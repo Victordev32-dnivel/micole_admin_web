@@ -1,0 +1,14 @@
+@import '@fortawesome/fontawesome-free/css/all.css';
+
+body {
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; /* Fuentes preferidas con fallback */
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* Evita desplazamiento horizontal */
+}
+
+* {
+  box-sizing: border-box; /* Mejora la consistencia del diseño */
+}
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

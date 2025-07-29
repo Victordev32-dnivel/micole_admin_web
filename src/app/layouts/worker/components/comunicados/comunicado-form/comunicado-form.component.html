@@ -1,0 +1,51 @@
+<div class="comunicado-container">
+  <h2>CREAR COMUNICADO</h2>
+  <form [formGroup]="comunicadoForm" (ngSubmit)="onSubmit()" class="form-grid">
+    <div class="form-column left-column">
+      <div class="section">
+        <h3>DATOS DEL COMUNICADO</h3>
+        <mat-form-field appearance="outline" class="full-width">
+          <input matInput placeholder="Nombre del comunicado" formControlName="name">
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <input matInput [matDatepicker]="picker" placeholder="Fecha del evento" formControlName="eventDate">
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <input matInput type="time" placeholder="Horario del evento" formControlName="eventTime">
+        </mat-form-field>
+        <div class="full-width">
+          <label>Imagen del evento</label>
+          <input type="file" (change)="onImageUpload($event)" accept="image/*">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-column right-column">
+      <div class="section">
+        <h3>TIPO DE COMUNICADO</h3>
+        <mat-radio-group formControlName="type" class="radio-group">
+          <mat-radio-button value="general">Comunicado General</mat-radio-button>
+          <mat-radio-button value="specific">Comunicado Específico</mat-radio-button>
+        </mat-radio-group>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-select formControlName="aula" placeholder="Seleccionar aula" [disabled]="comunicadoForm.get('type')?.value === 'general'">
+            <mat-option *ngFor="let aula of aulas" [value]="aula">{{ aula }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="section">
+        <h3>SUBIR PDF</h3>
+        <div class="pdf-upload">
+          <img src="assets/iconopdf.png" alt="PDF Icon" class="pdf-icon">
+          <input type="file" (change)="onPdfUpload($event)" accept="application/pdf">
+          <button mat-raised-button color="primary">Cargar PDF</button>
+        </div>
+      </div>
+      <div class="actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="!comunicadoForm.valid">Guardar Comunicado</button>
+      </div>
+    </div>
+  </form>
+</div>

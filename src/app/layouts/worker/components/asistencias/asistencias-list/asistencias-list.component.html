@@ -1,0 +1,27 @@
+<div class="student-container">
+  <div class="toolbar">
+    <div></div> <!-- Espacio vacío donde iría la búsqueda -->
+    <button mat-raised-button color="primary" class="add-button" (click)="openAddDialog()">Agregar Horarios de Asistencia</button>
+  </div>
+  <div class="student-table">
+    <div class="table-header">
+      <span>SECCIÓN</span>
+      <span>HORARIO</span>
+      <span>TIPO</span>
+      <span>TOLERANCIA</span>
+      <span>ACCIONES</span>
+    </div>
+    <div class="table-body">
+      <div class="student-row" *ngFor="let asistencia of filteredAsistencias">
+        <span>{{ asistencia.section }}</span>
+        <span>{{ asistencia.schedule }}</span>
+        <span>{{ asistencia.type }}</span>
+        <span>{{ asistencia.tolerance }}</span>
+        <span class="actions">
+          <mat-icon (click)="openEditDialog(asistencia)" style="color: #ffcc00;">edit</mat-icon>
+          <mat-icon (click)="confirmDelete(asistencia.section)" style="color: #ff0000;">delete</mat-icon>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

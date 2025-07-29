@@ -1,0 +1,19 @@
+<div mat-dialog-content class="dialog-content">
+  <h2 class="dialog-title">Editar Matrícula</h2>
+  <form [formGroup]="matriculaForm" (ngSubmit)="onSave()">
+    <mat-form-field appearance="outline" class="full-width">
+      <input matInput placeholder="Sección" formControlName="section" readonly>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width">
+      <input matInput placeholder="Estudiante" formControlName="student">
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full-width">
+      <input matInput placeholder="Estado" formControlName="status">
+    </mat-form-field>
+    <div class="dialog-actions">
+      <button mat-button (click)="onCancel()">Cancelar</button>
+      <button mat-raised-button color="warn" (click)="onDelete()">Eliminar</button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="!matriculaForm.valid">Guardar</button>
+    </div>
+  </form>
+</div>

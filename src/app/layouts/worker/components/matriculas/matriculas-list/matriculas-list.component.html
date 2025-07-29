@@ -1,0 +1,25 @@
+<div class="student-container">
+  <div class="toolbar">
+    <div></div>
+    <button mat-raised-button color="primary" class="add-button" (click)="openAddDialog()">Agregar Matrícula</button>
+  </div>
+  <div class="student-table">
+    <div class="table-header">
+      <span>SECCIÓN</span>
+      <span>ESTUDIANTE</span>
+      <span>ESTADO</span>
+      <span>ACCIONES</span>
+    </div>
+    <div class="table-body">
+      <div class="student-row" *ngFor="let matricula of filteredMatriculas">
+        <span>{{ matricula.section }}</span>
+        <span>{{ matricula.student }}</span>
+        <span>{{ matricula.status }}</span>
+        <span class="actions">
+          <mat-icon (click)="openEditDialog(matricula)" style="color: #ffcc00;">edit</mat-icon>
+          <mat-icon (click)="confirmDelete(matricula.section)" style="color: #ff0000;">delete</mat-icon>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

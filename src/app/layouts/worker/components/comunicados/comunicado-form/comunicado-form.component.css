@@ -1,0 +1,152 @@
+.comunicado-container {
+  width: calc(100vw - 300px); /* Ocupa todo el ancho, restando el sidebar */
+  margin: 20px 0 20px 300px; /* Margen reducido para evitar scroll innecesario */
+  padding: 10vh; /* Padding más amplio para un diseño más abierto */
+  background: #f9f9f9; /* Fondo más suave */
+  border-radius: 15px; /* Bordes más redondeados */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* Sombra sutil */
+  min-height: calc(100vh - 40px); /* Ajusta al alto de la ventana, menos márgenes */
+}
+
+.comunicado-container h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 2rem; /* Fuente más grande para el título */
+  text-transform: uppercase;
+  color: #333;
+}
+
+.form-grid {
+  display: flex;
+  gap: 30px; /* Mayor separación entre columnas */
+}
+
+.form-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.left-column {
+  /* Sin cambios específicos */
+}
+
+.right-column {
+  /* Sin cambios específicos */
+}
+
+.section {
+  margin-bottom: 25px;
+}
+
+.section h3 {
+  font-size: 1.5rem; /* Título de sección más grande */
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  color: #444;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 20px; /* Mayor espaciado entre campos */
+}
+
+.full-width label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 1.1rem; /* Etiquetas más visibles */
+}
+
+.full-width input[type="file"] {
+  width: 100%;
+  padding: 12px; /* Padding más grande para inputs de archivo */
+  border: 2px solid #ddd; /* Borde más grueso */
+  border-radius: 8px; /* Bordes redondeados */
+  font-size: 1rem; /* Texto más legible */
+}
+
+.radio-group {
+  display: flex;
+  gap: 25px;
+  margin-bottom: 20px;
+}
+
+.pdf-upload {
+  display: flex;
+  align-items: center; /* Alinea verticalmente */
+  justify-content: flex-start; /* Alinea desde la izquierda */
+  gap: 20px;
+  min-height: 60px; /* Altura mínima para evitar cortes */
+  flex-wrap: wrap; /* Permite ajuste si es necesario */
+  width: 100%; /* Ocupa todo el ancho disponible */
+}
+
+.pdf-icon {
+  width: 50px; /* Aumentado para evitar cortes, ajustable */
+  height: auto; /* Mantiene proporción */
+  flex-shrink: 0; /* Evita que se reduzca */
+}
+
+.pdf-upload input[type="file"] {
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  flex: 1; /* Permite que el input crezca */
+  min-width: 0; /* Evita desbordamiento */
+}
+
+.pdf-upload button {
+  padding: 12px 24px;
+  font-size: 1rem;
+  color: white;
+  background-color: rgb(255, 0, 0);
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px; /* Espaciado menor */
+}
+
+.actions button {
+  color: white;
+  background-color: black;
+  padding: 12px 24px; /* Botón más grande */
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .comunicado-container {
+    margin: 20px 10px;
+    width: auto;
+    min-height: auto; /* Elimina altura mínima en móviles */
+    padding: 15px;
+  }
+  .form-grid {
+    flex-direction: column;
+    gap: 15px;
+  }
+  .form-column {
+    width: 100%;
+  }
+  .comunicado-container h2 {
+    font-size: 1.5rem;
+  }
+  .section h3 {
+    font-size: 1.2rem;
+  }
+  .actions {
+    justify-content: center;
+  }
+  .pdf-upload {
+    flex-direction: column; /* Apila en móviles */
+    min-height: auto; /* Restaura altura normal */
+    gap: 10px;
+  }
+  .pdf-upload input[type="file"] {
+    width: 100%; /* Ocupa todo el ancho */
+  }
+  .pdf-upload button {
+    width: 100%; /* Botón ocupa todo el ancho */
+  }
+}
