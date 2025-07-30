@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
 import { StudentListComponent } from './components/alumnos/student-list/student-list.component';
 import { MatriculasListComponent } from './components/matriculas/matriculas-list/matriculas-list.component';
-import { AsistenciasListComponent } from './components/asistencias/asistencias-list/asistencias-list.component';
 import { WorkerLayoutComponent } from './worker-layout/worker-layout.component';
 import { ComunicadoFormComponent } from './components/comunicados/comunicado-form/comunicado-form.component';
 import { TarjetasComponent } from './components/tarjetas/tarjetas.component';
+import { AsistenciasComponent } from './components/asistencias/asistencias-list/asistencias-list.component';
 
 export const WORKER_ROUTES: Routes = [
   {
@@ -13,7 +13,7 @@ export const WORKER_ROUTES: Routes = [
     children: [
       { path: 'alumnos', component: StudentListComponent },
       { path: 'matriculas', component: MatriculasListComponent },
-      { path: 'asistencias', component: AsistenciasListComponent },
+      { path: 'asistencias', component: AsistenciasComponent },
       { path: 'comunicados', component: ComunicadoFormComponent },
       { path: 'tarjetas', component: TarjetasComponent },
     ],

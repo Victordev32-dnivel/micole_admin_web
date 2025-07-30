@@ -1,86 +1,228 @@
-import { Component } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ChangeDetectorRef,
+  NgZone,
+  Inject,
+  PLATFORM_ID,
+} from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { MatDialog } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
+import { MatTableModule } from '@angular/material/table';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
-import { FormBuilder, FormGroup, FormControl, ReactiveFormsModule } from '@angular/forms';
-import { AddAsistenciaDialogComponent } from '../add-asistencia/add-asistencia.component';
-import { EditAsistenciaDialogComponent } from '../edit-asistencia/edit-asistencia.component';
-import { ConfirmationDialogComponent } from '../../alumnos/confirmation-delete/confirmation-dialog.component';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatListModule } from '@angular/material/list';
+import {
+  HttpClient,
+  HttpClientModule,
+  HttpHeaders,
+} from '@angular/common/http';
+import { UserService } from '../../../../../services/UserData';
 
 @Component({
-  selector: 'app-asistencias-list',
+  selector: 'app-asistencias',
   standalone: true,
   imports: [
     CommonModule,
-    MatIconModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
     MatButtonModule,
-    ReactiveFormsModule
+    MatCardModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatListModule,
+    MatTableModule,
+    HttpClientModule,
   ],
   templateUrl: './asistencias-list.component.html',
-  styleUrls: ['./asistencias-list.component.css']
+  styleUrls: ['./asistencias-list.component.css'],
 })
-export class AsistenciasListComponent {
-  asistenciasForm: FormGroup;
-  asistencias = [
-    { section: 'Sec-101', schedule: '08:00-10:00', type: 'Presencial', tolerance: '15 min', actions: '' },
-    { section: 'Sec-102', schedule: '10:00-12:00', type: 'Virtual', tolerance: '10 min', actions: '' },
-    { section: 'Sec-103', schedule: '14:00-16:00', type: 'Presencial', tolerance: '20 min', actions: '' }
-  ];
-  filteredAsistencias = [...this.asistencias];
+export class AsistenciasComponent implements OnInit {
+  asistenciaForm: FormGroup;
+  salones: any[] = [];
+  alumnos: any[] = [];
+  asistencias: any[] = [];
+  loading: boolean = false;
+  error: string | null = null;
+  successMessage: string | null = null;
+  colegioId: number = 0;
+  private salonApiUrl =
+    'https://proy-back-dnivel.onrender.com/api/salon/colegio/lista';
+  private alumnoApiUrl =
+    'https://proy-back-dnivel.onrender.com/api/alumno/salon';
+  private asistenciaApiUrl =
+    'https://proy-back-dnivel.onrender.com/api/asistencia';
+  private staticToken = '732612882';
 
-  constructor(private fb: FormBuilder, public dialog: MatDialog) {
-    this.asistenciasForm = this.fb.group({
-      // Sin searchTerm ya que no hay búsqueda
+  constructor(
+    private fb: FormBuilder,
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone,
+    private userService: UserService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    this.asistenciaForm = this.fb.group({
+      idSalon: ['', Validators.required],
+      idAlumno: ['', Validators.required],
     });
   }
 
-  openAddDialog(): void {
-    const dialogRef = this.dialog.open(AddAsistenciaDialogComponent, {
-      width: '400px',
-      data: {}
-    });
+  ngOnInit() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadUserData();
+      this.loadSalones();
+    }
+  }
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.asistencias.push(result);
-        this.filteredAsistencias = [...this.asistencias];
+  private loadUserData(): void {
+    const userData = this.userService.getUserData();
+    if (userData) {
+      this.colegioId = userData.colegio;
+      console.log('Datos del usuario cargados:', { colegioId: this.colegioId });
+    }
+    this.userService.userData$.subscribe((userData) => {
+      if (userData) {
+        this.colegioId = userData.colegio;
+        this.cdr.detectChanges();
       }
     });
   }
 
-  openEditDialog(asistencia: any): void {
-    const dialogRef = this.dialog.open(EditAsistenciaDialogComponent, {
-      width: '400px',
-      data: asistencia
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        const index = this.asistencias.findIndex(a => a.section === result.section);
-        if (index !== -1) {
-          this.asistencias[index] = result;
-          this.filteredAsistencias = [...this.asistencias];
-        }
-      }
+  private getHeaders(): HttpHeaders {
+    const jwtToken = this.userService.getJwtToken() || this.staticToken;
+    return new HttpHeaders({
+      Authorization: `Bearer ${jwtToken}`,
+      'Content-Type': 'application/json',
     });
   }
 
-  confirmDelete(section: string): void {
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '300px',
-      data: { message: '¿Estás seguro de eliminar este horario de asistencia?' }
-    });
+  loadSalones() {
+    if (!this.colegioId) {
+      console.error('ID del colegio no disponible');
+      this.error =
+        'No se pudo cargar los salones: ID del colegio no disponible';
+      this.loading = false;
+      this.cdr.detectChanges();
+      return;
+    }
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.deleteAsistencia(section);
-      }
-    });
+    this.loading = true;
+    this.error = null;
+    this.successMessage = null;
+    const headers = this.getHeaders();
+    this.http
+      .get<any>(`${this.salonApiUrl}/${this.colegioId}`, { headers })
+      .subscribe({
+        next: (response) => {
+          this.ngZone.run(() => {
+            this.salones = response.data || [];
+            console.log('Salones cargados:', this.salones);
+            this.loading = false;
+            if (this.salones.length === 0) {
+              this.error = 'No se encontraron salones para este colegio';
+            }
+            this.cdr.detectChanges();
+          });
+        },
+        error: (error) => {
+          console.error('Error al cargar salones:', error);
+          this.error = 'Error al cargar los salones. Intente de nuevo';
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+      });
   }
 
-  deleteAsistencia(section: string): void {
-    this.asistencias = this.asistencias.filter(a => a.section !== section);
-    this.filteredAsistencias = [...this.asistencias];
+  onSalonChange() {
+    const salonId = this.asistenciaForm.get('idSalon')?.value;
+    if (salonId) {
+      this.loadAlumnos(salonId);
+    } else {
+      this.alumnos = [];
+      this.asistencias = [];
+      this.asistenciaForm.get('idAlumno')?.reset();
+    }
+  }
+
+  loadAlumnos(salonId: number) {
+    this.loading = true;
+    this.error = null;
+    this.successMessage = null;
+    this.alumnos = [];
+    this.asistencias = [];
+    this.asistenciaForm.get('idAlumno')?.reset();
+    const headers = this.getHeaders();
+    this.http
+      .get<any>(`${this.alumnoApiUrl}/${salonId}`, { headers })
+      .subscribe({
+        next: (response) => {
+          this.ngZone.run(() => {
+            this.alumnos = response || [];
+            console.log('Alumnos cargados:', this.alumnos);
+            this.loading = false;
+            if (this.alumnos.length === 0) {
+              this.error = 'No se encontraron alumnos en este salón';
+            }
+            this.cdr.detectChanges();
+          });
+        },
+        error: (error) => {
+          console.error('Error al cargar alumnos:', error);
+          this.error = 'Error al cargar los alumnos. Intente de nuevo';
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  onAlumnoChange() {
+    const alumnoId = this.asistenciaForm.get('idAlumno')?.value;
+    if (alumnoId) {
+      this.loadAsistencias(alumnoId);
+    } else {
+      this.asistencias = [];
+    }
+  }
+
+  loadAsistencias(alumnoId: number) {
+    this.loading = true;
+    this.error = null;
+    this.successMessage = null;
+    const headers = this.getHeaders();
+    this.http
+      .get<any>(`${this.asistenciaApiUrl}/${alumnoId}`, { headers })
+      .subscribe({
+        next: (response) => {
+          this.ngZone.run(() => {
+            this.asistencias = response || [];
+            console.log('Asistencias cargadas:', this.asistencias);
+            this.loading = false;
+            if (this.asistencias.length === 0) {
+              this.error = 'No se encontraron asistencias para este alumno';
+            }
+            this.cdr.detectChanges();
+          });
+        },
+        error: (error) => {
+          console.error('Error al cargar asistencias:', error);
+          this.error = 'Error al cargar las asistencias. Intente de nuevo';
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+      });
   }
 }
