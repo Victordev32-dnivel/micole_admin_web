@@ -1,0 +1,109 @@
+/* Contenedor principal para evitar que se extienda por todo el ancho y choque con el header */
+.tarjetas-container {
+  min-height: 100vh;
+  padding-left: 220px; /* Espaciado para el sidebar de 200px + 20px de margen */
+  padding-top: 100px; /* Espaciado para el header (ajusta según la altura del header, asumiendo 80px + 20px de margen) */
+  background-color: #f9f9f9;
+}
+
+/* Estilo del mat-card dentro del contenedor */
+.tarjetas-card {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  z-index: 1; /* Asegura que esté por encima del sidebar si este usa posicionamiento absoluto/fijo */
+}
+
+mat-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 24px;
+  color: #333;
+}
+
+mat-card-subtitle {
+  color: #666;
+  font-size: 16px;
+}
+
+.tarjetas-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-field {
+  width: 100%;
+}
+
+mat-form-field mat-icon {
+  color: #007bff;
+}
+
+mat-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+button[mat-raised-button] {
+  transition: background-color 0.3s ease;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  color: #666;
+  margin-top: 20px;
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #d32f2f;
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #2e7d32;
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+@media (max-width: 800px) {
+  .tarjetas-container {
+    padding-left: 10px; /* Reduce el padding en pantallas pequeñas */
+    padding-top: 60px; /* Reduce el padding superior en pantallas pequeñas */
+    padding-right: 10px;
+  }
+
+  .tarjetas-card {
+    margin: 10px;
+    padding: 15px;
+  }
+
+  mat-card-title {
+    font-size: 20px;
+  }
+
+  mat-card-subtitle {
+    font-size: 14px;
+  }
+}

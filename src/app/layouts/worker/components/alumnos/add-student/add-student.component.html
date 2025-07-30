@@ -7,76 +7,53 @@
         <h3>Datos del Alumno</h3>
         <mat-form-field appearance="outline">
           <mat-label>DNI</mat-label>
-          <input matInput formControlName="studentDni" placeholder="Ingrese DNI (8 dígitos)">
+          <input matInput formControlName="numeroDocumento" placeholder="Ingrese DNI (8 dígitos)">
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Nombres</mat-label>
-          <input matInput formControlName="studentFirstName" placeholder="Ingrese nombres">
+          <input matInput formControlName="nombres" placeholder="Ingrese nombres">
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Apellido Paterno</mat-label>
-          <input matInput formControlName="studentLastNameP" placeholder="Ingrese apellido paterno">
+          <input matInput formControlName="apellidoPaterno" placeholder="Ingrese apellido paterno">
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Apellido Materno</mat-label>
-          <input matInput formControlName="studentLastNameM" placeholder="Ingrese apellido materno">
+          <input matInput formControlName="apellidoMaterno" placeholder="Ingrese apellido materno">
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Género</mat-label>
-          <mat-select formControlName="studentGender">
+          <mat-select formControlName="genero">
             <mat-option *ngFor="let gender of genders" [value]="gender">{{ gender }}</mat-option>
           </mat-select>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Teléfono</mat-label>
-          <input matInput formControlName="studentPhone" placeholder="Ingrese teléfono (9 dígitos)">
+          <input matInput formControlName="telefono" placeholder="Ingrese teléfono (9 dígitos)">
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Fecha de Nacimiento</mat-label>
-          <input matInput [matDatepicker]="picker" formControlName="studentBirthDate" (click)="openCalendar()">
+          <input matInput [matDatepicker]="picker" formControlName="fechaNacimiento" (click)="openCalendar()">
           <mat-datepicker-toggle matIconSuffix [for]="picker" (click)="openCalendar(); $event.stopPropagation()"></mat-datepicker-toggle>
           <mat-datepicker #picker></mat-datepicker>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Dirección</mat-label>
-          <input matInput formControlName="studentAddress" placeholder="Ingrese dirección">
-        </mat-form-field>
-      </div>
-
-      <!-- Sección Datos del Apoderado -->
-      <div class="section guardian-section">
-        <h3>Datos del Apoderado</h3>
-        <mat-form-field appearance="outline">
-          <mat-label>DNI</mat-label>
-          <input matInput formControlName="guardianDni" placeholder="Ingrese DNI (8 dígitos)">
+          <input matInput formControlName="direccion" placeholder="Ingrese dirección">
         </mat-form-field>
         <mat-form-field appearance="outline">
-          <mat-label>Nombres</mat-label>
-          <input matInput formControlName="guardianFirstName" placeholder="Ingrese nombres">
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Apellido Paterno</mat-label>
-          <input matInput formControlName="guardianLastNameP" placeholder="Ingrese apellido paterno">
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Apellido Materno</mat-label>
-          <input matInput formControlName="guardianLastNameM" placeholder="Ingrese apellido materno">
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Género</mat-label>
-          <mat-select formControlName="guardianGender">
-            <mat-option *ngFor="let gender of genders" [value]="gender">{{ gender }}</mat-option>
+          <mat-label>Estado</mat-label>
+          <mat-select formControlName="estado">
+            <mat-option *ngFor="let state of states" [value]="state">{{ state }}</mat-option>
           </mat-select>
         </mat-form-field>
         <mat-form-field appearance="outline">
-          <mat-label>Teléfono</mat-label>
-          <input matInput formControlName="guardianPhone" placeholder="Ingrese teléfono (9 dígitos)">
+          <mat-label>ID Apoderado</mat-label>
+          <input matInput formControlName="idApoderado" placeholder="Ingrese ID del apoderado">
         </mat-form-field>
         <mat-form-field appearance="outline">
-          <mat-label>Parentesco</mat-label>
-          <mat-select formControlName="guardianRelationship">
-            <mat-option *ngFor="let relationship of relationships" [value]="relationship">{{ relationship }}</mat-option>
-          </mat-select>
+          <mat-label>ID Salón</mat-label>
+          <input matInput formControlName="idSalon" placeholder="Ingrese ID del salón">
         </mat-form-field>
       </div>
     </div>

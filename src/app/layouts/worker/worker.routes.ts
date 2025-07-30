@@ -4,6 +4,7 @@ import { MatriculasListComponent } from './components/matriculas/matriculas-list
 import { AsistenciasListComponent } from './components/asistencias/asistencias-list/asistencias-list.component';
 import { WorkerLayoutComponent } from './worker-layout/worker-layout.component';
 import { ComunicadoFormComponent } from './components/comunicados/comunicado-form/comunicado-form.component';
+import { TarjetasComponent } from './components/tarjetas/tarjetas.component';
 
 export const WORKER_ROUTES: Routes = [
   {
@@ -13,7 +14,8 @@ export const WORKER_ROUTES: Routes = [
       { path: 'alumnos', component: StudentListComponent },
       { path: 'matriculas', component: MatriculasListComponent },
       { path: 'asistencias', component: AsistenciasListComponent },
-      { path: 'comunicados', component: ComunicadoFormComponent}
-    ]
-  }
+      { path: 'comunicados', component: ComunicadoFormComponent },
+      { path: 'tarjetas', component: TarjetasComponent },
+    ],
+  },
 ];

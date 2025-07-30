@@ -25,7 +25,6 @@
         <span>{{ student.telefono }}</span>
         <span class="actions">
           <mat-icon (click)="openEditDialog(student)" style="color: #ffcc00;">edit</mat-icon>
-          <mat-icon (click)="confirmDelete(student.numero_documento)" style="color: #ff0000;">delete</mat-icon>
         </span>
       </div>
       <div *ngIf="filteredStudents.length === 0 && !loading">No hay estudiantes para mostrar</div>
