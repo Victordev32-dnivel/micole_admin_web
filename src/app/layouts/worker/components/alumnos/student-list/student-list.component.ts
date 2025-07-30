@@ -1,3 +1,4 @@
+// student-list.component.ts
 import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
@@ -5,11 +6,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { FormBuilder, FormGroup, FormControl, ReactiveFormsModule } from '@angular/forms';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { ConfirmationDialogComponent } from '../confirmation-delete/confirmation-dialog.component';
 import { StudentEditComponent } from '../edit-student/edit-student.component';
 import { AddStudentComponent } from '../add-student/add-student.component';
 import { Router } from '@angular/router';
+import { UserService } from '../../../../../services/UserData';// Importar el servicio
 
 @Component({
   selector: 'app-student-list',
@@ -35,8 +37,13 @@ export class StudentListComponent implements OnInit {
   totalAlumnos: number = 0;
   pageSize: number = 10;
   loading: boolean = true;
+  
+  // Variables para datos del usuario
+  userName: string = '';
+  userType: string = '';
 
   private apiUrl = 'https://proy-back-dnivel.onrender.com/api/alumno';
+  private staticToken = '732612882';
 
   constructor(
     private fb: FormBuilder,
@@ -44,7 +51,8 @@ export class StudentListComponent implements OnInit {
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
-    private router: Router
+    private router: Router,
+    private userService: UserService // Inyectar el servicio
   ) {
     this.searchForm = this.fb.group({
       searchTerm: this.searchTermControl
@@ -52,15 +60,48 @@ export class StudentListComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.loadUserData();
     this.loadStudents();
     this.searchTermControl.valueChanges.subscribe(term => {
       this.filterStudents(term);
     });
   }
 
+  // Cargar datos del usuario
+  private loadUserData(): void {
+    this.userName = this.userService.getUserName();
+    this.userType = this.userService.getUserType();
+    
+    console.log('Datos del usuario cargados:', {
+      nombre: this.userName,
+      tipo: this.userType
+    });
+
+    // Suscribirse a cambios en los datos del usuario
+    this.userService.userData$.subscribe(userData => {
+      if (userData) {
+        this.userName = userData.nombre;
+        this.userType = userData.tipoUsuario;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private getHeaders(): HttpHeaders {
+    // Usar el JWT del usuario si está disponible, sino usar el token estático
+    const jwtToken = this.userService.getJwtToken() || this.staticToken;
+    
+    return new HttpHeaders({
+      'Authorization': `Bearer ${jwtToken}`,
+      'Content-Type': 'application/json'
+    });
+  }
+
   loadStudents(page: number = 1) {
     this.loading = true;
-    this.http.get<any>(`${this.apiUrl}?page=${page}`).subscribe({
+    const headers = this.getHeaders();
+    
+    this.http.get<any>(`${this.apiUrl}?page=${page}`, { headers }).subscribe({
       next: (response) => {
         this.ngZone.run(() => {
           this.students = response.data;
@@ -115,7 +156,7 @@ export class StudentListComponent implements OnInit {
       maxWidth: '100vw',
       height: 'auto',
       panelClass: 'custom-dialog',
-      data: { id: student.id, numero_documento: student.numero_documento } // Pasa el id
+      data: { id: student.id, numero_documento: student.numero_documento }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -140,7 +181,17 @@ export class StudentListComponent implements OnInit {
 
   deleteStudent(dni: string): void {
     console.log('Eliminar alumno con DNI:', dni);
-    this.loadStudents(this.currentPage);
+    const headers = this.getHeaders();
+    
+    this.http.delete(`${this.apiUrl}/${dni}`, { headers }).subscribe({
+      next: (response) => {
+        console.log('Alumno eliminado exitosamente');
+        this.loadStudents(this.currentPage);
+      },
+      error: (error) => {
+        console.error('Error al eliminar alumno:', error);
+      }
+    });
   }
 
   changePage(page: number) {
@@ -155,6 +206,8 @@ export class StudentListComponent implements OnInit {
   }
 
   logout() {
+    // Limpiar datos del usuario
+    this.userService.clearUserData();
     localStorage.removeItem('user');
     this.router.navigate(['/login']);
   }

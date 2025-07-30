@@ -1,235 +1,180 @@
 .login-container {
+  background-image: none;
+  background-image: url('/assets/fondo.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background: #000000;
   margin: 0;
-}
-
-.login-split {
-  display: flex;
-  width: 1200px;
-  height: 700px;
-  border-radius: 12px;
+  position: relative;
   overflow: hidden;
-  border-color: rgb(255, 255, 255);
-  border-style: groove;
-  box-shadow: 0 0 15px rgb(165, 165, 165);
-}
-
-.login-image {
-  flex: 1;
-  background: #f8f9fa;
-}
-
-.login-image-content {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .login-form {
-  flex: 1;
-  background: linear-gradient(135deg, #235577 0%, #110433 100%);
-  padding: 80px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  padding: 60px; /* Aumentado de 40px */
+  border-radius: 0;
+  width: 100%;
+  max-width: 450px; /* Aumentado de 350px */
+  text-align: center;
+  position: relative;
+  background: transparent;
+}
+
+.logo-container {
+  margin-bottom: 60px; /* Aumentado de 40px */
+}
+
+.logo {
+  max-width: 120px; /* Aumentado de 80px */
+  height: auto;
 }
 
 .form-content {
-  width: 100%;
-  max-width: 400px;
-  text-align: center;
-}
-
-h2 {
-  margin-bottom: 40px;
-  color: #ffffff;
-  font-size: 2.5rem;
-  font-weight: bold;
+  display: flex;
+  flex-direction: column;
 }
 
 .form-group {
-  margin-bottom: 30px;
-  text-align: left;
-}
-
-label {
-  display: block;
-  margin-bottom: 10px;
-  color: #ffffff;
-  font-size: 1.3rem;
-}
-
-.password-container {
-  position: relative;
   width: 100%;
+  margin-bottom: 25px; /* Aumentado de 15px */
 }
 
 input {
-  width: 100%;
-  padding: 15px 40px 15px 15px;
-  border: 2px solid #ced4da;
-  border-radius: 8px;
-  font-size: 1.4rem;
-  transition: border-color 0.2s;
+  width: 350px; /* Aumentado de 250px */
+  padding: 15px; /* Aumentado de 10px */
+  border: 3px solid white; /* Aumentado de 2px */
+  border-radius: 8px; /* Aumentado de 5px */
+  font-size: 20px; /* Aumentado de 16px */
+  color: white;
+  background: transparent;
+  text-align: center;
   box-sizing: border-box;
 }
 
+input::placeholder {
+  color: white;
+  opacity: 0.7;
+  font-size: 18px; /* Nuevo: tamaño aumentado para placeholder */
+}
+
 input:focus {
-  border-color: #6c757d;
   outline: none;
-}
-
-.password-toggle {
-  position: absolute;
-  top: 50%;
-  right: 10px;
-  transform: translateY(-50%);
-  cursor: pointer;
-  background: none;
-  border: none;
-  padding: 5px;
-  display: flex;
-  align-items: center;
-}
-
-.material-icons {
-  font-size: 24px;
-  color: #6c757d;
-}
-
-.password-toggle:hover .material-icons {
-  color: #343a40;
+  border-color: white;
+  background: transparent;
 }
 
 button {
-  width: 100%;
-  padding: 18px;
-  background: #16866e;
+  width: 350px; /* Aumentado de 250px */
+  padding: 15px; /* Aumentado de 10px */
+  background-color: white;
+  color: #1e3a8a;
   border: none;
-  color: #ffffff;
-  font-size: 1.5rem;
-  border-radius: 8px;
+  border-radius: 8px; /* Aumentado de 5px */
+  font-size: 20px; /* Aumentado de 16px */
+  font-weight: bold;
+  text-transform: none;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background-color 0.3s;
+  margin-top: 30px; /* Aumentado de 20px */
 }
 
 button:hover {
-  background: #145a05;
+  background-color: #f0f0f0;
 }
 
 button:disabled {
-  background: #858383;
+  background-color: #cccccc;
   cursor: not-allowed;
 }
 
 .forgot-password {
-  display: block;
-  margin-top: 15px;
-  color: #6c757d;
-  text-decoration: none;
-  font-size: 1rem;
-  text-align: center;
+  margin-top: 20px; /* Aumentado de 10px */
+  color: white;
+  font-size: 18px; /* Aumentado de 14px */
+  cursor: pointer;
+  text-decoration: underline;
 }
 
-.forgot-password:hover {
-  text-decoration: underline;
+.error {
+  color: #ff0000;
+  margin-top: 25px; /* Aumentado de 15px */
+  font-size: 16px; /* Aumentado de 12px */
 }
 
 .loading {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px;
-  color: #ffffff;
-  font-size: 1.2rem;
+  margin-top: 25px; /* Aumentado de 15px */
+  font-size: 16px; /* Aumentado de 12px */
+  color: #666;
 }
 
 .spinner {
-  width: 20px;
-  height: 20px;
-  margin-left: 10px;
-  border: 3px solid #ffffff; /* Blanco para contraste */
-  border-top: 3px solid #16866e; /* Color del botón */
+  display: inline-block;
+  width: 24px; /* Aumentado de 16px */
+  height: 24px; /* Aumentado de 16px */
+  border: 3px solid rgba(0, 0, 0, 0.1); /* Aumentado de 2px */
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-.error {
-  color: #ff0000; /* Rojo para errores */
-  text-align: center;
-  margin-top: 10px;
-  font-size: 1.1rem;
+  border-top-color: #000;
+  animation: spin 1s ease-in-out infinite;
+  margin-left: 12px; /* Aumentado de 8px */
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@media (max-width: 1200px) {
-  .login-split {
-    width: 90%;
-    height: 600px;
+  to {
+    transform: rotate(360deg);
   }
 }
 
-@media (max-width: 900px) {
-  .login-split {
-    flex-direction: column;
-    height: auto;
-    width: 90%;
-  }
-
-  .login-image, .login-form {
-    flex: none;
-    height: 300px;
-  }
-
-  .login-form {
-    padding: 40px;
-  }
-
-  .form-content {
-    max-width: 100%;
-  }
-
-  h2 {
-    font-size: 2rem;
-  }
-
-  label {
-    font-size: 1.1rem;
-  }
-
-  input {
-    padding: 12px 40px 12px 12px;
-    font-size: 1.2rem;
-  }
-
-  .material-icons {
-    font-size: 20px;
-  }
-
-  button {
-    padding: 15px;
-    font-size: 1.3rem;
-  }
-
-  .forgot-password {
-    font-size: 0.9rem;
-  }
+.login-form::before {
+  content: none;
 }
 
-@media (max-width: 600px) {
-  .login-image, .login-form {
-    height: 250px;
-  }
+/* Nuevos estilos para el icono de visibilidad de contraseña */
+.password-toggle i {
+  font-size: 28px; /* Tamaño aumentado para el icono */
+  color: white;
+}
+.white-text {
+  color: white !important;
+}
 
-  .login-form {
-    padding: 20px;
-  }
+/* Contenedor del campo de contraseña */
+.password-field {
+  position: relative;
+}
+
+/* Estilo para el botón de mostrar/ocultar contraseña */
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: white;
+}
+
+/* Estilo para el icono de material */
+.material-icons {
+  font-size: 20px;
+  color: white;
+}
+
+/* Cambiar color del placeholder a blanco */
+::placeholder {
+  color: white !important;
+  opacity: 1 !important;
+}
+
+/* Para navegadores específicos */
+:-ms-input-placeholder {
+  color: white !important;
+}
+
+::-ms-input-placeholder {
+  color: white !important;
 }
