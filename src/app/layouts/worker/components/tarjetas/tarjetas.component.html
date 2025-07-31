@@ -21,7 +21,7 @@
         </mat-form-field>
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Salón</mat-label>
-          <mat-select formControlName="idSalon">
+          <mat-select formControlName="idSalon" (selectionChange)="onSalonChange()">
             <mat-option *ngIf="!salones.length && !loading" disabled>
               No hay salones disponibles
             </mat-option>
@@ -40,6 +40,28 @@
           </button>
         </mat-card-actions>
       </form>
+      <div *ngIf="alumnos.length > 0" class="alumnos-table-container">
+        <table mat-table [dataSource]="alumnos" class="mat-elevation-z2 full-width-table">
+          <!-- Nombre -->
+          <ng-container matColumnDef="nombre">
+            <th mat-header-cell *matHeaderCellDef> Nombre </th>
+            <td mat-cell *matCellDef="let alumno"> {{ alumno.nombre || alumno.alumno || 'Sin nombre' }} </td>
+          </ng-container>
+
+          <!-- Acciones -->
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef> Acciones </th>
+            <td mat-cell *matCellDef="let alumno">
+              <button mat-button color="primary" [disabled]="!tarjetaForm.get('rfid')?.value">
+                Asignar
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
       <div *ngIf="loading" class="loading">
         <mat-spinner diameter="24"></mat-spinner> Cargando salones...
       </div>

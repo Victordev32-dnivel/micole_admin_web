@@ -14,6 +14,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -41,6 +42,7 @@ import { UserService } from '../../../../services/UserData';
     MatCardModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatTableModule,
     HttpClientModule,
   ],
   templateUrl: './tarjetas.component.html',
@@ -49,12 +51,15 @@ import { UserService } from '../../../../services/UserData';
 export class TarjetasComponent implements OnInit {
   tarjetaForm: FormGroup;
   salones: any[] = [];
+  alumnos: any[] = [];
   loading: boolean = false;
   error: string | null = null;
   successMessage: string | null = null;
   colegioId: number = 0;
   private apiUrl = 'https://proy-back-dnivel.onrender.com/api/salon/colegio';
   private staticToken = '732612882';
+
+  displayedColumns: string[] = ['nombre', 'acciones'];
 
   constructor(
     private fb: FormBuilder,
@@ -136,14 +141,53 @@ export class TarjetasComponent implements OnInit {
       });
   }
 
+  onSalonChange() {
+    const salonId = this.tarjetaForm.get('idSalon')?.value;
+    if (salonId) {
+      this.loadAlumnos(salonId);
+    } else {
+      this.alumnos = [];
+      this.error = null;
+      this.cdr.detectChanges();
+    }
+  }
+
+  loadAlumnos(salonId: number) {
+    this.loading = true;
+    this.error = null;
+    this.successMessage = null;
+    this.alumnos = [];
+    const headers = this.getHeaders();
+    this.http
+      .get<any>(`${this.apiUrl}/${salonId}?page=1`, { headers })
+      .subscribe({
+        next: (response) => {
+          this.ngZone.run(() => {
+            this.alumnos = response.data || [];
+            console.log('Alumnos cargados:', this.alumnos);
+            this.loading = false;
+            if (this.alumnos.length === 0) {
+              this.error = 'No se encontraron alumnos en este salón';
+            }
+            this.cdr.detectChanges();
+          });
+        },
+        error: (error) => {
+          console.error('Error al cargar alumnos:', error);
+          this.error = 'Error al cargar los alumnos. Intente de nuevo';
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
   onSubmit(): void {
     if (this.tarjetaForm.valid) {
-      this.successMessage =
-        'Formulario válido. Selección guardada';
+      this.successMessage = 'Formulario válido. Selección guardada';
       this.error = null;
       this.cdr.detectChanges();
       console.log('Formulario enviado:', this.tarjetaForm.value);
-      // Aquí se implementará la carga de alumnos cuando esté definida
+      // Aquí se implementará la lógica para asignar la tarjeta RFID
     } else {
       this.error = 'Por favor, complete correctamente todos los campos';
       this.successMessage = null;

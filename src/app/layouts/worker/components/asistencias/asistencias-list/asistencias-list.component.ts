@@ -155,6 +155,8 @@ export class AsistenciasComponent implements OnInit {
       this.alumnos = [];
       this.asistencias = [];
       this.asistenciaForm.get('idAlumno')?.reset();
+      this.error = null;
+      this.cdr.detectChanges();
     }
   }
 
@@ -191,10 +193,13 @@ export class AsistenciasComponent implements OnInit {
 
   onAlumnoChange() {
     const alumnoId = this.asistenciaForm.get('idAlumno')?.value;
+    this.asistencias = []; // Limpiar la tabla explícitamente al cambiar de alumno
+    this.error = null; // Limpiar el mensaje de error al cambiar de alumno
     if (alumnoId) {
       this.loadAsistencias(alumnoId);
     } else {
       this.asistencias = [];
+      this.cdr.detectChanges();
     }
   }
 
@@ -202,6 +207,7 @@ export class AsistenciasComponent implements OnInit {
     this.loading = true;
     this.error = null;
     this.successMessage = null;
+    this.asistencias = []; // Limpiar la tabla antes de cargar nuevas asistencias
     const headers = this.getHeaders();
     this.http
       .get<any>(`${this.asistenciaApiUrl}/${alumnoId}`, { headers })

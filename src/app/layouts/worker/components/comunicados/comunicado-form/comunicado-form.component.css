@@ -1,152 +1,158 @@
-.comunicado-container {
-  width: calc(100vw - 300px); /* Ocupa todo el ancho, restando el sidebar */
-  margin: 20px 0 20px 300px; /* Margen reducido para evitar scroll innecesario */
-  padding: 10vh; /* Padding más amplio para un diseño más abierto */
-  background: #f9f9f9; /* Fondo más suave */
-  border-radius: 15px; /* Bordes más redondeados */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* Sombra sutil */
-  min-height: calc(100vh - 40px); /* Ajusta al alto de la ventana, menos márgenes */
-}
-
-.comunicado-container h2 {
-  text-align: center;
-  margin-bottom: 30px;
-  font-size: 2rem; /* Fuente más grande para el título */
-  text-transform: uppercase;
-  color: #333;
-}
-
-.form-grid {
+.container {
   display: flex;
-  gap: 30px; /* Mayor separación entre columnas */
+  flex-direction: column;
+  height: 100vh;
 }
 
-.form-column {
-  flex: 1;
-  min-width: 0;
+mat-toolbar {
+  padding: 0 16px; /* Espaciado interno del header */
+  margin-bottom: 16px; /* Separación con el contenido */
 }
 
-.left-column {
-  /* Sin cambios específicos */
+.form-container {
+  padding: 20px;
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-left: 300px; /* Espaciado para el sidebar (ajusta según ancho del sidebar) */
 }
 
-.right-column {
-  /* Sin cambios específicos */
-}
-
-.section {
-  margin-bottom: 25px;
-}
-
-.section h3 {
-  font-size: 1.5rem; /* Título de sección más grande */
-  margin-bottom: 15px;
-  text-transform: uppercase;
-  color: #444;
+mat-card {
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .full-width {
   width: 100%;
-  margin-bottom: 20px; /* Mayor espaciado entre campos */
-}
-
-.full-width label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 1.1rem; /* Etiquetas más visibles */
-}
-
-.full-width input[type="file"] {
-  width: 100%;
-  padding: 12px; /* Padding más grande para inputs de archivo */
-  border: 2px solid #ddd; /* Borde más grueso */
-  border-radius: 8px; /* Bordes redondeados */
-  font-size: 1rem; /* Texto más legible */
-}
-
-.radio-group {
-  display: flex;
-  gap: 25px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .pdf-upload {
-  display: flex;
-  align-items: center; /* Alinea verticalmente */
-  justify-content: flex-start; /* Alinea desde la izquierda */
-  gap: 20px;
-  min-height: 60px; /* Altura mínima para evitar cortes */
-  flex-wrap: wrap; /* Permite ajuste si es necesario */
-  width: 100%; /* Ocupa todo el ancho disponible */
-}
-
-.pdf-icon {
-  width: 50px; /* Aumentado para evitar cortes, ajustable */
-  height: auto; /* Mantiene proporción */
-  flex-shrink: 0; /* Evita que se reduzca */
-}
-
-.pdf-upload input[type="file"] {
-  padding: 12px;
-  border: 2px solid #ddd;
+  margin-bottom: 16px;
+  border: 2px dashed #e0e0e0;
+  padding: 20px;
   border-radius: 8px;
-  font-size: 1rem;
-  flex: 1; /* Permite que el input crezca */
-  min-width: 0; /* Evita desbordamiento */
+  background-color: #f5f5f5;
+  transition: border-color 0.3s ease;
+}
+
+.pdf-upload:hover {
+  border-color: #1976d2;
+}
+
+.pdf-preview {
+  position: relative;
+  margin-bottom: 10px;
+  padding: 15px;
+  background-color: #ffffff;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.pdf-preview span {
+  color: #333;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 70%;
+}
+
+.remove-button {
+  margin-left: 10px;
+  background-color: #ffebee; /* Fondo rojo claro */
+  border: 2px solid #ef5350; /* Borde rojo */
+  border-radius: 50%; /* Ícono circular */
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.remove-button:hover {
+  background-color: #ef5350; /* Rojo más intenso al hover */
+  transform: scale(1.1);
+}
+
+.remove-button mat-icon {
+  color: #d32f2f; /* Ícono rojo */
+  font-size: 20px;
+}
+
+.remove-button:hover mat-icon {
+  color: #ffffff; /* Ícono blanco al hover */
+}
+
+.file-input {
+  display: none;
 }
 
 .pdf-upload button {
-  padding: 12px 24px;
-  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #1976d2;
   color: white;
-  background-color: rgb(255, 0, 0);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-.actions {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px; /* Espaciado menor */
+.pdf-upload button:hover {
+  background-color: #1565c0;
 }
 
-.actions button {
-  color: white;
-  background-color: black;
-  padding: 12px 24px; /* Botón más grande */
-  font-size: 1.1rem;
+.pdf-upload button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
 
-@media (max-width: 768px) {
-  .comunicado-container {
-    margin: 20px 10px;
-    width: auto;
-    min-height: auto; /* Elimina altura mínima en móviles */
-    padding: 15px;
+.progress {
+  margin-top: 10px;
+}
+
+.progress mat-progress-bar {
+  border-radius: 4px;
+}
+
+.progress span {
+  display: block;
+  text-align: center;
+  color: #666;
+  margin-top: 5px;
+}
+
+.error-message {
+  color: #f44336;
+  margin-top: 10px;
+}
+
+.success-message {
+  color: #4caf50;
+  margin-top: 10px;
+}
+
+.submit-button {
+  width: 100%;
+  margin-top: 16px;
+}
+
+@media (max-width: 600px) {
+  .form-container {
+    padding: 10px;
+    margin-left: 0; /* Sin sidebar en pantallas pequeñas */
   }
-  .form-grid {
-    flex-direction: column;
-    gap: 15px;
+  mat-card {
+    padding: 10px;
   }
-  .form-column {
-    width: 100%;
-  }
-  .comunicado-container h2 {
-    font-size: 1.5rem;
-  }
-  .section h3 {
-    font-size: 1.2rem;
-  }
-  .actions {
-    justify-content: center;
-  }
-  .pdf-upload {
-    flex-direction: column; /* Apila en móviles */
-    min-height: auto; /* Restaura altura normal */
-    gap: 10px;
-  }
-  .pdf-upload input[type="file"] {
-    width: 100%; /* Ocupa todo el ancho */
-  }
-  .pdf-upload button {
-    width: 100%; /* Botón ocupa todo el ancho */
+  mat-toolbar {
+    padding: 0 10px;
   }
 }

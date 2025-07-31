@@ -1,4 +1,3 @@
-// login.component.ts
 import { Component } from '@angular/core';
 import {
   FormBuilder,
@@ -11,7 +10,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { ChangeDetectorRef, NgZone } from '@angular/core';
 import { AuthService } from '../../core/auth/services/auth.service';
-import { UserService, UserData } from '../../services/UserData'; // Importar el servicio
+import { UserService, UserData } from '../../services/UserData';
 
 @Component({
   selector: 'app-login',
@@ -34,7 +33,7 @@ export class LoginComponent {
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
     private authService: AuthService,
-    private userService: UserService // Inyectar el servicio
+    private userService: UserService
   ) {
     this.loginForm = this.fb.group({
       username: ['', Validators.required],
@@ -56,21 +55,19 @@ export class LoginComponent {
         next: (response) => {
           this.ngZone.run(() => {
             console.log('Login exitoso:', response);
-            
-            // Guardar datos del usuario usando el servicio
+
             const userData: UserData = {
               id: response.id,
               tipoUsuario: response.tipoUsuario,
               nombre: response.nombre,
               colegio: response.colegio,
-              jwt: response.jwt
+              jwt: response.jwt,
             };
-            
+
             this.userService.setUserData(userData);
-            this.authService.login(response);
+            this.authService.login(userData); // Pasar userData tipado
             this.loading = false;
 
-            // Redirección según tipo de usuario
             if (response.tipoUsuario === 'trabajador') {
               this.router
                 .navigate(['/worker/alumnos'])

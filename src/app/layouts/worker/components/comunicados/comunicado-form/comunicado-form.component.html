@@ -1,51 +1,78 @@
-<div class="comunicado-container">
-  <h2>CREAR COMUNICADO</h2>
-  <form [formGroup]="comunicadoForm" (ngSubmit)="onSubmit()" class="form-grid">
-    <div class="form-column left-column">
-      <div class="section">
-        <h3>DATOS DEL COMUNICADO</h3>
-        <mat-form-field appearance="outline" class="full-width">
-          <input matInput placeholder="Nombre del comunicado" formControlName="name">
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="full-width">
-          <input matInput [matDatepicker]="picker" placeholder="Fecha del evento" formControlName="eventDate">
-          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-          <mat-datepicker #picker></mat-datepicker>
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="full-width">
-          <input matInput type="time" placeholder="Horario del evento" formControlName="eventTime">
-        </mat-form-field>
-        <div class="full-width">
-          <label>Imagen del evento</label>
-          <input type="file" (change)="onImageUpload($event)" accept="image/*">
-        </div>
-      </div>
-    </div>
+<div class="container">
+  <mat-toolbar color="primary">
+    <button mat-icon-button (click)="onBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <span class="title">Crear Nuevo Anuncio</span>
+  </mat-toolbar>
 
-    <div class="form-column right-column">
-      <div class="section">
-        <h3>TIPO DE COMUNICADO</h3>
-        <mat-radio-group formControlName="type" class="radio-group">
-          <mat-radio-button value="general">Comunicado General</mat-radio-button>
-          <mat-radio-button value="specific">Comunicado Específico</mat-radio-button>
-        </mat-radio-group>
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-select formControlName="aula" placeholder="Seleccionar aula" [disabled]="comunicadoForm.get('type')?.value === 'general'">
-            <mat-option *ngFor="let aula of aulas" [value]="aula">{{ aula }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="section">
-        <h3>SUBIR PDF</h3>
-        <div class="pdf-upload">
-          <img src="assets/iconopdf.png" alt="PDF Icon" class="pdf-icon">
-          <input type="file" (change)="onPdfUpload($event)" accept="application/pdf">
-          <button mat-raised-button color="primary">Cargar PDF</button>
-        </div>
-      </div>
-      <div class="actions">
-        <button mat-raised-button color="primary" type="submit" [disabled]="!comunicadoForm.valid">Guardar Comunicado</button>
-      </div>
-    </div>
-  </form>
+  <div class="form-container" *ngIf="isBrowser">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Información del Anuncio</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="comunicadoForm" (ngSubmit)="onSubmit()">
+          <!-- Salón -->
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Salón</mat-label>
+            <mat-select formControlName="idSalon" required>
+              <mat-option *ngFor="let salon of salones" [value]="salon.id">
+                {{ salon.nombre }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="comunicadoForm.get('idSalon')?.hasError('required')">
+              Selecciona un salón
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Nombre -->
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Nombre del Anuncio</mat-label>
+            <input matInput formControlName="nombre" placeholder="Ej: Reunión de padres" required>
+            <mat-error *ngIf="comunicadoForm.get('nombre')?.hasError('required')">
+              El nombre es requerido
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Horario -->
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Horario</mat-label>
+            <input matInput formControlName="horario" placeholder="Ej: Lunes 15:00 - 16:00" required>
+            <mat-error *ngIf="comunicadoForm.get('horario')?.hasError('required')">
+              El horario es requerido
+            </mat-error>
+          </mat-form-field>
+
+          <!-- PDF -->
+          <div class="pdf-upload">
+            <div class="pdf-preview" *ngIf="pdfFile">
+              <span>{{ pdfFile.name }}</span>
+              <button mat-icon-button color="warn" (click)="pdfFile = null; uploadProgress = 0" class="remove-button">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+            <input #fileInput type="file" (change)="onPdfUpload($event)" accept="application/pdf" class="file-input" required>
+            <button mat-raised-button color="primary" (click)="triggerFileInput()" [disabled]="loading">
+              {{ pdfFile ? 'Cambiar PDF' : 'Seleccionar PDF' }}
+            </button>
+            <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="progress">
+              <mat-progress-bar mode="determinate" [value]="uploadProgress"></mat-progress-bar>
+              <span>Subiendo: {{ uploadProgress }}%</span>
+            </div>
+          </div>
+
+          <!-- Mensajes de error/éxito -->
+          <mat-error *ngIf="error" class="error-message">{{ error }}</mat-error>
+          <mat-hint *ngIf="successMessage" class="success-message">{{ successMessage }}</mat-hint>
+
+          <!-- Botón de envío -->
+          <button mat-raised-button color="primary" type="submit" [disabled]="loading" class="submit-button">
+            <mat-icon *ngIf="loading">autorenew</mat-icon>
+            Publicar Anuncio
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
 </div>

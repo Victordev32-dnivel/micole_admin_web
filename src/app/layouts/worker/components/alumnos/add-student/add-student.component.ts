@@ -73,7 +73,7 @@ export class AddStudentComponent implements AfterViewInit {
   addForm: FormGroup;
   genders = ['Masculino', 'Femenino', 'Otro'];
   states = ['Activo', 'Inactivo'];
-  private apiUrl = 'https://proy-back-dnivel.onrender.com/api/alumno/colegio';
+  private apiUrl = 'https://proy-back-dnivel.onrender.com/api/alumno';
   private staticToken = '732612882';
 
   @ViewChild('picker') datepicker: MatDatepicker<Date> | undefined;

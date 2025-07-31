@@ -1,19 +1,17 @@
-/* Contenedor principal para evitar que se extienda por todo el ancho y choque con el header */
 .tarjetas-container {
   min-height: 100vh;
-  padding-left: 220px; /* Espaciado para el sidebar de 200px + 20px de margen */
-  padding-top: 100px; /* Espaciado para el header (ajusta según la altura del header, asumiendo 80px + 20px de margen) */
+  padding-left: 220px;
+  padding-top: 100px;
   background-color: #f9f9f9;
 }
 
-/* Estilo del mat-card dentro del contenedor */
 .tarjetas-card {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  z-index: 1; /* Asegura que esté por encima del sidebar si este usa posicionamiento absoluto/fijo */
+  z-index: 1;
 }
 
 mat-card-header {
@@ -60,6 +58,14 @@ button[mat-raised-button] {
   transition: background-color 0.3s ease;
 }
 
+.alumnos-table-container {
+  margin-top: 20px;
+}
+
+.full-width-table {
+  width: 100%;
+}
+
 .loading {
   display: flex;
   align-items: center;
@@ -89,8 +95,8 @@ button[mat-raised-button] {
 
 @media (max-width: 800px) {
   .tarjetas-container {
-    padding-left: 10px; /* Reduce el padding en pantallas pequeñas */
-    padding-top: 60px; /* Reduce el padding superior en pantallas pequeñas */
+    padding-left: 10px;
+    padding-top: 60px;
     padding-right: 10px;
   }
 
