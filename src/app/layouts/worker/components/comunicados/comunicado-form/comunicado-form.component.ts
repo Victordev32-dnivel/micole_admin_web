@@ -64,6 +64,7 @@ const BUCKET_NAME = 'bckpdfs';
 })
 export class ComunicadoFormComponent implements OnInit {
   comunicadoForm: FormGroup;
+  generalForm: FormGroup;
   salones: { id: number; nombre: string }[] = [];
   loading: boolean = false;
   error: string | null = null;
@@ -71,9 +72,11 @@ export class ComunicadoFormComponent implements OnInit {
   colegioId: number = 0;
   uploadProgress: number = 0;
   pdfFile: File | null = null;
+  imageFile: File | null = null;
   isBrowser: boolean = false;
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('imageInput') imageInput!: ElementRef<HTMLInputElement>;
 
   private s3: S3;
 
@@ -92,12 +95,20 @@ export class ComunicadoFormComponent implements OnInit {
       horario: ['', Validators.required],
       pdf: ['', Validators.required],
     });
+    this.generalForm = this.fb.group({
+      nombre: ['', Validators.required],
+      horario: ['', Validators.required],
+      imagen: [''],
+      idColegio: [0],
+    });
 
     this.s3 = new S3({
       accessKeyId: 'AKIASYIUVPYK5L3ET47F',
       secretAccessKey: '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',
       region: 'us-east-1',
       signatureVersion: 'v4',
+      s3ForcePathStyle: true,
+      correctClockSkew: true,
     });
   }
 
@@ -112,11 +123,13 @@ export class ComunicadoFormComponent implements OnInit {
     const userData = this.userService.getUserData();
     if (userData) {
       this.colegioId = userData.colegio;
+      this.generalForm.patchValue({ idColegio: this.colegioId });
       console.log('Usuario cargado - colegioId:', this.colegioId);
     }
     this.userService.userData$.subscribe((userData: UserData | null) => {
       if (userData) {
         this.colegioId = userData.colegio;
+        this.generalForm.patchValue({ idColegio: this.colegioId });
         console.log('Usuario actualizado - nuevo colegioId:', this.colegioId);
         this.loadSalones();
         this.cdr.detectChanges();
@@ -125,7 +138,7 @@ export class ComunicadoFormComponent implements OnInit {
   }
 
   private getHeaders(): HttpHeaders {
-    const jwtToken = this.userService.getJwtToken() || '732612882'; // Usa el token estático como en la app
+    const jwtToken = this.userService.getJwtToken() || '732612882';
     console.log('Token usado en headers:', jwtToken);
     return new HttpHeaders({
       Authorization: `Bearer ${jwtToken}`,
@@ -277,6 +290,116 @@ export class ComunicadoFormComponent implements OnInit {
     }
   }
 
+  async uploadImageToS3(file: File): Promise<string> {
+    try {
+      console.log('🚀 Iniciando subida de imagen:', file.name);
+      this.uploadProgress = 0;
+
+      if (!file) {
+        throw new Error('El archivo no existe');
+      }
+
+      const reader = new FileReader();
+      const base64Content = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Error al leer el archivo'));
+        reader.readAsDataURL(file);
+      });
+
+      const base64Data = base64Content.split(',')[1];
+      const buffer = Buffer.from(base64Data, 'base64');
+
+      const timestamp = Date.now();
+      const randomId = Math.random().toString(36).substring(2);
+      const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `announcements/images/${timestamp}_${randomId}.${fileExtension}`;
+
+      console.log('📝 Nombre del archivo:', fileName);
+
+      let contentType = 'image/jpeg';
+      if (fileExtension === 'png') contentType = 'image/png';
+      else if (fileExtension === 'gif') contentType = 'image/gif';
+      else if (fileExtension === 'webp') contentType = 'image/webp';
+
+      const params = {
+        Bucket: BUCKET_NAME,
+        Key: fileName,
+        Body: buffer,
+        ContentType: contentType,
+      };
+
+      console.log('⚙️ Parámetros de subida configurados (archivo privado)');
+
+      const upload = this.s3.upload(params, {
+        partSize: 5 * 1024 * 1024,
+        queueSize: 1,
+      });
+
+      upload.on('httpUploadProgress', (progress) => {
+        const percent = Math.round((progress.loaded / progress.total) * 100);
+        this.ngZone.run(() => {
+          this.uploadProgress = percent;
+          console.log(`📈 Progreso: ${percent}%`);
+          this.cdr.detectChanges();
+        });
+      });
+
+      await upload.promise();
+      console.log('✅ Imagen subida exitosamente (privada)');
+
+      const signedUrl = this.s3.getSignedUrl('getObject', {
+        Bucket: BUCKET_NAME,
+        Key: fileName,
+        Expires: 7 * 24 * 60 * 60,
+      });
+
+      console.log('🔗 URL presignada generada:', signedUrl);
+
+      return signedUrl;
+    } catch (error: unknown) {
+      console.error('❌ Error detallado en uploadImageToS3:', error);
+      console.log('🔍 Detalles de error:', JSON.stringify(error, null, 2));
+
+      const isAWSError = (
+        err: unknown
+      ): err is { code?: string; statusCode?: number; message?: string } => {
+        return typeof err === 'object' && err !== null;
+      };
+
+      const isError = (err: unknown): err is Error => {
+        return err instanceof Error;
+      };
+
+      let errorMessage = 'Error desconocido al subir imagen';
+
+      if (isAWSError(error)) {
+        if (error.code === 'NetworkingError') {
+          errorMessage =
+            'Error de conexión. Verifica tu internet o configura CORS en S3.';
+        } else if (error.code === 'InvalidAccessKeyId') {
+          errorMessage = 'Credenciales de AWS inválidas. Verifica las claves.';
+        } else if (error.code === 'AccessDenied') {
+          errorMessage =
+            'Sin permisos para subir al bucket. Revisa la política IAM.';
+        } else if (error.code === 'NoSuchBucket') {
+          errorMessage = 'El bucket no existe. Confirma el nombre.';
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+      } else if (isError(error)) {
+        errorMessage = error.message;
+      }
+
+      this.ngZone.run(() => {
+        this.error = errorMessage;
+        this.loading = false;
+        this.uploadProgress = 0;
+        this.cdr.detectChanges();
+      });
+      throw new Error(errorMessage);
+    }
+  }
+
   onPdfUpload(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -307,6 +430,39 @@ export class ComunicadoFormComponent implements OnInit {
     }
   }
 
+  onImageUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      console.log('Imagen seleccionada:', file.name);
+
+      this.loading = true;
+      this.imageFile = file;
+
+      this.uploadImageToS3(file)
+        .then((signedUrl) => {
+          this.ngZone.run(() => {
+            this.generalForm.patchValue({ imagen: signedUrl });
+            this.loading = false;
+            this.uploadProgress = 0;
+            console.log(
+              'URL de la imagen actualizada en el formulario:',
+              signedUrl
+            );
+            this.cdr.detectChanges();
+          });
+        })
+        .catch((error) => {
+          this.ngZone.run(() => {
+            this.loading = false;
+            this.error = error.message;
+            console.error('Error al subir imagen:', error.message);
+            this.cdr.detectChanges();
+          });
+        });
+    }
+  }
+
   onBack(): void {
     window.history.back();
   }
@@ -315,7 +471,11 @@ export class ComunicadoFormComponent implements OnInit {
     this.fileInput.nativeElement.click();
   }
 
-  onSubmit(): void {
+  triggerImageInput(): void {
+    this.imageInput.nativeElement.click();
+  }
+
+  onSubmitSalon(): void {
     if (this.comunicadoForm.valid) {
       const data = {
         IdSalon: parseInt(
@@ -327,7 +487,10 @@ export class ComunicadoFormComponent implements OnInit {
         Pdf: this.comunicadoForm.get('pdf')?.value.trim(),
         IdColegio: this.colegioId,
       };
-      console.log('Datos enviados en el POST:', JSON.stringify(data, null, 2));
+      console.log(
+        'Datos enviados en el POST (Salon):',
+        JSON.stringify(data, null, 2)
+      );
 
       const headers = this.getHeaders();
       this.loading = true;
@@ -337,8 +500,11 @@ export class ComunicadoFormComponent implements OnInit {
         })
         .subscribe({
           next: (response) => {
-            console.log('Respuesta de la API al publicar anuncio:', response);
-            this.successMessage = 'Anuncio publicado correctamente';
+            console.log(
+              'Respuesta de la API al publicar anuncio (Salon):',
+              response
+            );
+            this.successMessage = 'Anuncio por salón publicado correctamente';
             this.error = null;
             this.comunicadoForm.reset();
             this.pdfFile = null;
@@ -346,7 +512,7 @@ export class ComunicadoFormComponent implements OnInit {
             this.cdr.detectChanges();
           },
           error: (error: HttpErrorResponse) => {
-            console.error('Error en el POST:', {
+            console.error('Error en el POST (Salon):', {
               status: error.status,
               statusText: error.statusText,
               message: error.message,
@@ -355,7 +521,7 @@ export class ComunicadoFormComponent implements OnInit {
               headers: error.headers,
             });
             this.error =
-              'Fallo al publicar el anuncio: ' +
+              'Fallo al publicar el anuncio por salón: ' +
               (error.error?.message || error.message || 'Error desconocido');
             this.successMessage = null;
             this.loading = false;
@@ -363,9 +529,69 @@ export class ComunicadoFormComponent implements OnInit {
           },
         });
     } else {
-      this.error = 'Por favor, complete correctamente todos los campos';
+      this.error = 'Por favor, complete correctamente todos los campos (Salon)';
       this.successMessage = null;
-      console.log('Formulario inválido:', this.comunicadoForm.errors);
+      console.log('Formulario inválido (Salon):', this.comunicadoForm.errors);
+      this.cdr.detectChanges();
+    }
+  }
+
+  onSubmitGeneral(): void {
+    if (this.generalForm.valid) {
+      const data = {
+        nombre: this.generalForm.get('nombre')?.value.trim(),
+        horario: this.generalForm.get('horario')?.value.trim(),
+        imagen: this.generalForm.get('imagen')?.value.trim() || null,
+        idColegio: this.colegioId,
+      };
+      console.log(
+        'Datos enviados en el POST (General):',
+        JSON.stringify(data, null, 2)
+      );
+
+      const headers = this.getHeaders();
+      this.loading = true;
+      this.http
+        .post(
+          'https://proy-back-dnivel.onrender.com/api/anuncio/general',
+          data,
+          { headers }
+        )
+        .subscribe({
+          next: (response) => {
+            console.log(
+              'Respuesta de la API al publicar anuncio (General):',
+              response
+            );
+            this.successMessage = 'Anuncio general publicado correctamente';
+            this.error = null;
+            this.generalForm.reset();
+            this.imageFile = null;
+            this.loading = false;
+            this.cdr.detectChanges();
+          },
+          error: (error: HttpErrorResponse) => {
+            console.error('Error en el POST (General):', {
+              status: error.status,
+              statusText: error.statusText,
+              message: error.message,
+              error: error.error,
+              url: error.url,
+              headers: error.headers,
+            });
+            this.error =
+              'Fallo al publicar el anuncio general: ' +
+              (error.error?.message || error.message || 'Error desconocido');
+            this.successMessage = null;
+            this.loading = false;
+            this.cdr.detectChanges();
+          },
+        });
+    } else {
+      this.error =
+        'Por favor, complete correctamente todos los campos (General)';
+      this.successMessage = null;
+      console.log('Formulario inválido (General):', this.generalForm.errors);
       this.cdr.detectChanges();
     }
   }

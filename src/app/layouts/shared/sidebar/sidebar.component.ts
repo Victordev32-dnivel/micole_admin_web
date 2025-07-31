@@ -30,8 +30,8 @@ export class SidebarComponent implements OnInit {
   workerItems = [
     { path: '/worker/alumnos', label: 'Alumnos', icon: 'fas fa-users' },
     {
-      path: '/worker/matriculas',
-      label: 'Matrículas',
+      path: '/worker/notas',
+      label: 'Notas',
       icon: 'fas fa-file-alt',
     },
     {
