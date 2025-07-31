@@ -24,7 +24,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatCardModule } from '@angular/material/card';
-import { MatToolbarModule } from '@angular/material/toolbar'; // Añadido
+import { MatToolbarModule } from '@angular/material/toolbar';
 import {
   HttpClient,
   HttpClientModule,
@@ -57,7 +57,7 @@ const BUCKET_NAME = 'bckpdfs';
     HttpClientModule,
     MatProgressBarModule,
     MatCardModule,
-    MatToolbarModule, // Añadido
+    MatToolbarModule,
   ],
   templateUrl: './comunicado-form.component.html',
   styleUrls: ['./comunicado-form.component.css'],
@@ -125,10 +125,12 @@ export class ComunicadoFormComponent implements OnInit {
   }
 
   private getHeaders(): HttpHeaders {
-    const jwtToken = this.userService.getJwtToken() || '732612882';
+    const jwtToken = this.userService.getJwtToken() || '732612882'; // Usa el token estático como en la app
     console.log('Token usado en headers:', jwtToken);
     return new HttpHeaders({
       Authorization: `Bearer ${jwtToken}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
     });
   }
 
@@ -290,6 +292,7 @@ export class ComunicadoFormComponent implements OnInit {
             this.comunicadoForm.patchValue({ pdf: signedUrl });
             this.loading = false;
             this.uploadProgress = 0;
+            console.log('URL del PDF actualizada en el formulario:', signedUrl);
             this.cdr.detectChanges();
           });
         })
@@ -297,6 +300,7 @@ export class ComunicadoFormComponent implements OnInit {
           this.ngZone.run(() => {
             this.loading = false;
             this.error = error.message;
+            console.error('Error al subir PDF:', error.message);
             this.cdr.detectChanges();
           });
         });
@@ -314,15 +318,19 @@ export class ComunicadoFormComponent implements OnInit {
   onSubmit(): void {
     if (this.comunicadoForm.valid) {
       const data = {
-        idSalon: this.comunicadoForm.get('idSalon')?.value,
-        nombre: this.comunicadoForm.get('nombre')?.value,
-        horario: this.comunicadoForm.get('horario')?.value,
-        pdf: this.comunicadoForm.get('pdf')?.value,
-        id_colegio: this.colegioId,
+        IdSalon: parseInt(
+          this.comunicadoForm.get('idSalon')?.value.toString(),
+          10
+        ),
+        Nombre: this.comunicadoForm.get('nombre')?.value.trim(),
+        Horario: this.comunicadoForm.get('horario')?.value.trim(),
+        Pdf: this.comunicadoForm.get('pdf')?.value.trim(),
+        IdColegio: this.colegioId,
       };
-      console.log('Datos enviados en el formulario:', data);
+      console.log('Datos enviados en el POST:', JSON.stringify(data, null, 2));
 
       const headers = this.getHeaders();
+      this.loading = true;
       this.http
         .post('https://proy-back-dnivel.onrender.com/api/anuncio/salon', data, {
           headers,
@@ -333,20 +341,31 @@ export class ComunicadoFormComponent implements OnInit {
             this.successMessage = 'Anuncio publicado correctamente';
             this.error = null;
             this.comunicadoForm.reset();
+            this.pdfFile = null;
+            this.loading = false;
             this.cdr.detectChanges();
           },
           error: (error: HttpErrorResponse) => {
-            console.error('Error al publicar anuncio:', error);
+            console.error('Error en el POST:', {
+              status: error.status,
+              statusText: error.statusText,
+              message: error.message,
+              error: error.error,
+              url: error.url,
+              headers: error.headers,
+            });
             this.error =
               'Fallo al publicar el anuncio: ' +
-              (error.error?.message || error.message);
+              (error.error?.message || error.message || 'Error desconocido');
             this.successMessage = null;
+            this.loading = false;
             this.cdr.detectChanges();
           },
         });
     } else {
       this.error = 'Por favor, complete correctamente todos los campos';
       this.successMessage = null;
+      console.log('Formulario inválido:', this.comunicadoForm.errors);
       this.cdr.detectChanges();
     }
   }
