@@ -99,13 +99,26 @@ export class StudentEditComponent implements AfterViewInit {
     this.editForm = this.fb.group({
       numeroDocumento: [
         { value: '', disabled: true },
-        [Validators.required, Validators.pattern('^[0-9]{8}$')],
+        [
+          Validators.required,
+          Validators.pattern('^[0-9]{8}$'),
+          Validators.minLength(8),
+          Validators.maxLength(8),
+        ],
       ],
       nombres: ['', Validators.required],
       apellidoPaterno: ['', Validators.required],
       apellidoMaterno: ['', Validators.required],
       genero: ['', Validators.required],
-      telefono: ['', [Validators.required, Validators.pattern('^[0-9]{9}$')]],
+      telefono: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern('^[0-9]{9}$'),
+          Validators.minLength(9),
+          Validators.maxLength(9),
+        ],
+      ],
       fechaNacimiento: ['', Validators.required],
       direccion: ['', Validators.required],
       estado: ['', Validators.required],

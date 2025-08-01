@@ -92,13 +92,26 @@ export class AddStudentComponent implements AfterViewInit {
     this.addForm = this.fb.group({
       numeroDocumento: [
         '',
-        [Validators.required, Validators.pattern('^[0-9]{8}$')],
+        [
+          Validators.required,
+          Validators.pattern('^[0-9]{8}$'),
+          Validators.minLength(8),
+          Validators.maxLength(8),
+        ],
       ],
       nombres: ['', Validators.required],
       apellidoPaterno: ['', Validators.required],
       apellidoMaterno: ['', Validators.required],
       genero: ['', Validators.required],
-      telefono: ['', [Validators.required, Validators.pattern('^[0-9]{9}$')]],
+      telefono: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern('^[0-9]{9}$'),
+          Validators.minLength(9),
+          Validators.maxLength(9),
+        ],
+      ],
       fechaNacimiento: ['', Validators.required],
       direccion: ['', Validators.required],
       estado: ['Activo', Validators.required],
@@ -130,12 +143,7 @@ export class AddStudentComponent implements AfterViewInit {
         nombres: formValue.nombres,
         apellidoPaterno: formValue.apellidoPaterno,
         apellidoMaterno: formValue.apellidoMaterno,
-        genero:
-          formValue.genero === 'Masculino'
-            ? 'm'
-            : formValue.genero === 'Femenino'
-            ? 'f'
-            : 'o',
+        genero: formValue.genero,
         telefono: formValue.telefono,
         fechaNacimiento: this.formatDate(formValue.fechaNacimiento),
         direccion: formValue.direccion,

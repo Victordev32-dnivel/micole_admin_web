@@ -1,10 +1,3 @@
-<mat-toolbar color="primary">
-  <button mat-icon-button (click)="onBack()">
-    <mat-icon>arrow_back</mat-icon>
-  </button>
-  <span>Crear Nuevo Anuncio</span>
-</mat-toolbar>
-
 <div class="form-container">
   <div class="form-row">
     <!-- Anuncio por Salón (Izquierda) -->
@@ -50,7 +43,7 @@
             </div>
           </div>
 
-          <button mat-raised-button color="primary" class="submit-button" (click)="onSubmitSalon()" [disabled]="loading">
+          <button class="submit-button" (click)="onSubmitSalon()" [disabled]="loading">
             Publicar Anuncio por Salón
           </button>
         </form>
@@ -91,7 +84,7 @@
             </div>
           </div>
 
-          <button mat-raised-button color="primary" class="submit-button" (click)="onSubmitGeneral()" [disabled]="loading">
+          <button class="submit-button" (click)="onSubmitGeneral()" [disabled]="loading">
             Publicar Anuncio General
           </button>
         </form>

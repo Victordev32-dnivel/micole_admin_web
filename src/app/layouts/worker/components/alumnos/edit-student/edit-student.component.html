@@ -7,39 +7,63 @@
         <h3>Datos del Alumno</h3>
         <mat-form-field appearance="outline">
           <mat-label>DNI</mat-label>
-          <input matInput formControlName="numeroDocumento" placeholder="Ingrese DNI (8 dígitos)" readonly>
+          <input matInput formControlName="numeroDocumento" placeholder="Ingrese DNI (8 dígitos)" readonly [maxlength]="8">
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Nombres</mat-label>
           <input matInput formControlName="nombres" placeholder="Ingrese nombres">
+          <mat-error *ngIf="editForm.get('nombres')?.hasError('required')">
+            Los nombres son obligatorios.
+          </mat-error>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Apellido Paterno</mat-label>
           <input matInput formControlName="apellidoPaterno" placeholder="Ingrese apellido paterno">
+          <mat-error *ngIf="editForm.get('apellidoPaterno')?.hasError('required')">
+            El apellido paterno es obligatorio.
+          </mat-error>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Apellido Materno</mat-label>
           <input matInput formControlName="apellidoMaterno" placeholder="Ingrese apellido materno">
+          <mat-error *ngIf="editForm.get('apellidoMaterno')?.hasError('required')">
+            El apellido materno es obligatorio.
+          </mat-error>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Género</mat-label>
           <mat-select formControlName="genero">
             <mat-option *ngFor="let gender of genders" [value]="gender">{{ gender }}</mat-option>
           </mat-select>
+          <mat-error *ngIf="editForm.get('genero')?.hasError('required')">
+            El género es obligatorio.
+          </mat-error>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Teléfono</mat-label>
-          <input matInput formControlName="telefono" placeholder="Ingrese teléfono (9 dígitos)">
+          <input matInput formControlName="telefono" placeholder="Ingrese teléfono (9 dígitos)" [maxlength]="9">
+          <mat-error *ngIf="editForm.get('telefono')?.hasError('required')">
+            El teléfono es obligatorio.
+          </mat-error>
+          <mat-error *ngIf="editForm.get('telefono')?.hasError('minlength') || editForm.get('telefono')?.hasError('maxlength')">
+            El teléfono debe tener exactamente 9 dígitos.
+          </mat-error>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Fecha de Nacimiento</mat-label>
           <input matInput [matDatepicker]="picker" formControlName="fechaNacimiento" (click)="openCalendar()">
           <mat-datepicker-toggle matIconSuffix [for]="picker" (click)="openCalendar(); $event.stopPropagation()"></mat-datepicker-toggle>
           <mat-datepicker #picker></mat-datepicker>
+          <mat-error *ngIf="editForm.get('fechaNacimiento')?.hasError('required')">
+            La fecha de nacimiento es obligatoria.
+          </mat-error>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Dirección</mat-label>
           <input matInput formControlName="direccion" placeholder="Ingrese dirección">
+          <mat-error *ngIf="editForm.get('direccion')?.hasError('required')">
+            La dirección es obligatoria.
+          </mat-error>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Estado</mat-label>
@@ -47,14 +71,23 @@
             <mat-option value="Activo">Activo</mat-option>
             <mat-option value="Inactivo">Inactivo</mat-option>
           </mat-select>
+          <mat-error *ngIf="editForm.get('estado')?.hasError('required')">
+            El estado es obligatorio.
+          </mat-error>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>ID Salón</mat-label>
           <input matInput formControlName="idSalon" type="number" placeholder="Ingrese ID del salón">
+          <mat-error *ngIf="editForm.get('idSalon')?.hasError('required')">
+            El ID del salón es obligatorio.
+          </mat-error>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>ID Apoderado</mat-label>
           <input matInput formControlName="idApoderado" type="number" placeholder="Ingrese ID del apoderado">
+          <mat-error *ngIf="editForm.get('idApoderado')?.hasError('required')">
+            El ID del apoderado es obligatorio.
+          </mat-error>
         </mat-form-field>
       </div>
     </div>
