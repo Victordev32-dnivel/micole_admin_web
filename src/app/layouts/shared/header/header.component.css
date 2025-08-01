@@ -2,12 +2,12 @@
   width: 100%;
   background: #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 20px 20px; /* Aumentado de 10px */
-  position: absolute; /* Cambiado de fixed a absolute para estar detrás del sidebar */
+  padding: 15px 15px;
+  position: absolute;
   top: 0;
   left: 0;
-  z-index: 500; /* Menor que el sidebar para estar detrás */
-  height: 80px; /* Aumentado de altura implícita */
+  z-index: 500;
+  height: 60px; /* Reducido para pantallas pequeñas */
 }
 
 .header-content {
@@ -25,14 +25,14 @@
 }
 
 .logo-image {
-  width: 40px; /* Tamaño del logo, ajústalo según tu imagen */
-  height: 40px;
+  width: 30px; /* Reducido para pantallas pequeñas */
+  height: 30px;
 }
 
 .header-user {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .user-info {
@@ -42,11 +42,33 @@
 }
 
 .user-info span {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: #333;
 }
 
 .header-user i {
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: #6c757d;
+}
+
+/* Media Query para responsive */
+@media (max-width: 767px) {
+  .header {
+    display: flex;
+    height: 50px; /* Más pequeño en móvil */
+    padding: 10px;
+  }
+
+  .logo-image {
+    width: 25px;
+    height: 25px;
+  }
+
+  .user-info span {
+    font-size: 0.8rem;
+  }
+
+  .header-user i {
+    font-size: 0.9rem;
+  }
 }

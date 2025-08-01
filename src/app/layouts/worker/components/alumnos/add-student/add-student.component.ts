@@ -36,6 +36,7 @@ import {
   HttpHeaders,
 } from '@angular/common/http';
 import { UserService } from '../../../../../services/UserData';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 export const MY_DATE_FORMATS = {
   parse: { dateInput: 'DD/MM/YYYY' },
@@ -61,6 +62,7 @@ export const MY_DATE_FORMATS = {
     MatDatepickerModule,
     MatNativeDateModule,
     HttpClientModule,
+    MatSnackBarModule,
   ],
   providers: [
     { provide: DateAdapter, useClass: NativeDateAdapter },
@@ -84,7 +86,8 @@ export class AddStudentComponent implements AfterViewInit {
     private fb: FormBuilder,
     private http: HttpClient,
     private userService: UserService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private snackBar: MatSnackBar
   ) {
     this.addForm = this.fb.group({
       numeroDocumento: [
@@ -121,40 +124,90 @@ export class AddStudentComponent implements AfterViewInit {
 
   onSave(): void {
     if (this.addForm.valid) {
-      const headers = this.getHeaders();
+      const formValue = this.addForm.value;
       const payload = {
-        numeroDocumento: this.addForm.value.numeroDocumento,
-        nombres: this.addForm.value.nombres,
-        apellidoPaterno: this.addForm.value.apellidoPaterno,
-        apellidoMaterno: this.addForm.value.apellidoMaterno,
+        numeroDocumento: formValue.numeroDocumento,
+        nombres: formValue.nombres,
+        apellidoPaterno: formValue.apellidoPaterno,
+        apellidoMaterno: formValue.apellidoMaterno,
         genero:
-          this.addForm.value.genero === 'Masculino'
+          formValue.genero === 'Masculino'
             ? 'm'
-            : this.addForm.value.genero === 'Femenino'
+            : formValue.genero === 'Femenino'
             ? 'f'
             : 'o',
-        telefono: this.addForm.value.telefono,
-        fechaNacimiento: this.addForm.value.fechaNacimiento,
-        direccion: this.addForm.value.direccion,
-        estado: this.addForm.value.estado,
-        idApoderado: this.addForm.value.idApoderado,
-        idSalon: this.addForm.value.idSalon,
-        idColegio: this.addForm.value.idColegio,
+        telefono: formValue.telefono,
+        fechaNacimiento: this.formatDate(formValue.fechaNacimiento),
+        direccion: formValue.direccion,
+        estado: formValue.estado,
+        idApoderado: +formValue.idApoderado,
+        idSalon: +formValue.idSalon,
+        idColegio: +formValue.idColegio,
       };
 
-      this.http
-        .post<any>(`${this.apiUrl}/${this.data.colegioId}`, payload, {
-          headers,
-        })
-        .subscribe({
-          next: (response) => {
-            console.log('Alumno agregado:', response);
-            this.dialogRef.close(this.addForm.value);
-          },
-          error: (error) => {
-            console.error('Error al agregar alumno:', error);
-          },
-        });
+      console.log('Payload enviado al POST:', payload);
+      const headers = this.getHeaders();
+      this.http.post<any>(this.apiUrl, payload, { headers }).subscribe({
+        next: (response) => {
+          console.log('Alumno agregado:', response);
+          this.snackBar.open('Alumno agregado exitosamente!', 'Cerrar', {
+            duration: 5000,
+            verticalPosition: 'top',
+            horizontalPosition: 'center',
+          });
+          this.dialogRef.close(payload);
+        },
+        error: (error) => {
+          console.error('Error al agregar alumno:', error);
+          if (error.status === 400) {
+            const errorMessage =
+              error.error?.message || error.error || 'Error desconocido';
+            if (errorMessage.includes('Este Dni ya existe')) {
+              this.snackBar.open(
+                'El DNI ya está registrado. Por favor, usa otro.',
+                'Cerrar',
+                {
+                  duration: 5000,
+                  verticalPosition: 'top',
+                  horizontalPosition: 'center',
+                }
+              );
+            } else {
+              this.snackBar.open(
+                'Error al agregar alumno: ' + errorMessage,
+                'Cerrar',
+                {
+                  duration: 5000,
+                  verticalPosition: 'top',
+                  horizontalPosition: 'center',
+                }
+              );
+            }
+          } else if (error.status === 401) {
+            this.snackBar.open(
+              'Token no válido. Inicia sesión nuevamente.',
+              'Cerrar',
+              {
+                duration: 5000,
+                verticalPosition: 'top',
+                horizontalPosition: 'center',
+              }
+            );
+          } else {
+            this.snackBar.open(
+              'Error inesperado. Intenta de nuevo.',
+              'Cerrar',
+              {
+                duration: 5000,
+                verticalPosition: 'top',
+                horizontalPosition: 'center',
+              }
+            );
+          }
+        },
+      });
+    } else {
+      console.log('Formulario inválido:', this.addForm.errors);
     }
   }
 
@@ -169,5 +222,12 @@ export class AddStudentComponent implements AfterViewInit {
     } else {
       console.error('Datepicker no encontrado');
     }
+  }
+
+  private formatDate(date: Date): string {
+    if (date instanceof Date) {
+      return date.toISOString();
+    }
+    return new Date(date).toISOString();
   }
 }

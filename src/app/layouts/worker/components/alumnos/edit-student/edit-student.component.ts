@@ -77,9 +77,11 @@ export class StudentEditComponent implements AfterViewInit {
   loading: boolean = false;
   error: string | null = null;
   genders = ['Masculino', 'Femenino', 'Otro'];
-  relationships = ['Padre', 'Madre', 'Tutor Legal'];
-  private apiUrl = 'https://proy-back-dnivel.onrender.com/api/alumno/colegio';
+  states = ['Activo', 'Inactivo'];
+  private apiUrl = 'https://proy-back-dnivel.onrender.com/api/alumno';
   private staticToken = '732612882';
+  isFormChanged: boolean = false;
+  initialNumeroDocumento: string = '';
 
   @ViewChild('picker') datepicker: MatDatepicker<Date> | undefined;
 
@@ -96,7 +98,7 @@ export class StudentEditComponent implements AfterViewInit {
     this.studentData = data;
     this.editForm = this.fb.group({
       numeroDocumento: [
-        { value: this.data.numero_documento, disabled: true },
+        { value: '', disabled: true },
         [Validators.required, Validators.pattern('^[0-9]{8}$')],
       ],
       nombres: ['', Validators.required],
@@ -110,14 +112,21 @@ export class StudentEditComponent implements AfterViewInit {
       idSalon: ['', Validators.required],
       idApoderado: ['', Validators.required],
     });
+
+    // Suscribirse a cambios en el formulario
+    this.editForm.valueChanges.subscribe(() => {
+      this.checkFormChanges();
+    });
+
+    // Cargar datos iniciales al abrir el diálogo
+    if (data && data.id) {
+      this.loadInitialData();
+    }
   }
 
   ngAfterViewInit(): void {
     if (isPlatformBrowser(this.platformId) && !this.datepicker) {
       console.warn('Datepicker no inicializado en ngAfterViewInit');
-    }
-    if (isPlatformBrowser(this.platformId)) {
-      this.loadStudentData();
     }
   }
 
@@ -129,70 +138,119 @@ export class StudentEditComponent implements AfterViewInit {
     });
   }
 
-  loadStudentData() {
+  private loadInitialData() {
     this.loading = true;
-    const headers = this.getHeaders();
-    this.http
-      .get<any>(
-        `${this.apiUrl}/${this.data.colegioId}/${this.data.numero_documento}`,
-        { headers }
-      )
-      .subscribe({
-        next: (response) => {
-          this.ngZone.run(() => {
-            const { apoderado, ...student } = response;
-            this.editForm.patchValue({
-              numeroDocumento: student.numeroDocumento,
-              nombres: student.nombres,
-              apellidoPaterno: student.apellidoPaterno,
-              apellidoMaterno: student.apellidoMaterno,
-              genero:
-                student.genero === 'm'
-                  ? 'Masculino'
-                  : student.genero === 'f'
-                  ? 'Femenino'
-                  : 'Otro',
-              telefono: student.telefono,
-              fechaNacimiento: student.fechaNacimiento,
-              direccion: student.direccion,
-              estado: student.estado,
-              idSalon: student.idSalon,
-              idApoderado: student.idApoderado,
-            });
-            console.log('Datos cargados para edición:', response);
-            this.loading = false;
-            this.cdr.detectChanges();
+    const studentId = Number(this.data.id);
+    if (isNaN(studentId)) {
+      this.error = 'ID inválido';
+      this.loading = false;
+      this.cdr.detectChanges();
+      return;
+    }
+    const url = `${this.apiUrl}/${studentId}`;
+    console.log('URL de la petición GET:', url);
+    this.http.get<any>(url, { headers: this.getHeaders() }).subscribe({
+      next: (response) => {
+        this.ngZone.run(() => {
+          const student = response;
+          this.initialNumeroDocumento = student.numeroDocumento; // Guardar el valor inicial
+          this.editForm.patchValue({
+            numeroDocumento: student.numeroDocumento,
+            nombres: student.nombres,
+            apellidoPaterno: student.apellidoPaterno,
+            apellidoMaterno: student.apellidoMaterno,
+            genero:
+              student.genero === 'm'
+                ? 'Masculino'
+                : student.genero === 'f'
+                ? 'Femenino'
+                : 'Otro',
+            telefono: student.telefono,
+            fechaNacimiento: student.fechaNacimiento
+              ? new Date(student.fechaNacimiento)
+              : null,
+            direccion: student.direccion || '',
+            estado: student.estado === 'activo' ? 'Activo' : 'Inactivo',
+            idSalon: student.idSalon,
+            idApoderado: student.idApoderado,
           });
-        },
-        error: (error) => {
-          console.error('Error al cargar datos del alumno:', error);
-          this.error = 'Error al cargar datos';
+          this.isFormChanged = false;
+          console.log('Datos cargados para edición:', student);
           this.loading = false;
           this.cdr.detectChanges();
-        },
-      });
+        });
+      },
+      error: (error) => {
+        console.error('Error al cargar datos del alumno:', error);
+        this.error = 'Error al cargar datos del alumno';
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private checkFormChanges() {
+    if (this.editForm.valid) {
+      const currentValues = this.editForm.value;
+      const initialValues = {
+        numeroDocumento: this.studentData?.numeroDocumento || '',
+        nombres: this.studentData?.nombres || '',
+        apellidoPaterno: this.studentData?.apellidoPaterno || '',
+        apellidoMaterno: this.studentData?.apellidoMaterno || '',
+        genero:
+          this.studentData?.genero === 'm'
+            ? 'Masculino'
+            : this.studentData?.genero === 'f'
+            ? 'Femenino'
+            : 'Otro',
+        telefono: this.studentData?.telefono || '',
+        fechaNacimiento: this.studentData?.fechaNacimiento
+          ? new Date(this.studentData.fechaNacimiento)
+          : null,
+        direccion: this.studentData?.direccion || '',
+        estado: this.studentData?.estado === 'activo' ? 'Activo' : 'Inactivo',
+        idSalon: this.studentData?.idSalon || '',
+        idApoderado: this.studentData?.idApoderado || '',
+      };
+      this.isFormChanged = !this.deepEqual(currentValues, initialValues);
+    } else {
+      this.isFormChanged = false;
+    }
+    this.cdr.detectChanges();
+  }
+
+  private deepEqual(obj1: any, obj2: any): boolean {
+    return JSON.stringify(obj1) === JSON.stringify(obj2);
   }
 
   onSave(): void {
-    if (this.editForm.valid) {
+    if (this.editForm.valid && this.isFormChanged) {
       this.loading = true;
       const editData = {
-        ...this.editForm.value,
+        numeroDocumento: this.initialNumeroDocumento, // Usar el valor inicial guardado
+        nombres: this.editForm.value.nombres,
+        apellidoPaterno: this.editForm.value.apellidoPaterno,
+        apellidoMaterno: this.editForm.value.apellidoMaterno,
         genero:
           this.editForm.value.genero === 'Masculino'
             ? 'm'
             : this.editForm.value.genero === 'Femenino'
             ? 'f'
             : 'o',
-        colegioId: this.data.colegioId,
+        telefono: this.editForm.value.telefono,
+        fechaNacimiento: this.formatDate(this.editForm.value.fechaNacimiento),
+        direccion: this.editForm.value.direccion,
+        estado: this.editForm.value.estado,
+        idApoderado: +this.editForm.value.idApoderado,
+        idSalon: +this.editForm.value.idSalon,
+        idColegio: this.data.colegioId || 0,
       };
-      const headers = this.getHeaders();
+      console.log('Payload enviado al PUT:', editData); // Depuración
+      const studentId = Number(this.data.id);
+      const url = `${this.apiUrl}/${studentId}`;
+      console.log('URL de la petición PUT:', url);
       this.http
-        .put<any>(
-          `${this.apiUrl}/${this.data.colegioId}/${this.data.numero_documento}`,
-          editData,
-          { headers }
-        )
+        .put<any>(url, editData, { headers: this.getHeaders() })
         .subscribe({
           next: (response) => {
             this.ngZone.run(() => {
@@ -223,5 +281,12 @@ export class StudentEditComponent implements AfterViewInit {
     } else {
       console.error('Datepicker no encontrado');
     }
+  }
+
+  private formatDate(date: Date | null): string {
+    if (date instanceof Date && !isNaN(date.getTime())) {
+      return date.toISOString();
+    }
+    return '';
   }
 }

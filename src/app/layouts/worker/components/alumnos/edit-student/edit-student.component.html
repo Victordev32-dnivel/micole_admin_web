@@ -44,8 +44,8 @@
         <mat-form-field appearance="outline">
           <mat-label>Estado</mat-label>
           <mat-select formControlName="estado">
-            <mat-option value="activo">Activo</mat-option>
-            <mat-option value="inactivo">Inactivo</mat-option>
+            <mat-option value="Activo">Activo</mat-option>
+            <mat-option value="Inactivo">Inactivo</mat-option>
           </mat-select>
         </mat-form-field>
         <mat-form-field appearance="outline">
@@ -64,5 +64,5 @@
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">Cancelar</button>
-  <button mat-button (click)="onSave()" [disabled]="loading || !editForm.valid">Guardar</button>
+  <button mat-button (click)="onSave()" [disabled]="loading || !editForm.valid || !isFormChanged">Guardar</button>
 </mat-dialog-actions>
