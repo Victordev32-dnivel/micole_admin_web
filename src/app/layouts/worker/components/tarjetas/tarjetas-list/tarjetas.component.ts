@@ -12,6 +12,7 @@ import {
   FormGroup,
   Validators,
   ReactiveFormsModule,
+  FormsModule,
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
@@ -22,12 +23,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import {
   HttpClient,
   HttpClientModule,
   HttpHeaders,
 } from '@angular/common/http';
-import { UserService } from '../../../../services/UserData';
+import { TarjetasModalComponent } from '../tarjetas-modal/tarjetas-modal.component';
+import { UserService } from '../../../../../services/UserData';
 
 @Component({
   selector: 'app-tarjetas',
@@ -35,6 +38,7 @@ import { UserService } from '../../../../services/UserData';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
@@ -44,6 +48,7 @@ import { UserService } from '../../../../services/UserData';
     MatProgressSpinnerModule,
     MatTableModule,
     HttpClientModule,
+    MatDialogModule,
   ],
   templateUrl: './tarjetas.component.html',
   styleUrls: ['./tarjetas.component.css'],
@@ -56,10 +61,17 @@ export class TarjetasComponent implements OnInit {
   error: string | null = null;
   successMessage: string | null = null;
   colegioId: number = 0;
-  private apiUrl = 'https://proy-back-dnivel.onrender.com/api/salon/colegio';
+  private apiUrlSalon =
+    'https://proy-back-dnivel.onrender.com/api/salon/colegio';
+  private apiUrlAlumno =
+    'https://proy-back-dnivel.onrender.com/api/alumno/tarjeta';
   private staticToken = '732612882';
 
-  displayedColumns: string[] = ['nombre', 'acciones'];
+  displayedColumns: string[] = ['nombre', 'tarjeta', 'acciones'];
+  currentPage: number = 1;
+  totalPages: number = 0;
+  pageNumbers: number[] = [];
+  pageSize: number = 200;
 
   constructor(
     private fb: FormBuilder,
@@ -67,10 +79,10 @@ export class TarjetasComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
     private userService: UserService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private dialog: MatDialog
   ) {
     this.tarjetaForm = this.fb.group({
-      rfid: ['', [Validators.required, Validators.pattern('^[0-9]{7}$')]],
       idSalon: ['', Validators.required],
     });
   }
@@ -91,6 +103,7 @@ export class TarjetasComponent implements OnInit {
     this.userService.userData$.subscribe((userData) => {
       if (userData) {
         this.colegioId = userData.colegio;
+        this.loadSalones();
         this.cdr.detectChanges();
       }
     });
@@ -119,7 +132,9 @@ export class TarjetasComponent implements OnInit {
     this.successMessage = null;
     const headers = this.getHeaders();
     this.http
-      .get<any>(`${this.apiUrl}/${this.colegioId}?page=1`, { headers })
+      .get<any>(`${this.apiUrlSalon}/${this.colegioId}?page=1&pageSize=200`, {
+        headers,
+      })
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
@@ -141,15 +156,15 @@ export class TarjetasComponent implements OnInit {
       });
   }
 
-  onSalonChange() {
-    const salonId = this.tarjetaForm.get('idSalon')?.value;
+  onSalonChange(salonId: number) {
+    this.alumnos = [];
+    this.totalPages = 0;
+    this.pageNumbers = [];
+    this.currentPage = 1;
     if (salonId) {
       this.loadAlumnos(salonId);
-    } else {
-      this.alumnos = [];
-      this.error = null;
-      this.cdr.detectChanges();
     }
+    this.cdr.detectChanges();
   }
 
   loadAlumnos(salonId: number) {
@@ -159,11 +174,19 @@ export class TarjetasComponent implements OnInit {
     this.alumnos = [];
     const headers = this.getHeaders();
     this.http
-      .get<any>(`${this.apiUrl}/${salonId}?page=1`, { headers })
+      .get<any>(
+        `${this.apiUrlAlumno}/${salonId}?page=${this.currentPage}&pageSize=${this.pageSize}`,
+        { headers }
+      )
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-            this.alumnos = response.data || [];
+            this.alumnos = response.alumnos || [];
+            this.totalPages = response.totalPages || 1;
+            this.pageNumbers = Array.from(
+              { length: this.totalPages },
+              (_, i) => i + 1
+            );
             console.log('Alumnos cargados:', this.alumnos);
             this.loading = false;
             if (this.alumnos.length === 0) {
@@ -181,13 +204,31 @@ export class TarjetasComponent implements OnInit {
       });
   }
 
+  openRfidModal(alumnoId: number, currentRfid: number | null) {
+    const dialogRef = this.dialog.open(TarjetasModalComponent, {
+      width: '1000px',
+      maxHeight: '90vh',
+      disableClose: false,
+      data: { alumnoId, currentRfid, colegioId: this.colegioId },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.successMessage = `Tarjeta ${
+          currentRfid ? 'actualizada' : 'asignada'
+        } con éxito`;
+        this.loadAlumnos(this.tarjetaForm.get('idSalon')?.value);
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
   onSubmit(): void {
     if (this.tarjetaForm.valid) {
       this.successMessage = 'Formulario válido. Selección guardada';
       this.error = null;
       this.cdr.detectChanges();
       console.log('Formulario enviado:', this.tarjetaForm.value);
-      // Aquí se implementará la lógica para asignar la tarjeta RFID
     } else {
       this.error = 'Por favor, complete correctamente todos los campos';
       this.successMessage = null;

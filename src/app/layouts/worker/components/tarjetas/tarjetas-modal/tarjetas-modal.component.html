@@ -1,0 +1,15 @@
+<h2 mat-dialog-title>{{ modalTitle }}</h2>
+<mat-dialog-content class="modal-content">
+  <div class="form-container">
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>RFID</mat-label>
+      <input matInput [(ngModel)]="rfidInput" placeholder="Ingrese RFID (7 dígitos)" required>
+      <mat-error *ngIf="rfidError">Debe ser un número de 7 dígitos</mat-error>
+    </mat-form-field>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions class="modal-actions">
+  <button mat-button (click)="confirmRfid()" [disabled]="isRfidInvalid() || loading">
+    <mat-icon>save</mat-icon> Guardar
+  </button>
+</mat-dialog-actions>
