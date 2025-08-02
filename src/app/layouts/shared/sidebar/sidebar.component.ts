@@ -32,7 +32,7 @@ import { MatButtonModule } from '@angular/material/button';
       <div class="sidebar" [class.open]="isSidebarOpen">
         <div class="sidebar-header">
           <img src="assets/Logo-Appsistencia.png" alt="Logo" class="logo" />
-          <h1>APPSISTENCIA</h1>
+          <h1>MICOLE</h1>
         </div>
         <nav class="sidebar-nav">
           <ul>

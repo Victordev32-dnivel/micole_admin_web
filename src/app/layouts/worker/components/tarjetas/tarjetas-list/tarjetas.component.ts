@@ -70,8 +70,9 @@ export class TarjetasComponent implements OnInit {
   displayedColumns: string[] = ['nombre', 'tarjeta', 'acciones'];
   currentPage: number = 1;
   totalPages: number = 0;
+  totalAlumnos: number = 0;
   pageNumbers: number[] = [];
-  pageSize: number = 200;
+  pageSize: number = 20; // Cambiado a 20 para mejor paginación
 
   constructor(
     private fb: FormBuilder,
@@ -157,21 +158,30 @@ export class TarjetasComponent implements OnInit {
   }
 
   onSalonChange(salonId: number) {
-    this.alumnos = [];
-    this.totalPages = 0;
-    this.pageNumbers = [];
-    this.currentPage = 1;
+    this.resetPagination();
     if (salonId) {
       this.loadAlumnos(salonId);
     }
     this.cdr.detectChanges();
   }
 
-  loadAlumnos(salonId: number) {
+  private resetPagination() {
+    this.alumnos = [];
+    this.totalPages = 0;
+    this.totalAlumnos = 0;
+    this.pageNumbers = [];
+    this.currentPage = 1;
+  }
+
+  loadAlumnos(salonId: number, page: number = 1) {
     this.loading = true;
     this.error = null;
     this.successMessage = null;
-    this.alumnos = [];
+    
+    if (page !== this.currentPage) {
+      this.currentPage = page;
+    }
+
     const headers = this.getHeaders();
     this.http
       .get<any>(
@@ -183,11 +193,17 @@ export class TarjetasComponent implements OnInit {
           this.ngZone.run(() => {
             this.alumnos = response.alumnos || [];
             this.totalPages = response.totalPages || 1;
+            this.totalAlumnos = response.totalAlumnos || 0;
             this.pageNumbers = Array.from(
               { length: this.totalPages },
               (_, i) => i + 1
             );
-            console.log('Alumnos cargados:', this.alumnos);
+            console.log('Alumnos cargados:', {
+              alumnos: this.alumnos,
+              página: this.currentPage,
+              totalPáginas: this.totalPages,
+              totalAlumnos: this.totalAlumnos
+            });
             this.loading = false;
             if (this.alumnos.length === 0) {
               this.error = 'No se encontraron alumnos en este salón';
@@ -204,6 +220,47 @@ export class TarjetasComponent implements OnInit {
       });
   }
 
+  // Métodos de paginación
+  changePage(page: number) {
+    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
+      const salonId = this.tarjetaForm.get('idSalon')?.value;
+      if (salonId) {
+        this.loadAlumnos(salonId, page);
+      }
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.changePage(this.currentPage - 1);
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.changePage(this.currentPage + 1);
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    const halfVisible = Math.floor(maxVisiblePages / 2);
+    
+    let startPage = Math.max(1, this.currentPage - halfVisible);
+    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
+  }
+
   openRfidModal(alumnoId: number, currentRfid: number | null) {
     const dialogRef = this.dialog.open(TarjetasModalComponent, {
       width: '1000px',
@@ -217,7 +274,10 @@ export class TarjetasComponent implements OnInit {
         this.successMessage = `Tarjeta ${
           currentRfid ? 'actualizada' : 'asignada'
         } con éxito`;
-        this.loadAlumnos(this.tarjetaForm.get('idSalon')?.value);
+        const salonId = this.tarjetaForm.get('idSalon')?.value;
+        if (salonId) {
+          this.loadAlumnos(salonId, this.currentPage);
+        }
       }
       this.cdr.detectChanges();
     });

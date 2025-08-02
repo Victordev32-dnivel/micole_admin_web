@@ -127,17 +127,44 @@ export class StudentListComponent implements OnInit {
 
     this.loading = true;
     const headers = this.getHeaders();
+    
+    // Primero obtenemos la información de paginación si no la tenemos
+    if (this.totalPages === 1) {
+      this.http
+        .get<any>(`${this.apiUrl}/${this.colegioId}?page=1`, { headers })
+        .subscribe({
+          next: (response) => {
+            this.totalPages = response.totalPages;
+            this.totalAlumnos = response.totalAlumnos;
+            // Ahora cargamos la página correcta (invertida)
+            this.loadReversedPage(page);
+          },
+          error: (error) => {
+            console.error('Error al obtener información de paginación:', error);
+            this.loading = false;
+          },
+        });
+    } else {
+      this.loadReversedPage(page);
+    }
+  }
+
+  private loadReversedPage(userPage: number) {
+    const headers = this.getHeaders();
+    // Calcular la página real de la API (invertida)
+    const realApiPage = this.totalPages - userPage + 1;
+    
     this.http
-      .get<any>(`${this.apiUrl}/${this.colegioId}?page=${page}`, { headers })
+      .get<any>(`${this.apiUrl}/${this.colegioId}?page=${realApiPage}`, { headers })
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-            this.students = response.data;
+            // Invertir el array de la página para mostrar los más recientes primero
+            this.students = response.data.reverse();
             this.filteredStudents = [...this.students];
-            this.currentPage = response.page;
-            this.totalPages = response.totalPages;
-            this.totalAlumnos = response.totalAlumnos;
-            console.log('Datos cargados:', this.filteredStudents);
+            this.currentPage = userPage; // Mostrar la página que el usuario espera ver
+            console.log(`Página mostrada: ${userPage}, Página API real: ${realApiPage}`);
+            console.log('Datos cargados (últimos primero):', this.filteredStudents);
             this.loading = false;
             this.cdr.detectChanges();
           });

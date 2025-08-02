@@ -4,8 +4,9 @@
       <mat-card-title>
         <mat-icon>credit_card</mat-icon> Gestión de Tarjetas
       </mat-card-title>
-      <mat-card-subtitle>Seleccione un salón para cargar hasta 200 alumnos</mat-card-subtitle>
+      <mat-card-subtitle>Seleccione un salón para gestionar las tarjetas de los alumnos</mat-card-subtitle>
     </mat-card-header>
+    
     <mat-card-content>
       <form [formGroup]="tarjetaForm" class="tarjetas-form">
         <mat-form-field appearance="outline" class="form-field">
@@ -24,34 +25,123 @@
           </mat-error>
         </mat-form-field>
       </form>
+
+      <!-- Información de paginación -->
+      <div *ngIf="alumnos.length > 0" class="pagination-info">
+        <p>Mostrando {{ alumnos.length }} de {{ totalAlumnos }} alumnos - Página {{ currentPage }} de {{ totalPages }}</p>
+      </div>
+
+      <!-- Tabla de alumnos -->
       <div *ngIf="alumnos.length > 0" class="alumnos-table-container">
         <table mat-table [dataSource]="alumnos" class="mat-elevation-z2 full-width-table">
           <ng-container matColumnDef="nombre">
             <th mat-header-cell *matHeaderCellDef> Nombre </th>
             <td mat-cell *matCellDef="let alumno"> {{ alumno.nombre || 'Sin nombre' }} </td>
           </ng-container>
+
           <ng-container matColumnDef="tarjeta">
             <th mat-header-cell *matHeaderCellDef> Tarjeta RFID </th>
-            <td mat-cell *matCellDef="let alumno"> {{ alumno.tarjeta || 'No asignada' }} </td>
+            <td mat-cell *matCellDef="let alumno"> 
+              <span [class]="alumno.tarjeta ? 'tarjeta-asignada' : 'tarjeta-sin-asignar'">
+                {{ alumno.tarjeta || 'No asignada' }}
+              </span>
+            </td>
           </ng-container>
+
           <ng-container matColumnDef="acciones">
             <th mat-header-cell *matHeaderCellDef> Acciones </th>
             <td mat-cell *matCellDef="let alumno">
-              <button mat-button color="primary" (click)="openRfidModal(alumno.id, alumno.tarjeta)" [disabled]="loading">
+              <button 
+                mat-button 
+                color="primary" 
+                (click)="openRfidModal(alumno.id, alumno.tarjeta)" 
+                [disabled]="loading"
+                class="action-button">
+                <mat-icon>{{ alumno.tarjeta ? 'edit' : 'add' }}</mat-icon>
                 {{ alumno.tarjeta ? 'Actualizar' : 'Asignar' }}
               </button>
             </td>
           </ng-container>
+
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
         </table>
       </div>
+
+      <!-- Controles de paginación -->
+      <div *ngIf="totalPages > 1" class="pagination-controls">
+        <div class="pagination-buttons">
+          <!-- Botón Anterior -->
+          <button 
+            mat-button 
+            [disabled]="currentPage === 1 || loading" 
+            (click)="previousPage()"
+            class="pagination-nav-btn">
+            <mat-icon>chevron_left</mat-icon>
+            Anterior
+          </button>
+
+          <!-- Números de página -->
+          <div class="page-numbers">
+            <!-- Primera página si no está visible -->
+            <button 
+              *ngIf="getPageNumbers()[0] > 1"
+              mat-button
+              (click)="changePage(1)"
+              [disabled]="loading"
+              class="page-btn">
+              1
+            </button>
+            
+            <!-- Puntos suspensivos -->
+            <span *ngIf="getPageNumbers()[0] > 2" class="page-dots">...</span>
+
+            <!-- Páginas visibles -->
+            <button 
+              *ngFor="let page of getPageNumbers()"
+              mat-button
+              [class.active]="page === currentPage"
+              (click)="changePage(page)"
+              [disabled]="loading"
+              class="page-btn">
+              {{ page }}
+            </button>
+
+            <!-- Puntos suspensivos -->
+            <span *ngIf="getPageNumbers()[getPageNumbers().length - 1] < totalPages - 1" class="page-dots">...</span>
+
+            <!-- Última página si no está visible -->
+            <button 
+              *ngIf="getPageNumbers()[getPageNumbers().length - 1] < totalPages"
+              mat-button
+              (click)="changePage(totalPages)"
+              [disabled]="loading"
+              class="page-btn">
+              {{ totalPages }}
+            </button>
+          </div>
+
+          <!-- Botón Siguiente -->
+          <button 
+            mat-button 
+            [disabled]="currentPage === totalPages || loading" 
+            (click)="nextPage()"
+            class="pagination-nav-btn">
+            Siguiente
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Estados de carga y mensajes -->
       <div *ngIf="loading" class="loading">
         <mat-spinner diameter="24"></mat-spinner> Cargando datos...
       </div>
+
       <div *ngIf="error" class="error">
         <mat-icon>error_outline</mat-icon> {{ error }}
       </div>
+
       <div *ngIf="successMessage" class="success">
         <mat-icon>check_circle</mat-icon> {{ successMessage }}
       </div>
