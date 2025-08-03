@@ -1,15 +1,10 @@
 {
-  "version": 2,
   "builds": [
     {
-      "src": "dist/appsistencia/browser/index.html",
+      "src": "dist/appsistencia/browser/**/*",
       "use": "@vercel/static"
     }
   ],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
+  "outputDirectory": "dist/appsistencia/browser"
 }
+
