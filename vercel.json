@@ -1,10 +1,10 @@
 {
   "builds": [
     {
-      "src": "dist/appsistencia/browser/**",
+      "src": "dist/appsistencia/**",
       "use": "@vercel/static"
     }
   ],
-  "outputDirectory": "dist/appsistencia/browser"
+  "outputDirectory": "dist/appsistencia"
 }
 
