@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "dist/appsistencia/index.html",
+      "src": "dist/appsistencia/browser/index.html",
       "use": "@vercel/static"
     }
   ],
