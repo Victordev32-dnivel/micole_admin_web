@@ -1,11 +1,11 @@
 {
   "builds": [
     {
-      "src": "dist/appsistencia/**",
+      "src": "dist/appsistencia/browser/**",
       "use": "@vercel/static"
     }
   ],
-  "outputDirectory": "dist/appsistencia",
+  "outputDirectory": "dist/appsistencia/browser",
   "rewrites": [
     {
       "source": "/(.*)",
