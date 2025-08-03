@@ -1,5 +1,6 @@
 .login-container {
   background-image: none;
+  background-image: url('/assets/fondo.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
