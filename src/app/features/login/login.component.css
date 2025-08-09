@@ -1,53 +1,54 @@
 .login-container {
-  background-image: none;
   background-image: url('/assets/fondo.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
   margin: 0;
-  position: relative;
-  overflow: hidden;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .login-form {
-  padding: 60px; /* Aumentado de 40px */
+  padding: 40px;
   border-radius: 0;
   width: 100%;
-  max-width: 450px; /* Aumentado de 350px */
+  max-width: 450px;
   text-align: center;
-  position: relative;
   background: transparent;
 }
 
 .logo-container {
-  margin-bottom: 60px; /* Aumentado de 40px */
+  margin-bottom: 40px;
 }
 
 .logo {
-  max-width: 120px; /* Aumentado de 80px */
+  max-width: 100%;
   height: auto;
+  max-height: 120px;
 }
 
 .form-content {
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 .form-group {
   width: 100%;
-  margin-bottom: 25px; /* Aumentado de 15px */
+  margin-bottom: 25px;
+  max-width: 350px;
 }
 
 input {
-  width: 350px; /* Aumentado de 250px */
-  padding: 15px; /* Aumentado de 10px */
-  border: 3px solid white; /* Aumentado de 2px */
-  border-radius: 8px; /* Aumentado de 5px */
-  font-size: 20px; /* Aumentado de 16px */
+  width: 100%;
+  padding: 15px;
+  border: 3px solid white;
+  border-radius: 8px;
+  font-size: 18px;
   color: white;
   background: transparent;
   text-align: center;
@@ -57,28 +58,27 @@ input {
 input::placeholder {
   color: white;
   opacity: 0.7;
-  font-size: 18px; /* Nuevo: tamaño aumentado para placeholder */
+  font-size: 16px;
 }
 
 input:focus {
   outline: none;
   border-color: white;
-  background: transparent;
 }
 
 button {
-  width: 350px; /* Aumentado de 250px */
-  padding: 15px; /* Aumentado de 10px */
+  width: 100%;
+  max-width: 350px;
+  padding: 15px;
   background-color: white;
   color: #1e3a8a;
   border: none;
-  border-radius: 8px; /* Aumentado de 5px */
-  font-size: 20px; /* Aumentado de 16px */
+  border-radius: 8px;
+  font-size: 18px;
   font-weight: bold;
-  text-transform: none;
   cursor: pointer;
   transition: background-color 0.3s;
-  margin-top: 30px; /* Aumentado de 20px */
+  margin-top: 30px;
 }
 
 button:hover {
@@ -91,37 +91,37 @@ button:disabled {
 }
 
 .forgot-password {
-  margin-top: 20px; /* Aumentado de 10px */
+  margin-top: 20px;
   color: white;
-  font-size: 18px; /* Aumentado de 14px */
+  font-size: 16px;
   cursor: pointer;
   text-decoration: underline;
 }
 
 .error {
   color: #ff0000;
-  margin-top: 25px; /* Aumentado de 15px */
-  font-size: 16px; /* Aumentado de 12px */
+  margin-top: 25px;
+  font-size: 16px;
 }
 
 .loading {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 25px; /* Aumentado de 15px */
-  font-size: 16px; /* Aumentado de 12px */
-  color: #666;
+  margin-top: 25px;
+  font-size: 16px;
+  color: white;
 }
 
 .spinner {
   display: inline-block;
-  width: 24px; /* Aumentado de 16px */
-  height: 24px; /* Aumentado de 16px */
-  border: 3px solid rgba(0, 0, 0, 0.1); /* Aumentado de 2px */
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  border-top-color: #000;
+  border-top-color: white;
   animation: spin 1s ease-in-out infinite;
-  margin-left: 12px; /* Aumentado de 8px */
+  margin-left: 10px;
 }
 
 @keyframes spin {
@@ -130,51 +130,95 @@ button:disabled {
   }
 }
 
-.login-form::before {
-  content: none;
-}
-
-/* Nuevos estilos para el icono de visibilidad de contraseña */
-.password-toggle i {
-  font-size: 28px; /* Tamaño aumentado para el icono */
-  color: white;
-}
-.white-text {
-  color: white !important;
-}
-
-/* Contenedor del campo de contraseña */
 .password-field {
   position: relative;
 }
 
-/* Estilo para el botón de mostrar/ocultar contraseña */
 .toggle-password {
   position: absolute;
-  right: 10px;
+  right: 15px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
   color: white;
 }
 
-/* Estilo para el icono de material */
 .material-icons {
   font-size: 20px;
   color: white;
 }
 
-/* Cambiar color del placeholder a blanco */
+.white-text {
+  color: white !important;
+}
+
 ::placeholder {
   color: white !important;
   opacity: 1 !important;
 }
 
-/* Para navegadores específicos */
-:-ms-input-placeholder {
-  color: white !important;
+/* Media Queries para diferentes tamaños de pantalla */
+@media (max-width: 768px) {
+  .login-form {
+    padding: 30px;
+    max-width: 400px;
+  }
+  
+  .logo {
+    max-height: 100px;
+  }
+  
+  input, button {
+    font-size: 16px;
+    padding: 12px;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
 }
 
-::-ms-input-placeholder {
-  color: white !important;
+@media (max-width: 480px) {
+  .login-form {
+    padding: 20px;
+  }
+  
+  .logo-container {
+    margin-bottom: 30px;
+  }
+  
+  input, button {
+    font-size: 14px;
+    padding: 10px;
+  }
+  
+  input::placeholder {
+    font-size: 14px;
+  }
+  
+  button {
+    margin-top: 20px;
+  }
+  
+  .forgot-password, .error, .loading {
+    font-size: 14px;
+  }
+  
+  .toggle-password {
+    right: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .login-form {
+    padding: 15px;
+  }
+  
+  .logo {
+    max-height: 80px;
+  }
+  
+  input {
+    border-width: 2px;
+  }
 }

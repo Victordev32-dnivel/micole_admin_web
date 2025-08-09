@@ -5,6 +5,7 @@ import {
   NgZone,
   Inject,
   PLATFORM_ID,
+  HostListener,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
@@ -53,11 +54,16 @@ export class StudentListComponent implements OnInit {
   currentPage: number = 1;
   totalPages: number = 1;
   totalAlumnos: number = 0;
-  pageSize: number = 10;
+  pageSize: number = 30;
   loading: boolean = true;
   userName: string = '';
   userType: string = '';
   colegioId: number = 0;
+  
+  // Variables para paginación responsiva
+  isMobile: boolean = false;
+  visiblePages: number[] = [];
+  maxVisiblePages: number = 5;
 
   private apiUrl = 'https://proy-back-dnivel.onrender.com/api/alumno/colegio';
   private staticToken = '732612882';
@@ -77,13 +83,47 @@ export class StudentListComponent implements OnInit {
     });
   }
 
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    this.checkScreenSize();
+    this.updateVisiblePages();
+  }
+
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
+      this.checkScreenSize();
       this.loadUserData();
       this.loadStudents();
       this.searchTermControl.valueChanges.subscribe((term) => {
         this.filterStudents(term);
       });
+    }
+  }
+
+  private checkScreenSize(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.isMobile = window.innerWidth <= 767;
+      this.maxVisiblePages = this.isMobile ? 3 : 5;
+    }
+  }
+
+  private updateVisiblePages(): void {
+    if (this.totalPages <= this.maxVisiblePages) {
+      this.visiblePages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
+    } else {
+      const half = Math.floor(this.maxVisiblePages / 2);
+      let start = this.currentPage - half;
+      let end = this.currentPage + half;
+
+      if (start < 1) {
+        start = 1;
+        end = this.maxVisiblePages;
+      } else if (end > this.totalPages) {
+        end = this.totalPages;
+        start = this.totalPages - this.maxVisiblePages + 1;
+      }
+
+      this.visiblePages = Array.from({ length: end - start + 1 }, (_, i) => start + i);
     }
   }
 
@@ -128,50 +168,45 @@ export class StudentListComponent implements OnInit {
     this.loading = true;
     const headers = this.getHeaders();
     
-    // Primero obtenemos la información de paginación si no la tenemos
-    if (this.totalPages === 1) {
-      this.http
-        .get<any>(`${this.apiUrl}/${this.colegioId}?page=1`, { headers })
-        .subscribe({
-          next: (response) => {
-            this.totalPages = response.totalPages;
-            this.totalAlumnos = response.totalAlumnos;
-            // Ahora cargamos la página correcta (invertida)
-            this.loadReversedPage(page);
-          },
-          error: (error) => {
-            console.error('Error al obtener información de paginación:', error);
-            this.loading = false;
-          },
-        });
-    } else {
-      this.loadReversedPage(page);
-    }
-  }
-
-  private loadReversedPage(userPage: number) {
-    const headers = this.getHeaders();
-    // Calcular la página real de la API (invertida)
-    const realApiPage = this.totalPages - userPage + 1;
+    console.log(`Cargando página: ${page}, pageSize: ${this.pageSize}, colegioId: ${this.colegioId}`);
     
     this.http
-      .get<any>(`${this.apiUrl}/${this.colegioId}?page=${realApiPage}`, { headers })
+      .get<any>(`${this.apiUrl}/${this.colegioId}?page=${page}&limit=${this.pageSize}`, { headers })
       .subscribe({
         next: (response) => {
+          console.log('Respuesta de la API:', response);
+          console.log('Número de estudiantes recibidos:', response.data?.length || 0);
+          
           this.ngZone.run(() => {
-            // Invertir el array de la página para mostrar los más recientes primero
-            this.students = response.data.reverse();
+            // Asignar datos directamente sin invertir
+            this.students = response.data || [];
             this.filteredStudents = [...this.students];
-            this.currentPage = userPage; // Mostrar la página que el usuario espera ver
-            console.log(`Página mostrada: ${userPage}, Página API real: ${realApiPage}`);
-            console.log('Datos cargados (últimos primero):', this.filteredStudents);
+            this.currentPage = page;
+            
+            // Calcular total de páginas correctamente
+            this.totalAlumnos = response.totalAlumnos || 0;
+            this.totalPages = response.totalPages || Math.ceil(this.totalAlumnos / this.pageSize);
+            
+            // Asegurar que totalPages sea al menos 1
+            if (this.totalPages < 1) {
+              this.totalPages = 1;
+            }
+            
+            this.updateVisiblePages();
+            
+            console.log(`Página actual: ${page}, Total páginas: ${this.totalPages}, Total alumnos: ${this.totalAlumnos}`);
+            console.log('Estudiantes mostrados:', this.filteredStudents.length);
+            
             this.loading = false;
             this.cdr.detectChanges();
           });
         },
         error: (error) => {
           console.error('Error al cargar estudiantes:', error);
-          this.loading = false;
+          this.ngZone.run(() => {
+            this.loading = false;
+            this.cdr.detectChanges();
+          });
         },
       });
   }
@@ -180,19 +215,31 @@ export class StudentListComponent implements OnInit {
     this.ngZone.run(() => {
       this.loading = true;
       setTimeout(() => {
-        this.filteredStudents = this.students.filter((student) =>
-          student.nombre_completo.toLowerCase().includes(term.toLowerCase())
-        );
+        if (!term || term.trim() === '') {
+          this.filteredStudents = [...this.students];
+        } else {
+          const searchTerm = term.toLowerCase().trim();
+          this.filteredStudents = this.students.filter((student) => {
+            // Buscar por nombre completo
+            const matchesName = student.nombre_completo?.toLowerCase().includes(searchTerm);
+            // Buscar por DNI/número de documento
+            const matchesDNI = student.numero_documento?.toString().toLowerCase().includes(searchTerm);
+            
+            return matchesName || matchesDNI;
+          });
+        }
+        console.log(`Estudiantes filtrados: ${this.filteredStudents.length} de ${this.students.length} total`);
+        console.log('Término de búsqueda:', term);
         this.loading = false;
         this.cdr.detectChanges();
-      }, 0);
+      }, 100);
     });
   }
 
   openAddDialog(): void {
     const dialogRef = this.dialog.open(AddStudentComponent, {
-      width: '1000px',
-      maxWidth: '100vw',
+      width: this.isMobile ? '95vw' : '1000px',
+      maxWidth: this.isMobile ? '95vw' : '100vw',
       height: 'auto',
       panelClass: 'custom-dialog',
       data: { colegioId: this.colegioId },
@@ -200,15 +247,16 @@ export class StudentListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.loadStudents(this.currentPage);
+        // Recargar la primera página para mostrar el nuevo estudiante
+        this.loadStudents(1);
       }
     });
   }
 
   openEditDialog(student: any): void {
     const dialogRef = this.dialog.open(StudentEditComponent, {
-      width: '1000px',
-      maxWidth: '100vw',
+      width: this.isMobile ? '95vw' : '1000px',
+      maxWidth: this.isMobile ? '95vw' : '100vw',
       height: 'auto',
       panelClass: 'custom-dialog',
       data: {
@@ -227,7 +275,7 @@ export class StudentListComponent implements OnInit {
 
   confirmDelete(dni: string): void {
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '300px',
+      width: this.isMobile ? '90vw' : '300px',
       data: { message: '¿Estás seguro de eliminar este alumno?' },
     });
 
@@ -250,6 +298,7 @@ export class StudentListComponent implements OnInit {
       .subscribe({
         next: (response) => {
           console.log('Alumno eliminado exitosamente');
+          // Recargar la página actual después de eliminar
           this.loadStudents(this.currentPage);
         },
         error: (error) => {
@@ -259,14 +308,69 @@ export class StudentListComponent implements OnInit {
   }
 
   changePage(page: number) {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
+    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
+      console.log(`Cambiando a página: ${page}`);
       this.loadStudents(page);
     }
   }
 
+  // Métodos para navegación de páginas
+  goToFirstPage(): void {
+    if (this.currentPage !== 1) {
+      this.changePage(1);
+    }
+  }
+
+  goToLastPage(): void {
+    if (this.currentPage !== this.totalPages) {
+      this.changePage(this.totalPages);
+    }
+  }
+
+  goToPreviousPage(): void {
+    if (this.currentPage > 1) {
+      this.changePage(this.currentPage - 1);
+    }
+  }
+
+  goToNextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.changePage(this.currentPage + 1);
+    }
+  }
+
+  // Métodos para obtener números de página
   getPageNumbers(): number[] {
+    return this.visiblePages;
+  }
+
+  getAllPageNumbers(): number[] {
     return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  // Métodos de utilidad para la paginación
+  canGoToFirstPage(): boolean {
+    return this.currentPage > 1;
+  }
+
+  canGoToLastPage(): boolean {
+    return this.currentPage < this.totalPages;
+  }
+
+  canGoToPreviousPage(): boolean {
+    return this.currentPage > 1;
+  }
+
+  canGoToNextPage(): boolean {
+    return this.currentPage < this.totalPages;
+  }
+
+  showEllipsisBefore(): boolean {
+    return this.visiblePages.length > 0 && this.visiblePages[0] > 1;
+  }
+
+  showEllipsisAfter(): boolean {
+    return this.visiblePages.length > 0 && this.visiblePages[this.visiblePages.length - 1] < this.totalPages;
   }
 
   logout() {

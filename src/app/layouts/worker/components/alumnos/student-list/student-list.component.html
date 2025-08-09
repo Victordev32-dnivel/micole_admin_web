@@ -1,11 +1,15 @@
 <div class="student-container">
   <div class="toolbar">
     <mat-form-field appearance="outline" class="search-field">
-      <input matInput placeholder="Buscar por nombre" [formControl]="searchTermControl">
+      <input matInput placeholder="Buscar por nombre o DNI" [formControl]="searchTermControl">
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
-    <button mat-raised-button color="primary" class="add-button" [disabled]="loading" (click)="openAddDialog()">Agregar Alumno</button>
+    <button mat-raised-button color="primary" class="add-button" [disabled]="loading" (click)="openAddDialog()">
+      <mat-icon>add</mat-icon>
+      Agregar Alumno
+    </button>
   </div>
+
   <div class="student-table">
     <div class="table-header">
       <span data-label="DNI">DNI</span>
@@ -14,25 +18,117 @@
       <span data-label="TELÉFONO">TELÉFONO</span>
       <span data-label="ACCIONES">ACCIONES</span>
     </div>
+    
     <div class="table-body">
       <div *ngIf="loading" class="loading-container">
         <div class="loading">Cargando datos <span class="spinner"></span></div>
       </div>
+      
       <div class="student-row" *ngFor="let student of filteredStudents">
         <span data-label="DNI">{{ student.numero_documento }}</span>
         <span data-label="NOMBRE">{{ student.nombre_completo }}</span>
         <span data-label="CÓDIGO">{{ student.codigo }}</span>
         <span data-label="TELÉFONO">{{ student.telefono }}</span>
         <span class="actions" data-label="ACCIONES">
-          <mat-icon (click)="openEditDialog(student)" style="color: #ffcc00;">edit</mat-icon>
+          <mat-icon (click)="openEditDialog(student)" style="color: #ffcc00;" title="Editar">edit</mat-icon>
         </span>
       </div>
-      <div *ngIf="filteredStudents.length === 0 && !loading">No hay estudiantes para mostrar</div>
+      
+      <div *ngIf="filteredStudents.length === 0 && !loading" style="text-align: center; padding: 40px; color: #666;">
+        <p *ngIf="searchTermControl.value && searchTermControl.value.trim() !== ''">
+          No se encontraron estudiantes que coincidan con "<strong>{{ searchTermControl.value }}</strong>"
+        </p>
+        <p *ngIf="!searchTermControl.value || searchTermControl.value.trim() === ''">
+          No hay estudiantes para mostrar
+        </p>
+      </div>
     </div>
   </div>
-  <div class="pagination">
-    <span>Total de alumnos: {{ totalAlumnos }}</span>
-    <div class="pagination-buttons">
+
+  <!-- PAGINACIÓN RESPONSIVA MEJORADA -->
+  <div class="pagination" *ngIf="totalPages > 1">
+    <div class="pagination-info">
+      <span>Total de alumnos: {{ totalAlumnos }}</span>
+      <span>Página {{ currentPage }} de {{ totalPages }}</span>
+      <span *ngIf="searchTermControl.value && searchTermControl.value.trim() !== '' && filteredStudents.length < students.length">
+        ({{ filteredStudents.length }} coincidencias)
+      </span>
+    </div>
+
+    <div class="pagination-controls">
+      <!-- Botones de navegación para móvil -->
+      <div *ngIf="isMobile" class="pagination-controls">
+        <button class="nav-button" 
+                [disabled]="!canGoToPreviousPage() || loading" 
+                (click)="goToPreviousPage()"
+                title="Página anterior">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        
+        <span style="margin: 0 10px; font-weight: bold;">{{ currentPage }}/{{ totalPages }}</span>
+        
+        <button class="nav-button" 
+                [disabled]="!canGoToNextPage() || loading" 
+                (click)="goToNextPage()"
+                title="Página siguiente">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+
+      <!-- Paginación completa para desktop -->
+      <div *ngIf="!isMobile" class="pagination-buttons">
+        <!-- Botón primera página -->
+        <button class="nav-button" 
+                [disabled]="!canGoToFirstPage() || loading" 
+                (click)="goToFirstPage()"
+                title="Primera página">
+          <mat-icon>first_page</mat-icon>
+        </button>
+
+        <!-- Botón página anterior -->
+        <button class="nav-button" 
+                [disabled]="!canGoToPreviousPage() || loading" 
+                (click)="goToPreviousPage()"
+                title="Página anterior">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+
+        <!-- Puntos suspensivos antes -->
+        <span *ngIf="showEllipsisBefore()" class="ellipsis">...</span>
+
+        <!-- Números de página visibles -->
+        <button *ngFor="let page of getPageNumbers()"
+                [class.active]="page === currentPage"
+                [disabled]="loading"
+                (click)="changePage(page)"
+                class="page-button"
+                [title]="'Ir a página ' + page">
+          {{ page }}
+        </button>
+
+        <!-- Puntos suspensivos después -->
+        <span *ngIf="showEllipsisAfter()" class="ellipsis">...</span>
+
+        <!-- Botón página siguiente -->
+        <button class="nav-button" 
+                [disabled]="!canGoToNextPage() || loading" 
+                (click)="goToNextPage()"
+                title="Página siguiente">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+
+        <!-- Botón última página -->
+        <button class="nav-button" 
+                [disabled]="!canGoToLastPage() || loading" 
+                (click)="goToLastPage()"
+                title="Última página">
+          <mat-icon>last_page</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Paginación simple para móvil con números -->
+    <div *ngIf="isMobile && totalPages <= 10" class="pagination-buttons">
       <button *ngFor="let page of getPageNumbers()"
               [class.active]="page === currentPage"
               [disabled]="loading"
