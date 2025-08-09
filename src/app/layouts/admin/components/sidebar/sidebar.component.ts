@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../core/auth/services/auth.service';
@@ -16,6 +16,7 @@ import { Inject } from '@angular/core';
 export class SidebarComponent implements OnInit {
   navItems: any[] = [];
   userRole: string = '';
+  isSidebarOpen: boolean = false;
 
   adminItems = [
     { path: '/admin/colegios', label: 'Crear Colegio', icon: 'fas fa-school' },
@@ -23,6 +24,7 @@ export class SidebarComponent implements OnInit {
     { path: '/admin/alumnos', label: 'Alumnos', icon: 'fas fa-users' },
     { path: '/admin/matriculas', label: 'Matrículas', icon: 'fas fa-file-alt' }
   ];
+
   workerItems = [
     { path: '/worker/alumnos', label: 'Alumnos', icon: 'fas fa-users' },
     { path: '/worker/matriculas', label: 'Matrículas', icon: 'fas fa-file-alt' },
@@ -50,6 +52,25 @@ export class SidebarComponent implements OnInit {
     }
   }
 
+  toggleSidebar() {
+    this.isSidebarOpen = !this.isSidebarOpen;
+  }
+
+  closeSidebar() {
+    this.isSidebarOpen = false;
+  }
+
+  onNavItemClick() {
+    // Cerrar sidebar en móviles al hacer click en un elemento de navegación
+    if (window.innerWidth <= 992) {
+      this.closeSidebar();
+    }
+  }
+
+  getUserRoleDisplay(): string {
+    return this.userRole === 'admin' ? 'Administrador' : 'Trabajador';
+  }
+
   logout() {
     if (isPlatformBrowser(this.platformId)) {
       this.authService.logout();
@@ -60,6 +81,42 @@ export class SidebarComponent implements OnInit {
       }).catch(error => {
         console.error('Error en la navegación:', error);
       });
+    }
+  }
+
+  // Cerrar sidebar al hacer click fuera en desktop
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    if (isPlatformBrowser(this.platformId)) {
+      const target = event.target as HTMLElement;
+      const sidebar = document.querySelector('.sidebar');
+      const hamburgerBtn = document.querySelector('.hamburger-btn');
+      
+      if (this.isSidebarOpen && 
+          sidebar && 
+          hamburgerBtn && 
+          !sidebar.contains(target) && 
+          !hamburgerBtn.contains(target)) {
+        this.closeSidebar();
+      }
+    }
+  }
+
+  // Cerrar sidebar con tecla ESC
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapePress(event: KeyboardEvent) {
+    if (this.isSidebarOpen) {
+      this.closeSidebar();
+    }
+  }
+
+  // Ajustar sidebar en cambio de tamaño de ventana
+  @HostListener('window:resize', ['$event'])
+  onWindowResize(event: Event) {
+    if (isPlatformBrowser(this.platformId)) {
+      if (window.innerWidth > 992) {
+        this.isSidebarOpen = false;
+      }
     }
   }
 }

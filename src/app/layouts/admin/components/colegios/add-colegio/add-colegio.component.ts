@@ -33,4 +33,6 @@ export class AddAsistenciaDialogComponent {
   onCancel(): void {
     this.dialogRef.close();
   }
+
+  
 }

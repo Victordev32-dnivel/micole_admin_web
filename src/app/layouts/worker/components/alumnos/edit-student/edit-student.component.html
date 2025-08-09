@@ -5,97 +5,157 @@
       <!-- Sección Datos del Alumno -->
       <div class="section student-section">
         <h3>Datos del Alumno</h3>
+        
+        <!-- DNI - OBLIGATORIO -->
         <mat-form-field appearance="outline">
-          <mat-label>DNI</mat-label>
+          <mat-label>DNI *</mat-label>
           <input matInput formControlName="numeroDocumento" placeholder="Ingrese DNI (8 dígitos)" readonly [maxlength]="8">
+          <mat-error *ngIf="editForm.get('numeroDocumento')?.hasError('required')">
+            El DNI es obligatorio.
+          </mat-error>
+          <mat-error *ngIf="editForm.get('numeroDocumento')?.hasError('pattern') || editForm.get('numeroDocumento')?.hasError('minlength') || editForm.get('numeroDocumento')?.hasError('maxlength')">
+            El DNI debe tener exactamente 8 dígitos.
+          </mat-error>
         </mat-form-field>
+        
+        <!-- CAMPOS OPCIONALES -->
         <mat-form-field appearance="outline">
           <mat-label>Nombres</mat-label>
-          <input matInput formControlName="nombres" placeholder="Ingrese nombres">
-          <mat-error *ngIf="editForm.get('nombres')?.hasError('required')">
-            Los nombres son obligatorios.
-          </mat-error>
+          <input matInput formControlName="nombres" placeholder="Ingrese nombres (opcional)">
         </mat-form-field>
+        
         <mat-form-field appearance="outline">
           <mat-label>Apellido Paterno</mat-label>
-          <input matInput formControlName="apellidoPaterno" placeholder="Ingrese apellido paterno">
-          <mat-error *ngIf="editForm.get('apellidoPaterno')?.hasError('required')">
-            El apellido paterno es obligatorio.
-          </mat-error>
+          <input matInput formControlName="apellidoPaterno" placeholder="Ingrese apellido paterno (opcional)">
         </mat-form-field>
+        
         <mat-form-field appearance="outline">
           <mat-label>Apellido Materno</mat-label>
-          <input matInput formControlName="apellidoMaterno" placeholder="Ingrese apellido materno">
-          <mat-error *ngIf="editForm.get('apellidoMaterno')?.hasError('required')">
-            El apellido materno es obligatorio.
-          </mat-error>
+          <input matInput formControlName="apellidoMaterno" placeholder="Ingrese apellido materno (opcional)">
         </mat-form-field>
+        
         <mat-form-field appearance="outline">
           <mat-label>Género</mat-label>
           <mat-select formControlName="genero">
+            <mat-option value="">Sin especificar</mat-option>
             <mat-option *ngFor="let gender of genders" [value]="gender">{{ gender }}</mat-option>
           </mat-select>
-          <mat-error *ngIf="editForm.get('genero')?.hasError('required')">
-            El género es obligatorio.
-          </mat-error>
         </mat-form-field>
+        
         <mat-form-field appearance="outline">
           <mat-label>Teléfono</mat-label>
-          <input matInput formControlName="telefono" placeholder="Ingrese teléfono (9 dígitos)" [maxlength]="9">
-          <mat-error *ngIf="editForm.get('telefono')?.hasError('required')">
-            El teléfono es obligatorio.
-          </mat-error>
-          <mat-error *ngIf="editForm.get('telefono')?.hasError('minlength') || editForm.get('telefono')?.hasError('maxlength')">
-            El teléfono debe tener exactamente 9 dígitos.
+          <input matInput formControlName="telefono" placeholder="Ingrese teléfono (9 dígitos, opcional)" [maxlength]="9">
+          <mat-error *ngIf="editForm.get('telefono')?.hasError('pattern') || editForm.get('telefono')?.hasError('minlength') || editForm.get('telefono')?.hasError('maxlength')">
+            Si ingresa teléfono, debe tener exactamente 9 dígitos.
           </mat-error>
         </mat-form-field>
+        
         <mat-form-field appearance="outline">
           <mat-label>Fecha de Nacimiento</mat-label>
-          <input matInput [matDatepicker]="picker" formControlName="fechaNacimiento" (click)="openCalendar()">
+          <input matInput [matDatepicker]="picker" formControlName="fechaNacimiento" (click)="openCalendar()" placeholder="Opcional">
           <mat-datepicker-toggle matIconSuffix [for]="picker" (click)="openCalendar(); $event.stopPropagation()"></mat-datepicker-toggle>
           <mat-datepicker #picker></mat-datepicker>
-          <mat-error *ngIf="editForm.get('fechaNacimiento')?.hasError('required')">
-            La fecha de nacimiento es obligatoria.
-          </mat-error>
         </mat-form-field>
+        
         <mat-form-field appearance="outline">
           <mat-label>Dirección</mat-label>
-          <input matInput formControlName="direccion" placeholder="Ingrese dirección">
-          <mat-error *ngIf="editForm.get('direccion')?.hasError('required')">
-            La dirección es obligatoria.
-          </mat-error>
+          <input matInput formControlName="direccion" placeholder="Ingrese dirección (opcional)">
         </mat-form-field>
+        
         <mat-form-field appearance="outline">
           <mat-label>Estado</mat-label>
           <mat-select formControlName="estado">
             <mat-option value="Activo">Activo</mat-option>
             <mat-option value="Inactivo">Inactivo</mat-option>
           </mat-select>
-          <mat-error *ngIf="editForm.get('estado')?.hasError('required')">
-            El estado es obligatorio.
-          </mat-error>
         </mat-form-field>
+        
+        <!-- NUEVO: Lista de Apoderados con búsqueda -->
         <mat-form-field appearance="outline">
-          <mat-label>ID Salón</mat-label>
-          <input matInput formControlName="idSalon" type="number" placeholder="Ingrese ID del salón">
-          <mat-error *ngIf="editForm.get('idSalon')?.hasError('required')">
-            El ID del salón es obligatorio.
-          </mat-error>
+          <mat-label>Apoderado</mat-label>
+          <input matInput 
+                 [formControl]="apoderadoSearchCtrl" 
+                 placeholder="Buscar apoderado..."
+                 [matAutocomplete]="apoderadoAuto">
+          <mat-autocomplete #apoderadoAuto="matAutocomplete" 
+                           (optionSelected)="onApoderadoSelected($event)"
+                           [displayWith]="displayApoderadoFn">
+            <mat-option *ngIf="loadingApoderados" disabled>
+              <mat-icon>hourglass_empty</mat-icon>
+              Cargando apoderados...
+            </mat-option>
+            <mat-option *ngIf="!loadingApoderados && filteredApoderados.length === 0 && apoderadoSearchCtrl.value" disabled>
+              <mat-icon>search_off</mat-icon>
+              No se encontraron resultados para "{{ apoderadoSearchCtrl.value }}"
+            </mat-option>
+            <mat-option [value]="null">
+              <mat-icon>person_off</mat-icon>
+              Sin apoderado asignado
+            </mat-option>
+            <mat-option *ngFor="let apoderado of filteredApoderados" [value]="apoderado">
+              <mat-icon>person</mat-icon>
+              <span>{{ apoderado.nombre }}</span>
+              <small style="color: #666; margin-left: 8px;">(ID: {{ apoderado.id }})</small>
+            </mat-option>
+          </mat-autocomplete>
+          <mat-hint *ngIf="!loadingApoderados">
+            <mat-icon style="font-size: 14px; width: 14px; height: 14px;">info</mat-icon>
+            Apoderados disponibles: {{ apoderados.length }}
+          </mat-hint>
         </mat-form-field>
+        
+        <!-- Campo de Salón con búsqueda -->
         <mat-form-field appearance="outline">
-          <mat-label>ID Apoderado</mat-label>
-          <input matInput formControlName="idApoderado" type="number" placeholder="Ingrese ID del apoderado">
-          <mat-error *ngIf="editForm.get('idApoderado')?.hasError('required')">
-            El ID del apoderado es obligatorio.
-          </mat-error>
+          <mat-label>Salón</mat-label>
+          <input matInput 
+                 [formControl]="salonSearchCtrl" 
+                 placeholder="Buscar salón..."
+                 [matAutocomplete]="salonAuto">
+          <mat-autocomplete #salonAuto="matAutocomplete" 
+                           (optionSelected)="onSalonSelected($event)"
+                           [displayWith]="displaySalonFn">
+            <mat-option *ngIf="loadingSalones" disabled>
+              <mat-icon>hourglass_empty</mat-icon>
+              Cargando salones...
+            </mat-option>
+            <mat-option *ngIf="!loadingSalones && filteredSalones.length === 0 && salonSearchCtrl.value" disabled>
+              <mat-icon>search_off</mat-icon>
+              No se encontraron resultados para "{{ salonSearchCtrl.value }}"
+            </mat-option>
+            <mat-option [value]="null">
+              <mat-icon>class</mat-icon>
+              Sin salón asignado
+            </mat-option>
+            <mat-option *ngFor="let salon of filteredSalones" [value]="salon">
+              <mat-icon>school</mat-icon>
+              <span>{{ salon.nombre || salon.descripcion || 'Salón ' + salon.id }}</span>
+              <span *ngIf="salon.descripcion && salon.nombre" style="color: #666; margin-left: 8px;"> - {{ salon.descripcion }}</span>
+              <small style="color: #666; margin-left: 8px;">(ID: {{ salon.id }})</small>
+            </mat-option>
+          </mat-autocomplete>
+          <mat-hint *ngIf="!loadingSalones">
+            <mat-icon style="font-size: 14px; width: 14px; height: 14px;">info</mat-icon>
+            Salones disponibles: {{ salones.length }}
+          </mat-hint>
         </mat-form-field>
       </div>
     </div>
+    
     <div *ngIf="loading" class="loading">Cargando datos <span class="spinner"></span></div>
     <div *ngIf="error" class="error">{{ error }}</div>
+    
+    <!-- Información sobre campos opcionales -->
+    <div class="info-section">
+      <small style="color: #666; font-style: italic;">
+        * Solo el DNI es obligatorio. Todos los demás campos son opcionales y pueden actualizarse posteriormente.
+      </small>
+    </div>
   </form>
 </mat-dialog-content>
+
 <mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">Cancelar</button>
-  <button mat-button (click)="onSave()" [disabled]="loading || !editForm.valid || !isFormChanged">Guardar</button>
+  <button mat-button (click)="onSave()" [disabled]="loading || loadingApoderados || loadingSalones" color="primary">
+    Guardar
+  </button>
 </mat-dialog-actions>

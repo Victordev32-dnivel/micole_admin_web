@@ -1,3 +1,4 @@
+/* Estilos base del sidebar */
 .sidebar {
   width: 300px;
   height: 100vh;
@@ -12,6 +13,7 @@
   box-shadow: 4px 0 10px rgba(0, 0, 0, 0.15);
   font-family: Arial, sans-serif;
   z-index: 1000;
+  transition: transform 0.3s ease;
 }
 
 .sidebar-header {
@@ -23,6 +25,7 @@
   justify-content: center;
   background: #f8f9fa;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 .logo {
@@ -36,6 +39,18 @@ h1 {
   margin: 0;
   color: #000000;
   font-weight: bold;
+}
+
+/* Hamburguesa - Oculto en desktop */
+.hamburger-btn {
+  display: none;
+  position: absolute;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #333;
 }
 
 .sidebar-nav {
@@ -62,14 +77,19 @@ a {
   color: #333;
   text-decoration: none;
   font-size: 1.1rem;
-  transition: background 0.2s, color 0.2s;
+  transition: all 0.3s ease;
   border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.nav-label {
+  transition: opacity 0.3s ease;
 }
 
 i {
   margin-right: 15px;
   font-size: 1.2rem;
+  min-width: 25px;
+  text-align: center;
 }
 
 a:hover {
@@ -81,14 +101,12 @@ a.active {
   background: #a7c4e4;
   color: #0400eb;
   font-weight: bold;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-footer {
   padding: 20px;
   border-top: 2px solid #e9ecef;
   background: #f8f9fa;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .logout-btn {
@@ -100,10 +118,70 @@ a.active {
   font-size: 1.1rem;
   cursor: pointer;
   border-radius: 6px;
-  transition: background 0.2s, transform 0.1s;
+  transition: all 0.3s ease;
 }
 
 .logout-btn:hover {
   background: #5a6268;
-  transform: translateY(-1px);
+}
+
+/* Overlay para móviles */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  
+  .hamburger-btn {
+    display: block;
+  }
+  
+  .nav-label {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 576px) {
+  .sidebar {
+    width: 270px;
+  }
+  
+  .sidebar-header {
+    padding: 15px;
+  }
+  
+  .sidebar-nav {
+    padding: 20px 15px;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  a {
+    padding: 10px 15px;
+    font-size: 1rem;
+  }
 }

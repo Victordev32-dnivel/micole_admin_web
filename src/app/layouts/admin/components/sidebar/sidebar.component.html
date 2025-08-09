@@ -1,23 +1,55 @@
-<div class="sidebar">
-  <div class="sidebar-header">
-    <img src="assets/Logo-Appsistencia.png" alt="Logo" class="logo">
-    <h1>APPSISTENCIA</h1>
-  </div>
-  <nav class="sidebar-nav">
-    <ul>
-      <li *ngFor="let item of navItems">
-        <a
-          [routerLink]="item.path"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: false }"
-        >
-          <i [class]="item.icon"></i>
-          {{ item.label }}
-        </a>
-      </li>
-    </ul>
-  </nav>
-  <div class="sidebar-footer">
-    <button (click)="logout()" class="logout-btn">Cerrar Sesión</button>
+<div class="sidebar-container">
+  <!-- Botón hamburguesa -->
+  <button 
+    class="hamburger-btn" 
+    (click)="toggleSidebar()"
+    [class.active]="isSidebarOpen"
+    aria-label="Toggle menu"
+  >
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <!-- Overlay para móviles -->
+  <div 
+    class="overlay" 
+    [class.active]="isSidebarOpen"
+    (click)="closeSidebar()"
+  ></div>
+
+  <!-- Sidebar -->
+  <div class="sidebar" [class.mobile-open]="isSidebarOpen">
+    <div class="sidebar-header">
+      <img src="assets/Logo-Appsistencia.png" alt="Logo" class="logo">
+      <h1>APPSISTENCIA</h1>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <ul>
+        <li *ngFor="let item of navItems">
+          <a
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: false }"
+            (click)="onNavItemClick()"
+          >
+            <i [class]="item.icon"></i>
+            <span class="nav-label">{{ item.label }}</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <i class="fas fa-user-circle user-avatar"></i>
+        <span class="user-role">{{ getUserRoleDisplay() }}</span>
+      </div>
+      <button (click)="logout()" class="logout-btn">
+        <i class="fas fa-sign-out-alt"></i>
+        Cerrar Sesión
+      </button>
+    </div>
   </div>
 </div>

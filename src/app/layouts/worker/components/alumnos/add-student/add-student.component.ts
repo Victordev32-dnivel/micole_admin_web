@@ -4,6 +4,8 @@ import {
   ViewChild,
   AfterViewInit,
   PLATFORM_ID,
+  OnInit,
+  OnDestroy,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import {
@@ -11,6 +13,7 @@ import {
   FormGroup,
   Validators,
   ReactiveFormsModule,
+  FormControl,
 } from '@angular/forms';
 import {
   MAT_DIALOG_DATA,
@@ -37,6 +40,9 @@ import {
 } from '@angular/common/http';
 import { UserService } from '../../../../../services/UserData';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { MatIconModule } from '@angular/material/icon';
+import { Subject, takeUntil } from 'rxjs';
 
 export const MY_DATE_FORMATS = {
   parse: { dateInput: 'DD/MM/YYYY' },
@@ -47,6 +53,21 @@ export const MY_DATE_FORMATS = {
     monthYearA11yLabel: 'MMMM YYYY',
   },
 };
+
+// Interfaz para los salones
+interface Salon {
+  id: number;
+  nombre: string;
+  descripcion?: string;
+  estado?: string;
+  idColegio: number;
+}
+
+// Interfaz para los apoderados
+interface Apoderado {
+  id: number;
+  nombre: string;
+}
 
 @Component({
   selector: 'app-student-add',
@@ -63,6 +84,8 @@ export const MY_DATE_FORMATS = {
     MatNativeDateModule,
     HttpClientModule,
     MatSnackBarModule,
+    MatAutocompleteModule,
+    MatIconModule,
   ],
   providers: [
     { provide: DateAdapter, useClass: NativeDateAdapter },
@@ -71,11 +94,32 @@ export const MY_DATE_FORMATS = {
   templateUrl: './add-student.component.html',
   styleUrls: ['./add-student.component.css'],
 })
-export class AddStudentComponent implements AfterViewInit {
+export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
   addForm: FormGroup;
   genders = ['Masculino', 'Femenino', 'Otro'];
   states = ['Activo', 'Inactivo'];
+  
+  // Datos originales
+  salones: Salon[] = [];
+  apoderados: Apoderado[] = [];
+  
+  // Datos filtrados para mostrar en los selects
+  filteredSalones: Salon[] = [];
+  filteredApoderados: Apoderado[] = [];
+  
+  // FormControls para la búsqueda
+  salonSearchCtrl: FormControl = new FormControl('');
+  apoderadoSearchCtrl: FormControl = new FormControl('');
+  
+  // Subject para manejar la limpieza de subscripciones
+  private _onDestroy = new Subject<void>();
+  
+  loadingSalones = false;
+  loadingApoderados = false;
+  
   private apiUrl = 'https://proy-back-dnivel.onrender.com/api/alumno';
+  private salonesApiUrl = 'https://proy-back-dnivel.onrender.com/api/salon/colegio/lista';
+  private apoderadosApiUrl = 'https://proy-back-dnivel.onrender.com/api/apoderado/colegio/lista';
   private staticToken = '732612882';
 
   @ViewChild('picker') datepicker: MatDatepicker<Date> | undefined;
@@ -89,6 +133,7 @@ export class AddStudentComponent implements AfterViewInit {
     @Inject(PLATFORM_ID) private platformId: Object,
     private snackBar: MatSnackBar
   ) {
+    // VALIDACIONES SIMPLIFICADAS - Solo DNI obligatorio
     this.addForm = this.fb.group({
       numeroDocumento: [
         '',
@@ -99,32 +144,119 @@ export class AddStudentComponent implements AfterViewInit {
           Validators.maxLength(8),
         ],
       ],
-      nombres: ['', Validators.required],
-      apellidoPaterno: ['', Validators.required],
-      apellidoMaterno: ['', Validators.required],
-      genero: ['', Validators.required],
+      nombres: [''],
+      apellidoPaterno: [''],
+      apellidoMaterno: [''],
+      genero: [''],
       telefono: [
         '',
         [
-          Validators.required,
           Validators.pattern('^[0-9]{9}$'),
           Validators.minLength(9),
           Validators.maxLength(9),
         ],
       ],
-      fechaNacimiento: ['', Validators.required],
-      direccion: ['', Validators.required],
-      estado: ['Activo', Validators.required],
-      idApoderado: ['', Validators.required],
-      idSalon: ['', Validators.required],
-      idColegio: [this.data.colegioId, Validators.required],
+      fechaNacimiento: [''],
+      direccion: [''],
+      estado: ['Activo'],
+      idApoderado: [''],
+      idSalon: [''],
+      idColegio: [this.data?.colegioId || ''],
     });
+  }
+
+  ngOnInit(): void {
+    // Cargar salones y apoderados cuando se inicializa el componente
+    this.loadSalones();
+    this.loadApoderados();
+    
+    // Configurar filtros de búsqueda
+    this.setupSearchFilters();
+  }
+
+  ngOnDestroy(): void {
+    this._onDestroy.next();
+    this._onDestroy.complete();
   }
 
   ngAfterViewInit(): void {
     if (isPlatformBrowser(this.platformId) && !this.datepicker) {
       console.warn('Datepicker no inicializado en ngAfterViewInit');
     }
+  }
+
+  private setupSearchFilters(): void {
+    // Filtro para salones
+    this.salonSearchCtrl.valueChanges
+      .pipe(takeUntil(this._onDestroy))
+      .subscribe((value) => {
+        this.filterSalones(value);
+      });
+
+    // Filtro para apoderados
+    this.apoderadoSearchCtrl.valueChanges
+      .pipe(takeUntil(this._onDestroy))
+      .subscribe((value) => {
+        this.filterApoderados(value);
+      });
+  }
+
+  private filterSalones(searchValue: any): void {
+    if (!this.salones || !searchValue || typeof searchValue !== 'string') {
+      this.filteredSalones = this.salones ? this.salones.slice() : [];
+      return;
+    }
+
+    const search = searchValue.toLowerCase().trim();
+    this.filteredSalones = this.salones.filter(salon => {
+      const nombre = (salon.nombre || '').toLowerCase();
+      const descripcion = (salon.descripcion || '').toLowerCase();
+      const id = salon.id.toString();
+      
+      return nombre.includes(search) || 
+             descripcion.includes(search) || 
+             id.includes(search);
+    });
+  }
+
+  private filterApoderados(searchValue: any): void {
+    if (!this.apoderados || !searchValue || typeof searchValue !== 'string') {
+      this.filteredApoderados = this.apoderados ? this.apoderados.slice() : [];
+      return;
+    }
+
+    const search = searchValue.toLowerCase().trim();
+    this.filteredApoderados = this.apoderados.filter(apoderado => {
+      const nombre = (apoderado.nombre || '').toLowerCase();
+      const id = apoderado.id.toString();
+      
+      return nombre.includes(search) || id.includes(search);
+    });
+  }
+
+  // Funciones para mostrar el texto seleccionado en el input
+  displaySalonFn = (salon: Salon): string => {
+    if (!salon) return '';
+    return salon.nombre || salon.descripcion || `Salón ${salon.id}`;
+  };
+
+  displayApoderadoFn = (apoderado: Apoderado): string => {
+    return apoderado ? apoderado.nombre : '';
+  };
+
+  // Manejadores de selección
+  onSalonSelected(event: MatAutocompleteSelectedEvent): void {
+    const salon = event.option.value;
+    const salonId = salon ? salon.id : '';
+    this.addForm.patchValue({ idSalon: salonId });
+    console.log('Salón seleccionado:', salon);
+  }
+
+  onApoderadoSelected(event: MatAutocompleteSelectedEvent): void {
+    const apoderado = event.option.value;
+    const apoderadoId = apoderado ? apoderado.id : '';
+    this.addForm.patchValue({ idApoderado: apoderadoId });
+    console.log('Apoderado seleccionado:', apoderado);
   }
 
   private getHeaders(): HttpHeaders {
@@ -135,22 +267,150 @@ export class AddStudentComponent implements AfterViewInit {
     });
   }
 
+  private loadSalones(): void {
+    let colegioId = this.data?.colegioId;
+    
+    if (!colegioId) {
+      const userData = this.userService.getUserData();
+      colegioId = userData?.colegio;
+    }
+
+    console.log('Cargando salones para colegio ID:', colegioId);
+    
+    if (!colegioId) {
+      console.error('No se encontró ID del colegio para salones');
+      return;
+    }
+
+    this.loadingSalones = true;
+    const headers = this.getHeaders();
+    const url = `${this.salonesApiUrl}/${colegioId}`;
+
+    console.log('Cargando salones desde URL:', url);
+
+    this.http.get<any>(url, { headers }).subscribe({
+      next: (response) => {
+        console.log('Respuesta completa de salones:', response);
+        
+        let salonesData = response;
+        if (response && response.data) {
+          salonesData = response.data;
+        } else if (response && response.salones) {
+          salonesData = response.salones;
+        } else if (Array.isArray(response)) {
+          salonesData = response;
+        }
+
+        this.salones = salonesData || [];
+        this.filteredSalones = this.salones.slice(); // Inicializar filteredSalones
+        this.loadingSalones = false;
+        
+        console.log('Salones procesados:', this.salones);
+      },
+      error: (error) => {
+        console.error('Error al cargar salones:', error);
+        this.loadingSalones = false;
+        this.snackBar.open('Error al cargar salones', 'Cerrar', {
+          duration: 3000,
+        });
+      },
+    });
+  }
+
+  private loadApoderados(): void {
+    let colegioId = this.data?.colegioId;
+    
+    if (!colegioId) {
+      const userData = this.userService.getUserData();
+      colegioId = userData?.colegio;
+    }
+
+    console.log('Cargando apoderados para colegio ID:', colegioId);
+    
+    if (!colegioId) {
+      console.error('No se encontró ID del colegio para apoderados');
+      return;
+    }
+
+    this.loadingApoderados = true;
+    const headers = this.getHeaders();
+    const url = `${this.apoderadosApiUrl}/${colegioId}`;
+
+    console.log('Cargando apoderados desde URL:', url);
+
+    this.http.get<any>(url, { headers }).subscribe({
+      next: (response) => {
+        console.log('Respuesta completa de apoderados:', response);
+        
+        let apoderadosData = [];
+        if (response && response.data && Array.isArray(response.data)) {
+          apoderadosData = response.data;
+        } else if (Array.isArray(response)) {
+          apoderadosData = response;
+        }
+
+        this.apoderados = apoderadosData || [];
+        this.filteredApoderados = this.apoderados.slice(); // Inicializar filteredApoderados
+        this.loadingApoderados = false;
+        
+        console.log('Apoderados procesados:', this.apoderados);
+        
+        if (this.apoderados.length === 0) {
+          console.warn('No se encontraron apoderados');
+          this.snackBar.open('No se encontraron apoderados para este colegio', 'Cerrar', {
+            duration: 3000,
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error detallado al cargar apoderados:', error);
+        this.loadingApoderados = false;
+        
+        let errorMessage = 'Error al cargar los apoderados';
+        if (error.status === 401) {
+          errorMessage = 'Token no válido. Inicia sesión nuevamente.';
+        } else if (error.status === 404) {
+          errorMessage = 'No se encontraron apoderados para este colegio';
+        } else if (error.error?.message) {
+          errorMessage = error.error.message;
+        }
+
+        this.snackBar.open(errorMessage, 'Cerrar', {
+          duration: 3000,
+        });
+      },
+    });
+  }
+
+  private isFormValidForSave(): boolean {
+    const numeroDocumento = this.addForm.get('numeroDocumento')?.value;
+    const telefono = this.addForm.get('telefono')?.value;
+    
+    const dniValid = numeroDocumento && /^[0-9]{8}$/.test(numeroDocumento);
+    const telefonoValid = !telefono || /^[0-9]{9}$/.test(telefono);
+    
+    return Boolean(dniValid && telefonoValid);
+  }
+
   onSave(): void {
-    if (this.addForm.valid) {
+    if (this.isFormValidForSave()) {
       const formValue = this.addForm.value;
+      
       const payload = {
         numeroDocumento: formValue.numeroDocumento,
-        nombres: formValue.nombres,
-        apellidoPaterno: formValue.apellidoPaterno,
-        apellidoMaterno: formValue.apellidoMaterno,
-        genero: formValue.genero,
-        telefono: formValue.telefono,
-        fechaNacimiento: this.formatDate(formValue.fechaNacimiento),
-        direccion: formValue.direccion,
-        estado: formValue.estado,
-        idApoderado: +formValue.idApoderado,
-        idSalon: +formValue.idSalon,
-        idColegio: +formValue.idColegio,
+        nombres: formValue.nombres || '',
+        apellidoPaterno: formValue.apellidoPaterno || '',
+        apellidoMaterno: formValue.apellidoMaterno || '',
+        genero: formValue.genero === 'Masculino' ? 'm' : 
+               formValue.genero === 'Femenino' ? 'f' : 
+               formValue.genero === 'Otro' ? 'o' : '',
+        telefono: formValue.telefono || '',
+        fechaNacimiento: formValue.fechaNacimiento ? this.formatDate(formValue.fechaNacimiento) : '',
+        direccion: formValue.direccion || '',
+        estado: formValue.estado || 'Activo',
+        idApoderado: formValue.idApoderado ? +formValue.idApoderado : null,
+        idSalon: formValue.idSalon ? +formValue.idSalon : null,
+        idColegio: this.data?.colegioId || 0,
       };
 
       console.log('Payload enviado al POST:', payload);
@@ -215,7 +475,11 @@ export class AddStudentComponent implements AfterViewInit {
         },
       });
     } else {
-      console.log('Formulario inválido:', this.addForm.errors);
+      this.snackBar.open(
+        'DNI es obligatorio (8 dígitos). Si ingresa teléfono, debe tener 9 dígitos.',
+        'Cerrar',
+        { duration: 4000 }
+      );
     }
   }
 
@@ -233,9 +497,9 @@ export class AddStudentComponent implements AfterViewInit {
   }
 
   private formatDate(date: Date): string {
-    if (date instanceof Date) {
+    if (date instanceof Date && !isNaN(date.getTime())) {
       return date.toISOString();
     }
-    return new Date(date).toISOString();
+    return '';
   }
 }
