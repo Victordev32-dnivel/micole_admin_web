@@ -13,8 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "baseHref": "./",
-            "deployUrl": "./",
+            "baseHref": "/",
             "outputPath": "dist/appsistencia",
             "index": "src/index.html",
             "browser": "src/main.ts",
