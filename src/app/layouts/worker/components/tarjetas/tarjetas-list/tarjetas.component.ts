@@ -28,10 +28,32 @@ import {
   HttpClient,
   HttpClientModule,
   HttpHeaders,
+  HttpErrorResponse,
 } from '@angular/common/http';
 import { TarjetasModalComponent } from '../tarjetas-modal/tarjetas-modal.component';
 import { AddTarjetaModalComponent } from '../add-tarjeta-modal/add-tarjeta-modal.component';
 import { UserService } from '../../../../../services/UserData';
+import { catchError, throwError } from 'rxjs';
+
+interface Salon {
+  id: number;
+  nombre: string;
+}
+
+interface Alumno {
+  id: number;
+  nombre: string;
+  codigo: string | null;
+  tarjeta: number | null;
+}
+
+interface ApiResponse<T> {
+  data?: T;
+  alumnos?: T;
+  message?: string;
+  totalPages?: number;
+  totalAlumnos?: number;
+}
 
 @Component({
   selector: 'app-tarjetas',
@@ -56,22 +78,24 @@ import { UserService } from '../../../../../services/UserData';
 })
 export class TarjetasComponent implements OnInit {
   tarjetaForm: FormGroup;
-  salones: any[] = [];
-  alumnos: any[] = [];
-  filteredAlumnos: any[] = [];
+  salones: Salon[] = [];
+  alumnos: Alumno[] = [];
+  filteredAlumnos: Alumno[] = [];
   loading: boolean = false;
   error: string | null = null;
   successMessage: string | null = null;
   colegioId: number = 0;
-  private apiUrlSalon =
-    'https://proy-back-dnivel.onrender.com/api/salon/colegio';
-  private apiUrlAlumno =
-    'https://proy-back-dnivel.onrender.com/api/alumno/tarjeta';
-  private apiUrlTarjeta = 'https://proy-back-dnivel.onrender.com/api/tarjeta';
-  private staticToken = '732612882';
 
-  // Columnas reorganizadas con código primero
+  // URLs de API consistentes
+  private readonly baseUrl = 'https://proy-back-dnivel.onrender.com/api';
+  private readonly apiUrlSalon = `${this.baseUrl}/salon/colegio`;
+  private readonly apiUrlAlumno = `${this.baseUrl}/alumno`;
+  private readonly apiUrlTarjeta = `${this.baseUrl}/tarjeta`;
+
+  // Columnas de la tabla
   displayedColumns: string[] = ['codigo', 'nombre', 'tarjeta', 'acciones'];
+  
+  // Paginación
   currentPage: number = 1;
   totalPages: number = 0;
   totalAlumnos: number = 0;
@@ -93,64 +117,105 @@ export class TarjetasComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       this.loadUserData();
-      this.loadSalones();
-
-      // Escuchar cambios en el campo de búsqueda
-      this.tarjetaForm.get('searchTerm')?.valueChanges.subscribe((term) => {
-        this.filterAlumnos(term);
-      });
+      this.setupSearchListener();
     }
   }
 
   private loadUserData(): void {
-    const userData = this.userService.getUserData();
-    if (userData) {
-      this.colegioId = userData.colegio;
-      console.log('Datos del usuario cargados:', { colegioId: this.colegioId });
-    }
-    this.userService.userData$.subscribe((userData) => {
-      if (userData) {
+    try {
+      const userData = this.userService.getUserData();
+      if (userData && userData.colegio) {
         this.colegioId = userData.colegio;
+        console.log('Datos del usuario cargados:', { colegioId: this.colegioId });
         this.loadSalones();
-        this.cdr.detectChanges();
+      } else {
+        this.error = 'No se pudieron cargar los datos del usuario';
+        console.error('Datos de usuario no válidos:', userData);
       }
+
+      // Suscribirse a cambios en los datos del usuario
+      this.userService.userData$.subscribe((userData) => {
+        if (userData && userData.colegio) {
+          this.colegioId = userData.colegio;
+          this.loadSalones();
+          this.cdr.detectChanges();
+        }
+      });
+    } catch (error) {
+      console.error('Error al cargar datos del usuario:', error);
+      this.error = 'Error al cargar datos del usuario';
+    }
+  }
+
+  private setupSearchListener(): void {
+    this.tarjetaForm.get('searchTerm')?.valueChanges.subscribe((term) => {
+      this.filterAlumnos(term || '');
     });
   }
 
   private getHeaders(): HttpHeaders {
-    const jwtToken = this.userService.getJwtToken() || this.staticToken;
+    const jwtToken = this.userService.getJwtToken();
+    
+    if (!jwtToken) {
+      console.warn('No se encontró token JWT');
+      this.error = 'Token de autenticación no válido';
+    }
+
     return new HttpHeaders({
-      Authorization: `Bearer ${jwtToken}`,
+      'Authorization': `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
     });
   }
 
-  loadSalones() {
-    if (!this.colegioId) {
-      console.error('ID del colegio no disponible');
-      this.error =
-        'No se pudo cargar los salones: ID del colegio no disponible';
+  private handleError = (error: HttpErrorResponse) => {
+    console.error('Error HTTP:', error);
+    let errorMessage = 'Error desconocido';
+
+    if (error.error instanceof ErrorEvent) {
+      // Error del lado del cliente
+      errorMessage = `Error: ${error.error.message}`;
+    } else {
+      // Error del lado del servidor
+      errorMessage = error.error?.message || 
+                    error.message || 
+                    `Error ${error.status}: ${error.statusText}`;
+    }
+
+    this.ngZone.run(() => {
+      this.error = errorMessage;
       this.loading = false;
       this.cdr.detectChanges();
+    });
+
+    return throwError(() => error);
+  };
+
+  loadSalones(): void {
+    if (!this.colegioId) {
+      this.error = 'ID del colegio no disponible';
       return;
     }
 
     this.loading = true;
     this.error = null;
     this.successMessage = null;
+
     const headers = this.getHeaders();
-    this.http
-      .get<any>(`${this.apiUrlSalon}/${this.colegioId}?page=1&pageSize=200`, {
-        headers,
-      })
+    const url = `${this.apiUrlSalon}/${this.colegioId}?page=1&pageSize=200`;
+
+    console.log('Cargando salones desde:', url);
+
+    this.http.get<ApiResponse<Salon[]>>(url, { headers })
+      .pipe(catchError(this.handleError))
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-            this.salones = response.data || [];
+            this.salones = response.data || response as any[] || [];
             console.log('Salones cargados:', this.salones);
+            
             this.loading = false;
             if (this.salones.length === 0) {
               this.error = 'No se encontraron salones para este colegio';
@@ -160,14 +225,12 @@ export class TarjetasComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al cargar salones:', error);
-          this.error = 'Error al cargar los salones. Intente de nuevo';
-          this.loading = false;
-          this.cdr.detectChanges();
-        },
+        }
       });
   }
 
-  onSalonChange(salonId: number) {
+  onSalonChange(salonId: number): void {
+    console.log('Salón seleccionado:', salonId);
     this.resetPagination();
     if (salonId) {
       this.loadAlumnos(salonId);
@@ -175,7 +238,7 @@ export class TarjetasComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  private resetPagination() {
+  private resetPagination(): void {
     this.alumnos = [];
     this.filteredAlumnos = [];
     this.totalPages = 0;
@@ -185,7 +248,7 @@ export class TarjetasComponent implements OnInit {
     this.tarjetaForm.get('searchTerm')?.setValue('');
   }
 
-  loadAlumnos(salonId: number, page: number = 1) {
+  loadAlumnos(salonId: number, page: number = 1): void {
     this.loading = true;
     this.error = null;
     this.successMessage = null;
@@ -195,28 +258,31 @@ export class TarjetasComponent implements OnInit {
     }
 
     const headers = this.getHeaders();
-    this.http
-      .get<any>(
-        `${this.apiUrlAlumno}/${salonId}?page=${this.currentPage}&pageSize=${this.pageSize}`,
-        { headers }
-      )
+    const url = `${this.apiUrlAlumno}/tarjeta/${salonId}?page=${this.currentPage}&pageSize=${this.pageSize}`;
+
+    console.log('Cargando alumnos desde:', url);
+
+    this.http.get<ApiResponse<Alumno[]>>(url, { headers })
+      .pipe(catchError(this.handleError))
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-            this.alumnos = response.alumnos || [];
+            // Manejar diferentes estructuras de respuesta
+            const alumnosData = response.alumnos || response.data || [];
+            this.alumnos = this.normalizeAlumnosData(alumnosData);
             this.filteredAlumnos = [...this.alumnos];
+            
             this.totalPages = response.totalPages || 1;
-            this.totalAlumnos = response.totalAlumnos || 0;
-            this.pageNumbers = Array.from(
-              { length: this.totalPages },
-              (_, i) => i + 1
-            );
+            this.totalAlumnos = response.totalAlumnos || this.alumnos.length;
+            this.pageNumbers = Array.from({ length: this.totalPages }, (_, i) => i + 1);
+            
             console.log('Alumnos cargados:', {
               alumnos: this.alumnos,
               página: this.currentPage,
               totalPáginas: this.totalPages,
               totalAlumnos: this.totalAlumnos,
             });
+
             this.loading = false;
             if (this.alumnos.length === 0) {
               this.error = 'No se encontraron alumnos en este salón';
@@ -226,36 +292,39 @@ export class TarjetasComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al cargar alumnos:', error);
-          this.error = 'Error al cargar los alumnos. Intente de nuevo';
-          this.loading = false;
-          this.cdr.detectChanges();
-        },
+        }
       });
   }
 
-  // Método para filtrar alumnos por nombre o código
+  private normalizeAlumnosData(data: any[]): Alumno[] {
+    return data.map((item: any) => ({
+      id: item.id || item.idAlumno || item.alumnoId,
+      nombre: item.nombre || item.alumno || `Alumno ${item.id || item.idAlumno}`,
+      codigo: item.codigo || null,
+      tarjeta: item.tarjeta || null
+    })).filter(alumno => alumno.id); // Filtrar elementos sin ID válido
+  }
+
   filterAlumnos(searchTerm: string): void {
     if (!searchTerm) {
       this.filteredAlumnos = [...this.alumnos];
       return;
     }
 
-    const term = searchTerm.toLowerCase();
-    this.filteredAlumnos = this.alumnos.filter(
-      (alumno) =>
-        (alumno.nombre && alumno.nombre.toLowerCase().includes(term)) ||
-        (alumno.codigo && alumno.codigo.toString().toLowerCase().includes(term))
+    const term = searchTerm.toLowerCase().trim();
+    this.filteredAlumnos = this.alumnos.filter((alumno) =>
+      (alumno.nombre && alumno.nombre.toLowerCase().includes(term)) ||
+      (alumno.codigo && alumno.codigo.toString().toLowerCase().includes(term))
     );
   }
 
-  // Método para limpiar la búsqueda
   clearSearch(): void {
     this.tarjetaForm.get('searchTerm')?.setValue('');
     this.filteredAlumnos = [...this.alumnos];
   }
 
   // Métodos de paginación
-  changePage(page: number) {
+  changePage(page: number): void {
     if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
       const salonId = this.tarjetaForm.get('idSalon')?.value;
       if (salonId) {
@@ -264,13 +333,13 @@ export class TarjetasComponent implements OnInit {
     }
   }
 
-  previousPage() {
+  previousPage(): void {
     if (this.currentPage > 1) {
       this.changePage(this.currentPage - 1);
     }
   }
 
-  nextPage() {
+  nextPage(): void {
     if (this.currentPage < this.totalPages) {
       this.changePage(this.currentPage + 1);
     }
@@ -295,19 +364,21 @@ export class TarjetasComponent implements OnInit {
     return pages;
   }
 
-  openRfidModal(alumnoId: number, currentRfid: number | null) {
+  openRfidModal(alumnoId: number, currentRfid: number | null): void {
     const dialogRef = this.dialog.open(TarjetasModalComponent, {
       width: '1000px',
       maxHeight: '90vh',
       disableClose: false,
-      data: { alumnoId, currentRfid, colegioId: this.colegioId },
+      data: { 
+        alumnoId, 
+        currentRfid, 
+        colegioId: this.colegioId 
+      },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.successMessage = `Tarjeta ${
-          currentRfid ? 'actualizada' : 'asignada'
-        } con éxito`;
+        this.successMessage = `Tarjeta ${currentRfid ? 'actualizada' : 'asignada'} con éxito`;
         const salonId = this.tarjetaForm.get('idSalon')?.value;
         if (salonId) {
           this.loadAlumnos(salonId, this.currentPage);
@@ -317,112 +388,216 @@ export class TarjetasComponent implements OnInit {
     });
   }
 
-// Reemplaza el método openAddTarjetaModal en tu TarjetasComponent
-// Reemplaza el método openAddTarjetaModal en tu TarjetasComponent
+  openAddTarjetaModal(): void {
+    const salonId = this.tarjetaForm.get('idSalon')?.value;
 
-openAddTarjetaModal(): void {
-  const salonId = this.tarjetaForm.get('idSalon')?.value;
+    if (!salonId) {
+      this.error = 'Debe seleccionar un salón primero';
+      this.cdr.detectChanges();
+      return;
+    }
 
-  if (!salonId) {
-    this.error = 'Debe seleccionar un salón primero';
-    this.cdr.detectChanges();
-    return;
+    this.loading = true;
+    this.error = null;
+    const headers = this.getHeaders();
+
+    // Usar endpoint consistente para obtener todos los alumnos del salón
+    const url = `${this.apiUrlAlumno}/salon/${salonId}`;
+    console.log('Obteniendo alumnos para modal desde:', url);
+
+    this.http.get<ApiResponse<any[]>>(url, { headers })
+      .pipe(catchError(this.handleError))
+      .subscribe({
+        next: (response) => {
+          this.ngZone.run(() => {
+            this.loading = false;
+
+            console.log('Respuesta completa de alumnos para modal:', response);
+
+            // Manejar diferentes estructuras de respuesta
+            let alumnosRaw = response.data || response.alumnos || response as any[] || [];
+            
+            // Si la respuesta es un array directamente
+            if (Array.isArray(response)) {
+              alumnosRaw = response;
+            }
+
+            const alumnos = this.normalizeAlumnosData(alumnosRaw);
+            
+            console.log('Alumnos procesados para modal:', alumnos);
+
+            if (alumnos.length === 0) {
+              this.error = 'No hay alumnos válidos en este salón';
+              this.cdr.detectChanges();
+              return;
+            }
+
+            const dialogRef = this.dialog.open(AddTarjetaModalComponent, {
+              width: '500px',
+              disableClose: true,
+              data: {
+                colegioId: this.colegioId,
+                alumnos: alumnos,
+                salonId: salonId
+              },
+            });
+
+            dialogRef.afterClosed().subscribe((result) => {
+              if (result) {
+                this.addTarjeta(result);
+              }
+            });
+          });
+        },
+        error: (error) => {
+          console.error('Error al cargar alumnos para modal:', error);
+        }
+      });
   }
 
-  this.loading = true;
-  this.error = null;
-  const headers = this.getHeaders();
-
-  // Usar la URL correcta para obtener alumnos con todos los datos
-  this.http
-    .get<any>(
-      `https://proy-back-dnivel.onrender.com/api/alumno/salon/${salonId}?includeAll=true`,
-      { headers }
-    )
-    .subscribe({
-      next: (response) => {
-        this.ngZone.run(() => {
-          this.loading = false;
-
-          // Verificar la estructura de la respuesta y filtrar datos válidos
-          console.log('Respuesta completa de alumnos:', response);
-
-          let alumnos = response.data || response.alumnos || response || [];
-          
-          // Filtrar y limpiar datos de alumnos - CORREGIDO para la estructura real
-          alumnos = alumnos.filter((alumno: any) => {
-            return alumno && (alumno.alumno || alumno.idAlumno);
-          }).map((alumno: any) => ({
-            id: alumno.idAlumno,
-            nombre: alumno.alumno || `Alumno ${alumno.idAlumno}`,
-            codigo: alumno.codigo || null,
-            tarjeta: alumno.tarjeta || null
-          }));
-
-          console.log('Alumnos procesados:', alumnos);
-
-          if (alumnos.length === 0) {
-            this.error = 'No hay alumnos válidos en este salón';
-            this.cdr.detectChanges();
-            return;
-          }
-
-          const dialogRef = this.dialog.open(AddTarjetaModalComponent, {
-            width: '500px',
-            disableClose: true,
-            data: {
-              colegioId: this.colegioId,
-              alumnos: alumnos,
-              salonId: salonId
-            },
-          });
-
-          dialogRef.afterClosed().subscribe((result) => {
-            if (result) {
-              this.addTarjeta(result);
-            }
-          });
-        });
-      },
-      error: (error) => {
-        console.error('Error al cargar alumnos:', error);
-        this.ngZone.run(() => {
-          this.error = 'Error al cargar los alumnos del salón: ' + 
-            (error.error?.message || error.message || 'Error desconocido');
-          this.loading = false;
-          this.cdr.detectChanges();
-        });
-      },
-    });
-}
-  // Nuevo método para agregar tarjeta
   addTarjeta(tarjetaData: any): void {
     this.loading = true;
     this.error = null;
     this.successMessage = null;
 
-    const headers = this.getHeaders();
-    this.http.post(this.apiUrlTarjeta, tarjetaData, { headers }).subscribe({
-      next: (response) => {
-        this.ngZone.run(() => {
-          this.successMessage = 'Tarjeta agregada con éxito';
-          this.loading = false;
+    // Validar datos antes de enviar
+    if (!tarjetaData) {
+      this.error = 'No se proporcionaron datos para la tarjeta';
+      this.loading = false;
+      this.cdr.detectChanges();
+      return;
+    }
 
-          // Recargar datos si hay un salón seleccionado
-          const salonId = this.tarjetaForm.get('idSalon')?.value;
-          if (salonId) {
-            this.loadAlumnos(salonId, this.currentPage);
+    console.log('=== DATOS PARA AGREGAR TARJETA ===');
+    console.log('Datos originales:', tarjetaData);
+
+    try {
+      // Limpiar y validar datos según los requisitos de la API
+      const cleanedData = this.validateAndCleanTarjetaData(tarjetaData);
+      const headers = this.getHeaders();
+
+      this.http.post(this.apiUrlTarjeta, cleanedData, { headers })
+        .pipe(
+          catchError((error: HttpErrorResponse) => {
+            console.error('=== ERROR DETALLADO ===');
+            console.error('Status:', error.status);
+            console.error('Error body:', error.error);
+            
+            let errorMessage = 'Error al agregar tarjeta';
+            
+            if (error.error && error.error.errors) {
+              // Manejar errores de validación de la API
+              const validationErrors = error.error.errors;
+              const errorMessages = [];
+              
+              for (const field in validationErrors) {
+                errorMessages.push(`${field}: ${validationErrors[field].join(', ')}`);
+              }
+              
+              errorMessage = `Errores de validación: ${errorMessages.join('; ')}`;
+            } else if (error.error && error.error.message) {
+              errorMessage = error.error.message;
+            } else if (error.message) {
+              errorMessage = error.message;
+            }
+
+            this.ngZone.run(() => {
+              this.error = `Error ${error.status}: ${errorMessage}`;
+              this.loading = false;
+              this.cdr.detectChanges();
+            });
+
+            return throwError(() => error);
+          })
+        )
+        .subscribe({
+          next: (response) => {
+            console.log('Respuesta exitosa:', response);
+            this.ngZone.run(() => {
+              this.successMessage = 'Tarjeta agregada con éxito';
+              this.loading = false;
+
+              // Recargar datos si hay un salón seleccionado
+              const salonId = this.tarjetaForm.get('idSalon')?.value;
+              if (salonId) {
+                this.loadAlumnos(salonId, this.currentPage);
+              }
+
+              this.cdr.detectChanges();
+            });
           }
-
-          this.cdr.detectChanges();
         });
-      },
-      error: (error) => {
-        console.error('Error al agregar tarjeta:', error);
-        this.error = error.error?.message || 'Error al agregar la tarjeta';
-        this.loading = false;
-        this.cdr.detectChanges();
-      },
+
+    } catch (error: any) {
+      this.error = error.message || 'Error al validar los datos de la tarjeta';
+      this.loading = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  private validateAndCleanTarjetaData(data: any): any {
+    // Basado en el error de validación de la API, necesita exactamente estos campos con esta capitalización
+    const cleanedData = {
+      Rfid: data.rfid,           // Capital R - requerido por la API
+      IdAlumno: data.idAlumno,   // Capital I y A - requerido por la API
+      IdColegio: data.idColegio, // Capital I y C - requerido por la API
+      Codigo: data.codigo        // Capital C - requerido por la API
+    };
+
+    console.log('=== DATOS LIMPIADOS PARA API ===');
+    console.log('Datos originales:', data);
+    console.log('Datos enviados a API:', cleanedData);
+    
+    // Validar que todos los campos requeridos estén presentes y no sean null/undefined
+    if (!cleanedData.Rfid && cleanedData.Rfid !== 0) {
+      throw new Error('RFID es requerido');
+    }
+    if (!cleanedData.IdAlumno && cleanedData.IdAlumno !== 0) {
+      throw new Error('ID del alumno es requerido');
+    }
+    if (!cleanedData.IdColegio && cleanedData.IdColegio !== 0) {
+      throw new Error('ID del colegio es requerido');
+    }
+    if (!cleanedData.Codigo && cleanedData.Codigo !== '') {
+      throw new Error('Código del alumno es requerido');
+    }
+
+    return cleanedData;
+  }
+
+  // Método para limpiar mensajes
+  clearMessages(): void {
+    this.error = null;
+    this.successMessage = null;
+    this.cdr.detectChanges();
+  }
+
+  // Método para debug - mostrar información del estado actual
+  debugInfo(): void {
+    console.log('Estado actual del componente:', {
+      colegioId: this.colegioId,
+      salonSeleccionado: this.tarjetaForm.get('idSalon')?.value,
+      salones: this.salones,
+      alumnos: this.alumnos,
+      filteredAlumnos: this.filteredAlumnos,
+      loading: this.loading,
+      error: this.error,
+      currentPage: this.currentPage,
+      totalPages: this.totalPages
     });
+  }
+
+  // Método temporal para testear la estructura de datos esperada por la API
+  testApiTarjeta(): void {
+    const testData = {
+      Rfid: "123456789",
+      IdAlumno: 1,
+      IdColegio: this.colegioId,
+      Codigo: "ABC123"
+    };
+    
+    console.log('=== TEST API TARJETA ===');
+    console.log('Formato correcto para la API:', testData);
+    console.log('Todos los campos requeridos: Rfid, IdAlumno, IdColegio, Codigo');
   }
 }
