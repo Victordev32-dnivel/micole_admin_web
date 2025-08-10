@@ -93,7 +93,7 @@ export class TarjetasComponent implements OnInit {
   private readonly apiUrlTarjeta = `${this.baseUrl}/tarjeta`;
 
   // Columnas de la tabla
-  displayedColumns: string[] = ['codigo', 'nombre', 'tarjeta', 'acciones'];
+  displayedColumns: string[] = ['codigo', 'nombre', 'tarjeta'];
   
   // Paginación
   currentPage: number = 1;
@@ -129,7 +129,7 @@ export class TarjetasComponent implements OnInit {
       const userData = this.userService.getUserData();
       if (userData && userData.colegio) {
         this.colegioId = userData.colegio;
-        console.log('Datos del usuario cargados:', { colegioId: this.colegioId });
+   
         this.loadSalones();
       } else {
         this.error = 'No se pudieron cargar los datos del usuario';
@@ -206,7 +206,7 @@ export class TarjetasComponent implements OnInit {
     const headers = this.getHeaders();
     const url = `${this.apiUrlSalon}/${this.colegioId}?page=1&pageSize=200`;
 
-    console.log('Cargando salones desde:', url);
+   
 
     this.http.get<ApiResponse<Salon[]>>(url, { headers })
       .pipe(catchError(this.handleError))
@@ -214,7 +214,7 @@ export class TarjetasComponent implements OnInit {
         next: (response) => {
           this.ngZone.run(() => {
             this.salones = response.data || response as any[] || [];
-            console.log('Salones cargados:', this.salones);
+          
             
             this.loading = false;
             if (this.salones.length === 0) {
@@ -230,7 +230,7 @@ export class TarjetasComponent implements OnInit {
   }
 
   onSalonChange(salonId: number): void {
-    console.log('Salón seleccionado:', salonId);
+  
     this.resetPagination();
     if (salonId) {
       this.loadAlumnos(salonId);
@@ -260,7 +260,7 @@ export class TarjetasComponent implements OnInit {
     const headers = this.getHeaders();
     const url = `${this.apiUrlAlumno}/tarjeta/${salonId}?page=${this.currentPage}&pageSize=${this.pageSize}`;
 
-    console.log('Cargando alumnos desde:', url);
+
 
     this.http.get<ApiResponse<Alumno[]>>(url, { headers })
       .pipe(catchError(this.handleError))
@@ -276,12 +276,7 @@ export class TarjetasComponent implements OnInit {
             this.totalAlumnos = response.totalAlumnos || this.alumnos.length;
             this.pageNumbers = Array.from({ length: this.totalPages }, (_, i) => i + 1);
             
-            console.log('Alumnos cargados:', {
-              alumnos: this.alumnos,
-              página: this.currentPage,
-              totalPáginas: this.totalPages,
-              totalAlumnos: this.totalAlumnos,
-            });
+           
 
             this.loading = false;
             if (this.alumnos.length === 0) {
@@ -403,7 +398,7 @@ export class TarjetasComponent implements OnInit {
 
     // Usar endpoint consistente para obtener todos los alumnos del salón
     const url = `${this.apiUrlAlumno}/salon/${salonId}`;
-    console.log('Obteniendo alumnos para modal desde:', url);
+  
 
     this.http.get<ApiResponse<any[]>>(url, { headers })
       .pipe(catchError(this.handleError))
@@ -412,7 +407,7 @@ export class TarjetasComponent implements OnInit {
           this.ngZone.run(() => {
             this.loading = false;
 
-            console.log('Respuesta completa de alumnos para modal:', response);
+        
 
             // Manejar diferentes estructuras de respuesta
             let alumnosRaw = response.data || response.alumnos || response as any[] || [];
@@ -423,9 +418,7 @@ export class TarjetasComponent implements OnInit {
             }
 
             const alumnos = this.normalizeAlumnosData(alumnosRaw);
-            
-            console.log('Alumnos procesados para modal:', alumnos);
-
+      
             if (alumnos.length === 0) {
               this.error = 'No hay alumnos válidos en este salón';
               this.cdr.detectChanges();
@@ -468,9 +461,8 @@ export class TarjetasComponent implements OnInit {
       return;
     }
 
-    console.log('=== DATOS PARA AGREGAR TARJETA ===');
-    console.log('Datos originales:', tarjetaData);
-
+    ('=== DATOS PARA AGREGAR TARJETA ===');
+   
     try {
       // Limpiar y validar datos según los requisitos de la API
       const cleanedData = this.validateAndCleanTarjetaData(tarjetaData);
@@ -512,7 +504,7 @@ export class TarjetasComponent implements OnInit {
         )
         .subscribe({
           next: (response) => {
-            console.log('Respuesta exitosa:', response);
+          
             this.ngZone.run(() => {
               this.successMessage = 'Tarjeta agregada con éxito';
               this.loading = false;
@@ -544,9 +536,8 @@ export class TarjetasComponent implements OnInit {
       Codigo: data.codigo        // Capital C - requerido por la API
     };
 
-    console.log('=== DATOS LIMPIADOS PARA API ===');
-    console.log('Datos originales:', data);
-    console.log('Datos enviados a API:', cleanedData);
+    ('=== DATOS LIMPIADOS PARA API ===');
+   
     
     // Validar que todos los campos requeridos estén presentes y no sean null/undefined
     if (!cleanedData.Rfid && cleanedData.Rfid !== 0) {
@@ -572,20 +563,7 @@ export class TarjetasComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  // Método para debug - mostrar información del estado actual
-  debugInfo(): void {
-    console.log('Estado actual del componente:', {
-      colegioId: this.colegioId,
-      salonSeleccionado: this.tarjetaForm.get('idSalon')?.value,
-      salones: this.salones,
-      alumnos: this.alumnos,
-      filteredAlumnos: this.filteredAlumnos,
-      loading: this.loading,
-      error: this.error,
-      currentPage: this.currentPage,
-      totalPages: this.totalPages
-    });
-  }
+  
 
   // Método temporal para testear la estructura de datos esperada por la API
   testApiTarjeta(): void {
@@ -596,8 +574,8 @@ export class TarjetasComponent implements OnInit {
       Codigo: "ABC123"
     };
     
-    console.log('=== TEST API TARJETA ===');
-    console.log('Formato correcto para la API:', testData);
-    console.log('Todos los campos requeridos: Rfid, IdAlumno, IdColegio, Codigo');
+    ('=== TEST API TARJETA ===');
+
+    ('Todos los campos requeridos: Rfid, IdAlumno, IdColegio, Codigo');
   }
 }

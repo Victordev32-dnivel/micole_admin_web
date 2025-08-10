@@ -133,11 +133,7 @@ export class StudentListComponent implements OnInit {
       this.userName = userData.nombre;
       this.userType = userData.tipoUsuario;
       this.colegioId = userData.colegio;
-      console.log('Datos del usuario cargados:', {
-        nombre: this.userName,
-        tipo: this.userType,
-        colegioId: this.colegioId,
-      });
+   
     }
 
     this.userService.userData$.subscribe((userData) => {
@@ -168,15 +164,13 @@ export class StudentListComponent implements OnInit {
     this.loading = true;
     const headers = this.getHeaders();
     
-    console.log(`Cargando página: ${page}, pageSize: ${this.pageSize}, colegioId: ${this.colegioId}`);
+    (`Cargando página: ${page}, pageSize: ${this.pageSize}, colegioId: ${this.colegioId}`);
     
     this.http
       .get<any>(`${this.apiUrl}/${this.colegioId}?page=${page}&limit=${this.pageSize}`, { headers })
       .subscribe({
         next: (response) => {
-          console.log('Respuesta de la API:', response);
-          console.log('Número de estudiantes recibidos:', response.data?.length || 0);
-          
+         
           this.ngZone.run(() => {
             // Asignar datos directamente sin invertir
             this.students = response.data || [];
@@ -194,9 +188,8 @@ export class StudentListComponent implements OnInit {
             
             this.updateVisiblePages();
             
-            console.log(`Página actual: ${page}, Total páginas: ${this.totalPages}, Total alumnos: ${this.totalAlumnos}`);
-            console.log('Estudiantes mostrados:', this.filteredStudents.length);
-            
+            (`Página actual: ${page}, Total páginas: ${this.totalPages}, Total alumnos: ${this.totalAlumnos}`);
+          
             this.loading = false;
             this.cdr.detectChanges();
           });
@@ -228,8 +221,8 @@ export class StudentListComponent implements OnInit {
             return matchesName || matchesDNI;
           });
         }
-        console.log(`Estudiantes filtrados: ${this.filteredStudents.length} de ${this.students.length} total`);
-        console.log('Término de búsqueda:', term);
+        (`Estudiantes filtrados: ${this.filteredStudents.length} de ${this.students.length} total`);
+       
         this.loading = false;
         this.cdr.detectChanges();
       }, 100);
@@ -297,7 +290,7 @@ export class StudentListComponent implements OnInit {
       .delete(`${this.apiUrl}/${this.colegioId}/${dni}`, { headers })
       .subscribe({
         next: (response) => {
-          console.log('Alumno eliminado exitosamente');
+          ('Alumno eliminado exitosamente');
           // Recargar la página actual después de eliminar
           this.loadStudents(this.currentPage);
         },
@@ -309,7 +302,7 @@ export class StudentListComponent implements OnInit {
 
   changePage(page: number) {
     if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
-      console.log(`Cambiando a página: ${page}`);
+      (`Cambiando a página: ${page}`);
       this.loadStudents(page);
     }
   }

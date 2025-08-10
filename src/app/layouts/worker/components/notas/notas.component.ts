@@ -141,7 +141,7 @@ export class NotasComponent implements OnInit {
         next: (response) => {
           this.ngZone.run(() => {
             this.salones = response.data || [];
-            console.log('Salones cargados:', this.salones);
+           
             this.loadingSalones = false;
             if (this.salones.length === 0) {
               this.error = 'No se encontraron salones para este colegio';
@@ -188,7 +188,7 @@ export class NotasComponent implements OnInit {
               id: item.idAlumno,
               nombre: item.alumno || 'Alumno sin nombre',
             }));
-            console.log('Alumnos cargados:', this.alumnos);
+          
             this.loadingAlumnos = false;
             if (this.alumnos.length === 0) {
               this.error = 'No se encontraron alumnos en este salón';
@@ -207,7 +207,7 @@ export class NotasComponent implements OnInit {
 
   async uploadPdfToS3(file: File): Promise<string> {
     try {
-      console.log('🚀 Iniciando subida de PDF de notas:', file.name);
+     
       this.uploadProgress = 0;
 
       if (!file) throw new Error('El archivo no existe');
@@ -226,7 +226,7 @@ export class NotasComponent implements OnInit {
       const randomId = Math.random().toString(36).substring(2);
       const fileName = `notes/${timestamp}_${randomId}.pdf`;
 
-      console.log('📝 Nombre del archivo:', fileName);
+      
 
       const params = {
         Bucket: BUCKET_NAME,
@@ -235,7 +235,7 @@ export class NotasComponent implements OnInit {
         ContentType: 'application/pdf',
       };
 
-      console.log('⚙️ Parámetros de subida configurados (archivo privado)');
+      ('⚙️ Parámetros de subida configurados (archivo privado)');
 
       const upload = this.s3.upload(params);
 
@@ -248,7 +248,7 @@ export class NotasComponent implements OnInit {
       });
 
       await upload.promise();
-      console.log('✅ Archivo de notas subido exitosamente');
+      ('✅ Archivo de notas subido exitosamente');
 
       const signedUrl = this.s3.getSignedUrl('getObject', {
         Bucket: BUCKET_NAME,
@@ -256,7 +256,7 @@ export class NotasComponent implements OnInit {
         Expires: 7 * 24 * 60 * 60,
       });
 
-      console.log('🔗 URL presignada generada para notas:', signedUrl);
+      
 
       return signedUrl;
     } catch (error: unknown) {
@@ -292,9 +292,9 @@ export class NotasComponent implements OnInit {
     this.error = null;
 
     try {
-      console.log('🔄 Iniciando proceso de guardado de notas...');
+      ('🔄 Iniciando proceso de guardado de notas...');
       const pdfUrl = await this.uploadPdfToS3(this.pdfFile);
-      console.log('✅ PDF subido, URL obtenida:', pdfUrl);
+      
 
       const payload = {
         IdAlumno: this.noteForm.get('idAlumno')?.value,
@@ -303,8 +303,8 @@ export class NotasComponent implements OnInit {
         Nombre: this.noteForm.get('nombre')?.value.trim(),
       };
 
-      console.log(
-        '📝 Payload para API de notas:',
+      (
+        
         JSON.stringify(payload, null, 2)
       );
 
@@ -313,7 +313,7 @@ export class NotasComponent implements OnInit {
           headers: this.getHeaders(),
         })
         .toPromise();
-      console.log('✅ Nota guardada exitosamente');
+      ('✅ Nota guardada exitosamente');
 
       this.successMessage = 'Nota subida correctamente';
       this.noteForm.reset();

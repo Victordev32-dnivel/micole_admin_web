@@ -249,14 +249,13 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     const salon = event.option.value;
     const salonId = salon ? salon.id : '';
     this.addForm.patchValue({ idSalon: salonId });
-    console.log('Salón seleccionado:', salon);
+  
   }
 
   onApoderadoSelected(event: MatAutocompleteSelectedEvent): void {
     const apoderado = event.option.value;
     const apoderadoId = apoderado ? apoderado.id : '';
     this.addForm.patchValue({ idApoderado: apoderadoId });
-    console.log('Apoderado seleccionado:', apoderado);
   }
 
   private getHeaders(): HttpHeaders {
@@ -275,7 +274,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
       colegioId = userData?.colegio;
     }
 
-    console.log('Cargando salones para colegio ID:', colegioId);
+   
     
     if (!colegioId) {
       console.error('No se encontró ID del colegio para salones');
@@ -286,11 +285,11 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     const headers = this.getHeaders();
     const url = `${this.salonesApiUrl}/${colegioId}`;
 
-    console.log('Cargando salones desde URL:', url);
+  
 
     this.http.get<any>(url, { headers }).subscribe({
       next: (response) => {
-        console.log('Respuesta completa de salones:', response);
+      
         
         let salonesData = response;
         if (response && response.data) {
@@ -305,7 +304,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
         this.filteredSalones = this.salones.slice(); // Inicializar filteredSalones
         this.loadingSalones = false;
         
-        console.log('Salones procesados:', this.salones);
+     
       },
       error: (error) => {
         console.error('Error al cargar salones:', error);
@@ -325,7 +324,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
       colegioId = userData?.colegio;
     }
 
-    console.log('Cargando apoderados para colegio ID:', colegioId);
+   
     
     if (!colegioId) {
       console.error('No se encontró ID del colegio para apoderados');
@@ -336,12 +335,11 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     const headers = this.getHeaders();
     const url = `${this.apoderadosApiUrl}/${colegioId}`;
 
-    console.log('Cargando apoderados desde URL:', url);
+
 
     this.http.get<any>(url, { headers }).subscribe({
       next: (response) => {
-        console.log('Respuesta completa de apoderados:', response);
-        
+     
         let apoderadosData = [];
         if (response && response.data && Array.isArray(response.data)) {
           apoderadosData = response.data;
@@ -353,7 +351,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
         this.filteredApoderados = this.apoderados.slice(); // Inicializar filteredApoderados
         this.loadingApoderados = false;
         
-        console.log('Apoderados procesados:', this.apoderados);
+       
         
         if (this.apoderados.length === 0) {
           console.warn('No se encontraron apoderados');
@@ -413,11 +411,11 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
         idColegio: this.data?.colegioId || 0,
       };
 
-      console.log('Payload enviado al POST:', payload);
+    
       const headers = this.getHeaders();
       this.http.post<any>(this.apiUrl, payload, { headers }).subscribe({
         next: (response) => {
-          console.log('Alumno agregado:', response);
+         
           this.snackBar.open('Alumno agregado exitosamente!', 'Cerrar', {
             duration: 5000,
             verticalPosition: 'top',
@@ -490,7 +488,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
   openCalendar(): void {
     if (isPlatformBrowser(this.platformId) && this.datepicker) {
       this.datepicker.open();
-      console.log('Calendario abierto manualmente');
+      ('Calendario abierto manualmente');
     } else {
       console.error('Datepicker no encontrado');
     }

@@ -54,7 +54,7 @@ export class LoginComponent {
       this.http.post<any>(this.apiUrl, loginData).subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-            console.log('Login exitoso:', response);
+
 
             const userData: UserData = {
               id: response.id,

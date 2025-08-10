@@ -299,7 +299,7 @@ export class AddTarjetaModalComponent {
       alumnos: any[] 
     }
   ) {
-    console.log('Datos recibidos en el modal:', data);
+   
     
     this.tarjetaForm = this.fb.group({
       rfid: ['', [
@@ -332,7 +332,7 @@ export class AddTarjetaModalComponent {
         idColegio: parseInt(formData.idColegio, 10)
       };
 
-      console.log('Datos de tarjeta a enviar:', tarjetaData);
+     
       this.dialogRef.close(tarjetaData);
     } else {
       // Marcar todos los campos como tocados para mostrar errores

@@ -124,13 +124,13 @@ export class ComunicadoFormComponent implements OnInit {
     if (userData) {
       this.colegioId = userData.colegio;
       this.generalForm.patchValue({ idColegio: this.colegioId });
-      console.log('Usuario cargado - colegioId:', this.colegioId);
+      
     }
     this.userService.userData$.subscribe((userData: UserData | null) => {
       if (userData) {
         this.colegioId = userData.colegio;
         this.generalForm.patchValue({ idColegio: this.colegioId });
-        console.log('Usuario actualizado - nuevo colegioId:', this.colegioId);
+   
         this.loadSalones();
         this.cdr.detectChanges();
       }
@@ -139,7 +139,7 @@ export class ComunicadoFormComponent implements OnInit {
 
   private getHeaders(): HttpHeaders {
     const jwtToken = this.userService.getJwtToken() || '732612882';
-    console.log('Token usado en headers:', jwtToken);
+   
     return new HttpHeaders({
       Authorization: `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
@@ -160,7 +160,7 @@ export class ComunicadoFormComponent implements OnInit {
     this.loading = true;
     this.error = null;
     this.successMessage = null;
-    console.log('Iniciando carga de salones para colegioId:', this.colegioId);
+   
     const headers = this.getHeaders();
     this.http
       .get<any>(
@@ -170,12 +170,12 @@ export class ComunicadoFormComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-            console.log('Respuesta de la API al cargar salones:', response);
+          
             this.salones = response.data.map((item: any) => ({
               id: item.id,
               nombre: item.nombre,
             }));
-            console.log('Salones cargados:', this.salones);
+          
             this.loading = false;
             this.cdr.detectChanges();
           });
@@ -191,7 +191,7 @@ export class ComunicadoFormComponent implements OnInit {
 
   async uploadPdfToS3(file: File): Promise<string> {
     try {
-      console.log('🚀 Iniciando subida de PDF:', file.name);
+     
       this.uploadProgress = 0;
 
       if (!file) {
@@ -212,7 +212,7 @@ export class ComunicadoFormComponent implements OnInit {
       const randomId = Math.random().toString(36).substring(2);
       const fileName = `announcements/${timestamp}_${randomId}.pdf`;
 
-      console.log('📝 Nombre del archivo:', fileName);
+    
 
       const params = {
         Bucket: BUCKET_NAME,
@@ -221,7 +221,7 @@ export class ComunicadoFormComponent implements OnInit {
         ContentType: 'application/pdf',
       };
 
-      console.log('⚙️ Parámetros de subida configurados (archivo privado)');
+      ('⚙️ Parámetros de subida configurados (archivo privado)');
 
       const upload = this.s3.upload(params);
 
@@ -229,13 +229,13 @@ export class ComunicadoFormComponent implements OnInit {
         const percent = Math.round((progress.loaded / progress.total) * 100);
         this.ngZone.run(() => {
           this.uploadProgress = percent;
-          console.log(`📈 Progreso: ${percent}%`);
+          (`📈 Progreso: ${percent}%`);
           this.cdr.detectChanges();
         });
       });
 
       await upload.promise();
-      console.log('✅ Archivo subido exitosamente (privado)');
+      ('✅ Archivo subido exitosamente (privado)');
 
       const signedUrl = this.s3.getSignedUrl('getObject', {
         Bucket: BUCKET_NAME,
@@ -243,12 +243,11 @@ export class ComunicadoFormComponent implements OnInit {
         Expires: 7 * 24 * 60 * 60,
       });
 
-      console.log('🔗 URL presignada generada:', signedUrl);
-
+    
       return signedUrl;
     } catch (error: unknown) {
       console.error('❌ Error detallado en uploadPdfToS3:', error);
-      console.log('🔍 Detalles de error:', JSON.stringify(error, null, 2));
+ 
 
       const isAWSError = (
         err: unknown
@@ -292,7 +291,7 @@ export class ComunicadoFormComponent implements OnInit {
 
   async uploadImageToS3(file: File): Promise<string> {
     try {
-      console.log('🚀 Iniciando subida de imagen:', file.name);
+   
       this.uploadProgress = 0;
 
       if (!file) {
@@ -314,7 +313,7 @@ export class ComunicadoFormComponent implements OnInit {
       const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `announcements/images/${timestamp}_${randomId}.${fileExtension}`;
 
-      console.log('📝 Nombre del archivo:', fileName);
+    
 
       let contentType = 'image/jpeg';
       if (fileExtension === 'png') contentType = 'image/png';
@@ -328,7 +327,7 @@ export class ComunicadoFormComponent implements OnInit {
         ContentType: contentType,
       };
 
-      console.log('⚙️ Parámetros de subida configurados (archivo privado)');
+      ('⚙️ Parámetros de subida configurados (archivo privado)');
 
       const upload = this.s3.upload(params, {
         partSize: 5 * 1024 * 1024,
@@ -339,13 +338,13 @@ export class ComunicadoFormComponent implements OnInit {
         const percent = Math.round((progress.loaded / progress.total) * 100);
         this.ngZone.run(() => {
           this.uploadProgress = percent;
-          console.log(`📈 Progreso: ${percent}%`);
+          (`📈 Progreso: ${percent}%`);
           this.cdr.detectChanges();
         });
       });
 
       await upload.promise();
-      console.log('✅ Imagen subida exitosamente (privada)');
+      ('✅ Imagen subida exitosamente (privada)');
 
       const signedUrl = this.s3.getSignedUrl('getObject', {
         Bucket: BUCKET_NAME,
@@ -353,12 +352,11 @@ export class ComunicadoFormComponent implements OnInit {
         Expires: 7 * 24 * 60 * 60,
       });
 
-      console.log('🔗 URL presignada generada:', signedUrl);
+     
 
       return signedUrl;
     } catch (error: unknown) {
       console.error('❌ Error detallado en uploadImageToS3:', error);
-      console.log('🔍 Detalles de error:', JSON.stringify(error, null, 2));
 
       const isAWSError = (
         err: unknown
@@ -404,7 +402,7 @@ export class ComunicadoFormComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      console.log('PDF seleccionado:', file.name);
+     
 
       this.loading = true;
       this.pdfFile = file;
@@ -415,7 +413,7 @@ export class ComunicadoFormComponent implements OnInit {
             this.comunicadoForm.patchValue({ pdf: signedUrl });
             this.loading = false;
             this.uploadProgress = 0;
-            console.log('URL del PDF actualizada en el formulario:', signedUrl);
+           
             this.cdr.detectChanges();
           });
         })
@@ -434,7 +432,7 @@ export class ComunicadoFormComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      console.log('Imagen seleccionada:', file.name);
+     
 
       this.loading = true;
       this.imageFile = file;
@@ -445,8 +443,8 @@ export class ComunicadoFormComponent implements OnInit {
             this.generalForm.patchValue({ imagen: signedUrl });
             this.loading = false;
             this.uploadProgress = 0;
-            console.log(
-              'URL de la imagen actualizada en el formulario:',
+            (
+              
               signedUrl
             );
             this.cdr.detectChanges();
@@ -487,8 +485,8 @@ export class ComunicadoFormComponent implements OnInit {
         Pdf: this.comunicadoForm.get('pdf')?.value.trim(),
         IdColegio: this.colegioId,
       };
-      console.log(
-        'Datos enviados en el POST (Salon):',
+      (
+      
         JSON.stringify(data, null, 2)
       );
 
@@ -500,8 +498,7 @@ export class ComunicadoFormComponent implements OnInit {
         })
         .subscribe({
           next: (response) => {
-            console.log(
-              'Respuesta de la API al publicar anuncio (Salon):',
+            (
               response
             );
             this.successMessage = 'Anuncio por salón publicado correctamente';
@@ -531,7 +528,7 @@ export class ComunicadoFormComponent implements OnInit {
     } else {
       this.error = 'Por favor, complete correctamente todos los campos (Salon)';
       this.successMessage = null;
-      console.log('Formulario inválido (Salon):', this.comunicadoForm.errors);
+   
       this.cdr.detectChanges();
     }
   }
@@ -544,8 +541,7 @@ export class ComunicadoFormComponent implements OnInit {
         imagen: this.generalForm.get('imagen')?.value.trim() || null,
         idColegio: this.colegioId,
       };
-      console.log(
-        'Datos enviados en el POST (General):',
+      (
         JSON.stringify(data, null, 2)
       );
 
@@ -559,8 +555,8 @@ export class ComunicadoFormComponent implements OnInit {
         )
         .subscribe({
           next: (response) => {
-            console.log(
-              'Respuesta de la API al publicar anuncio (General):',
+            (
+           
               response
             );
             this.successMessage = 'Anuncio general publicado correctamente';
@@ -591,7 +587,7 @@ export class ComunicadoFormComponent implements OnInit {
       this.error =
         'Por favor, complete correctamente todos los campos (General)';
       this.successMessage = null;
-      console.log('Formulario inválido (General):', this.generalForm.errors);
+     
       this.cdr.detectChanges();
     }
   }

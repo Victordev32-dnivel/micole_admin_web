@@ -26,7 +26,7 @@ export class AuthService {
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('userData', JSON.stringify(userData));
     }
-    console.log(
+    (
       `Login exitoso para ${userData.nombre} con rol ${userData.tipoUsuario}`
     );
   }
@@ -38,7 +38,7 @@ export class AuthService {
       localStorage.removeItem('isAuthenticated');
       localStorage.removeItem('userData');
     }
-    console.log('Logout ejecutado, estado de autenticación limpiado');
+    ('Logout ejecutado, estado de autenticación limpiado');
   }
 
   isLoggedIn(): boolean {

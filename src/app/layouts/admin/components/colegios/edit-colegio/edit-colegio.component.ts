@@ -104,7 +104,7 @@ export class StudentEditComponent implements AfterViewInit {
             idSalon: student.idSalon,
             idApoderado: student.idApoderado
           });
-          console.log('Datos cargados para edición:', response);
+          ('Datos cargados para edición:', response);
           this.loading = false;
           this.cdr.detectChanges();
         });
@@ -127,7 +127,7 @@ export class StudentEditComponent implements AfterViewInit {
       this.http.put<any>(`${this.apiUrl}/${this.data.id}`, editData).subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-            console.log('Edición exitosa:', response);
+            ('Edición exitosa:', response);
             this.dialogRef.close(this.editForm.value); // Cierra con los datos editados
             this.loading = false;
             this.cdr.detectChanges();
@@ -149,7 +149,7 @@ export class StudentEditComponent implements AfterViewInit {
   openCalendar(): void {
     if (this.datepicker) {
       this.datepicker.open();
-      console.log('Calendario abierto manualmente');
+      ('Calendario abierto manualmente');
     } else {
       console.error('Datepicker no encontrado');
     }

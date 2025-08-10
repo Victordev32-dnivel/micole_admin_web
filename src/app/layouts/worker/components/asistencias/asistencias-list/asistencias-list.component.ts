@@ -92,7 +92,6 @@ export class AsistenciasComponent implements OnInit {
     const userData = this.userService.getUserData();
     if (userData) {
       this.colegioId = userData.colegio;
-      console.log('Datos del usuario cargados:', { colegioId: this.colegioId });
     }
     this.userService.userData$.subscribe((userData) => {
       if (userData) {
@@ -130,7 +129,6 @@ export class AsistenciasComponent implements OnInit {
         next: (response) => {
           this.ngZone.run(() => {
             this.salones = response.data || [];
-            console.log('Salones cargados:', this.salones);
             this.loading = false;
             if (this.salones.length === 0) {
               this.error = 'No se encontraron salones para este colegio';
@@ -174,7 +172,6 @@ export class AsistenciasComponent implements OnInit {
         next: (response) => {
           this.ngZone.run(() => {
             this.alumnos = response || [];
-            console.log('Alumnos cargados:', this.alumnos);
             this.loading = false;
             if (this.alumnos.length === 0) {
               this.error = 'No se encontraron alumnos en este salón';
@@ -215,7 +212,6 @@ export class AsistenciasComponent implements OnInit {
         next: (response) => {
           this.ngZone.run(() => {
             this.asistencias = response || [];
-            console.log('Asistencias cargadas:', this.asistencias);
             this.loading = false;
             if (this.asistencias.length === 0) {
               this.error = 'No se encontraron asistencias para este alumno';

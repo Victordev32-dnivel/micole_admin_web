@@ -260,14 +260,13 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
     const salon = event.option.value;
     const salonId = salon ? salon.id : '';
     this.editForm.patchValue({ idSalon: salonId });
-    console.log('Salón seleccionado:', salon);
   }
 
   onApoderadoSelected(event: MatAutocompleteSelectedEvent): void {
     const apoderado = event.option.value;
     const apoderadoId = apoderado ? apoderado.id : '';
     this.editForm.patchValue({ idApoderado: apoderadoId });
-    console.log('Apoderado seleccionado:', apoderado);
+   
   }
 
   private getHeaders(): HttpHeaders {
@@ -286,7 +285,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
       colegioId = userData?.colegio;
     }
 
-    console.log('Cargando salones para colegio ID:', colegioId);
+  
     
     if (!colegioId) {
       console.error('No se encontró ID del colegio para salones');
@@ -297,12 +296,11 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
     const headers = this.getHeaders();
     const url = `${this.salonesApiUrl}/${colegioId}`;
 
-    console.log('Cargando salones desde URL:', url);
-
+   
     this.http.get<any>(url, { headers }).subscribe({
       next: (response) => {
         this.ngZone.run(() => {
-          console.log('Respuesta completa de salones:', response);
+          
           
           let salonesData = response;
           if (response && response.data) {
@@ -318,7 +316,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
           this.loadingSalones = false;
           this.cdr.detectChanges();
           
-          console.log('Salones procesados:', this.salones);
+        
         });
       },
       error: (error) => {
@@ -339,7 +337,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
       colegioId = userData?.colegio;
     }
 
-    console.log('Cargando apoderados para colegio ID:', colegioId);
+    
     
     if (!colegioId) {
       console.error('No se encontró ID del colegio para apoderados');
@@ -350,13 +348,10 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
     const headers = this.getHeaders();
     const url = `${this.apoderadosApiUrl}/${colegioId}`;
 
-    console.log('Cargando apoderados desde URL:', url);
-
+    
     this.http.get<any>(url, { headers }).subscribe({
       next: (response) => {
         this.ngZone.run(() => {
-          console.log('Respuesta completa de apoderados:', response);
-          
           let apoderadosData = [];
           if (response && response.data && Array.isArray(response.data)) {
             apoderadosData = response.data;
@@ -369,7 +364,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
           this.loadingApoderados = false;
           this.cdr.detectChanges();
           
-          console.log('Apoderados procesados:', this.apoderados);
+       
         });
       },
       error: (error) => {
@@ -392,7 +387,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
       return;
     }
     const url = `${this.apiUrl}/${studentId}`;
-    console.log('URL de la petición GET:', url);
+   
     this.http.get<any>(url, { headers: this.getHeaders() }).subscribe({
       next: (response) => {
         this.ngZone.run(() => {
@@ -436,7 +431,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
           }
           
           this.isFormChanged = false; // Inicialmente no hay cambios
-          console.log('Datos cargados para edición:', student);
+      
           this.loading = false;
           this.cdr.detectChanges();
         });
@@ -535,18 +530,16 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
         idColegio: this.data.colegioId || 0,
       };
       
-      console.log('Payload enviado al PUT:', editData);
+    
       
       const studentId = Number(this.data.id);
       const url = `${this.apiUrl}/${studentId}`;
-      console.log('URL de la petición PUT:', url);
       
       this.http
         .put<any>(url, editData, { headers: this.getHeaders() })
         .subscribe({
           next: (response) => {
             this.ngZone.run(() => {
-              console.log('Edición exitosa:', response);
               this.dialogRef.close(this.editForm.value);
               this.loading = false;
               this.cdr.detectChanges();
@@ -573,7 +566,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
   openCalendar(): void {
     if (isPlatformBrowser(this.platformId) && this.datepicker) {
       this.datepicker.open();
-      console.log('Calendario abierto manualmente');
+      ('Calendario abierto manualmente');
     } else {
       console.error('Datepicker no encontrado');
     }

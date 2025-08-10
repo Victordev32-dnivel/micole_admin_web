@@ -23,7 +23,7 @@ import { FormsModule } from '@angular/forms';
             <th>ID</th>
             <th>Nombre</th>
             <th>Dirección</th>
-            <th>Acciones</th>
+        
           </tr>
         </thead>
         <tbody>

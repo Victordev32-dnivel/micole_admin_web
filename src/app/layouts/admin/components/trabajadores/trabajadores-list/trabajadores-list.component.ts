@@ -24,7 +24,7 @@ import { FormsModule } from '@angular/forms';
             <th>Nombre</th>
             <th>Documento</th>
             <th>Tipo</th>
-            <th>Acciones</th>
+        
           </tr>
         </thead>
         <tbody>

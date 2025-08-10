@@ -177,11 +177,7 @@ export class GuardianListComponent implements OnInit {
       this.userName = userData.nombre;
       this.userType = userData.tipoUsuario;
       this.colegioId = userData.colegio;
-      console.log('Datos del usuario cargados:', {
-        nombre: this.userName,
-        tipo: this.userType,
-        colegioId: this.colegioId,
-      });
+     
     }
 
     this.userService.userData$.subscribe((userData) => {
@@ -212,7 +208,7 @@ loadGuardians(page: number = 1) {
   this.loading = true;
   const headers = this.getHeaders();
 
-  console.log(
+  (
     `Cargando página: ${page}, pageSize: ${this.pageSize}, colegioId: ${this.colegioId}`
   );
 
@@ -224,9 +220,8 @@ loadGuardians(page: number = 1) {
     )
     .subscribe({
       next: (response) => {
-        console.log('Respuesta de la API de apoderados:', response);
-        console.log(
-          'Número de apoderados recibidos:',
+       
+        (
           response.data?.length || 0
         );
 
@@ -258,10 +253,10 @@ loadGuardians(page: number = 1) {
 
           this.updateVisiblePages();
 
-          console.log(
+          (
             `Página actual: ${page}, Total páginas: ${this.totalPages}, Total apoderados: ${this.totalApoderados}`
           );
-          console.log('Apoderados mostrados:', this.filteredGuardians.length);
+         
 
           this.loading = false;
           this.cdr.detectChanges();
@@ -310,10 +305,10 @@ loadGuardians(page: number = 1) {
             return matchesName || matchesDNI;
           });
         }
-        console.log(
+        (
           `Apoderados filtrados: ${this.filteredGuardians.length} de ${this.guardians.length} total`
         );
-        console.log('Término de búsqueda:', term);
+       
         this.loading = false;
         this.cdr.detectChanges();
       }, 100);
@@ -376,7 +371,6 @@ loadGuardians(page: number = 1) {
       this.http.put(`${this.apiUrl}/${guardianId}`, guardianData, { headers })
         .subscribe({
           next: (response) => {
-            console.log('Apoderado actualizado exitosamente:', response);
             this.showSnackBar('Apoderado actualizado exitosamente', 'success');
             this.loadGuardians(this.currentPage);
           },
@@ -394,7 +388,7 @@ loadGuardians(page: number = 1) {
       this.http.post(this.apiUrl, guardianData, { headers })
         .subscribe({
           next: (response) => {
-            console.log('Apoderado creado exitosamente:', response);
+           
             this.showSnackBar('Apoderado agregado exitosamente', 'success');
             this.loadGuardians(this.currentPage);
           },
@@ -421,7 +415,7 @@ loadGuardians(page: number = 1) {
 
   changePage(page: number) {
     if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
-      console.log(`Cambiando a página: ${page}`);
+      (`Cambiando a página: ${page}`);
       this.loadGuardians(page);
     }
   }

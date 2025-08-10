@@ -47,6 +47,8 @@ export class TarjetasModalComponent {
   rfidError: boolean = false;
   modalTitle: string = '';
   loading: boolean = false;
+  isEditMode: boolean = false; // Nueva propiedad para identificar el modo
+  
   private apiUrlTarjeta = 'https://proy-back-dnivel.onrender.com/api/tarjeta';
   private staticToken = '732612882';
 
@@ -66,14 +68,18 @@ export class TarjetasModalComponent {
       this.currentRfid = this.data.currentRfid;
       this.colegioId = this.data.colegioId;
       this.rfidInput = this.currentRfid?.toString() || '';
-      this.modalTitle = this.currentRfid
+      
+      // Determinar si es modo edición o asignación
+      this.isEditMode = this.currentRfid !== null && this.currentRfid > 0;
+      
+      this.modalTitle = this.isEditMode
         ? 'Actualizar Tarjeta RFID'
         : 'Asignar Tarjeta RFID';
     }
   }
 
   isRfidInvalid(): boolean {
-    return !this.rfidInput || !/^[0-9]{7}$/.test(this.rfidInput);
+    return !this.rfidInput || !/^[0-9]{10}$/.test(this.rfidInput);
   }
 
   confirmRfid() {
@@ -86,28 +92,74 @@ export class TarjetasModalComponent {
     this.rfidError = false;
     this.loading = true;
     const headers = this.getHeaders();
+
+    if (this.isEditMode) {
+      // Usar PUT para actualizar tarjeta existente
+      this.updateTarjeta(headers);
+    } else {
+      // Usar POST para crear nueva tarjeta
+      this.createTarjeta(headers);
+    }
+  }
+
+  private createTarjeta(headers: HttpHeaders) {
     const body = {
       rfid: parseInt(this.rfidInput),
       idAlumno: this.alumnoId!,
       idColegio: this.colegioId,
     };
 
+  
+
     this.http.post<any>(this.apiUrlTarjeta, body, { headers }).subscribe({
       next: (response) => {
         this.ngZone.run(() => {
           this.loading = false;
-          this.modalClosed.emit(true); // Indica que se cerró con éxito
+          this.modalClosed.emit(true);
           this.dialogRef.close(true);
           this.cdr.detectChanges();
         });
       },
       error: (error) => {
-        console.error('Error al asignar tarjeta:', error);
-        this.loading = false;
-        this.rfidError = true;
-        this.cdr.detectChanges();
+        console.error('Error completo al asignar tarjeta:', error);
+        console.error('Error details:', error.error);
+        console.error('Validation errors:', error.error?.errors);
+        this.handleError();
       },
     });
+  }
+
+  private updateTarjeta(headers: HttpHeaders) {
+    const body = {
+      rfid: parseInt(this.rfidInput)
+    };
+    
+   
+    
+    const updateUrl = `${this.apiUrlTarjeta}/alumno/${this.alumnoId}`;
+
+    this.http.patch<any>(updateUrl, body, { headers }).subscribe({
+      next: (response) => {
+        this.ngZone.run(() => {
+          this.loading = false;
+          this.modalClosed.emit(true);
+          this.dialogRef.close(true);
+          this.cdr.detectChanges();
+        });
+      },
+      error: (error) => {
+        console.error('Error completo al actualizar tarjeta:', error);
+        console.error('Error details:', error.error);
+        console.error('Validation errors:', error.error?.errors);
+        this.handleError();
+      },
+    });
+  }
+
+  private handleError() {
+    this.loading = false;
+    this.rfidError = true;
+    this.cdr.detectChanges();
   }
 
   private getHeaders(): HttpHeaders {
@@ -119,6 +171,6 @@ export class TarjetasModalComponent {
   }
 
   onCancel() {
-    this.dialogRef.close(false); // Cierre sin éxito
+    this.dialogRef.close(false);
   }
 }
