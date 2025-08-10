@@ -7,7 +7,7 @@
 }
 
 .tarjetas-card {
-  max-width: 1000px;
+  max-width: 1200px; /* Aumenté el ancho máximo para acomodar la nueva columna */
   margin: 0 auto;
   padding: 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -85,7 +85,7 @@ mat-form-field .mat-error {
 .full-width-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 600px;
+  min-width: 800px; /* Aumenté el ancho mínimo para acomodar la nueva columna */
 }
 
 .full-width-table th {
@@ -123,6 +123,26 @@ mat-form-field .mat-error {
   color: #f44336;
   font-style: italic;
   background-color: #ffebee;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* Estilos para los códigos - Nuevos estilos */
+.codigo-asignado {
+  color: #2196f3;
+  font-weight: 500;
+  background-color: #e3f2fd;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+.codigo-sin-asignar {
+  color: #ff9800;
+  font-style: italic;
+  background-color: #fff3e0;
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
@@ -287,19 +307,19 @@ mat-form-field .mat-error {
   }
 
   .full-width-table {
-    min-width: 500px;
+    min-width: 650px; /* Ajusté para la nueva columna */
   }
-  
+
   .pagination-buttons {
     flex-direction: column;
     gap: 15px;
   }
-  
+
   .page-numbers {
     margin: 0;
     order: 1;
   }
-  
+
   .pagination-nav-btn {
     min-width: 120px;
     order: 2;
@@ -336,5 +356,38 @@ mat-form-field .mat-error {
   .pagination-nav-btn {
     font-size: 12px;
     padding: 6px 12px;
+  }
+  /* Estilos para el campo de búsqueda */
+  .search-field {
+    margin-left: auto;
+    max-width: 400px;
+  }
+
+  .search-field .mat-form-field-wrapper {
+    padding-bottom: 0;
+  }
+
+  .search-field .mat-form-field-infix {
+    border-top: 0;
+  }
+
+  /* Ajustes para la tabla con el nuevo orden de columnas */
+  .full-width-table th:nth-child(1),
+  .full-width-table td:nth-child(1) {
+    width: 120px; /* Ancho fijo para la columna de código */
+  }
+
+  .full-width-table th:nth-child(2),
+  .full-width-table td:nth-child(2) {
+    min-width: 200px; /* Ancho mínimo para la columna de nombre */
+  }
+
+  /* Responsive para el campo de búsqueda */
+  @media (max-width: 800px) {
+    .search-field {
+      max-width: 100%;
+      margin-left: 0;
+      margin-top: 15px;
+    }
   }
 }

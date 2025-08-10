@@ -24,16 +24,36 @@
             El salón es requerido
           </mat-error>
         </mat-form-field>
+
+        <!-- Añadido campo de búsqueda -->
+        <mat-form-field appearance="outline" class="form-field search-field">
+          <mat-label>Buscar alumno</mat-label>
+          <input matInput formControlName="searchTerm" placeholder="Nombre o código">
+          <mat-icon matPrefix>search</mat-icon>
+          <button matSuffix mat-icon-button (click)="clearSearch()" *ngIf="tarjetaForm.get('searchTerm')?.value">
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-form-field>
       </form>
 
       <!-- Información de paginación -->
-      <div *ngIf="alumnos.length > 0" class="pagination-info">
-        <p>Mostrando {{ alumnos.length }} de {{ totalAlumnos }} alumnos - Página {{ currentPage }} de {{ totalPages }}</p>
+      <div *ngIf="filteredAlumnos.length > 0" class="pagination-info">
+        <p>Mostrando {{ filteredAlumnos.length }} de {{ totalAlumnos }} alumnos - Página {{ currentPage }} de {{ totalPages }}</p>
       </div>
 
       <!-- Tabla de alumnos -->
-      <div *ngIf="alumnos.length > 0" class="alumnos-table-container">
-        <table mat-table [dataSource]="alumnos" class="mat-elevation-z2 full-width-table">
+      <div *ngIf="filteredAlumnos.length > 0" class="alumnos-table-container">
+        <table mat-table [dataSource]="filteredAlumnos" class="mat-elevation-z2 full-width-table">
+          <!-- Reorganizado el orden de las columnas (código primero) -->
+          <ng-container matColumnDef="codigo">
+            <th mat-header-cell *matHeaderCellDef> Código </th>
+            <td mat-cell *matCellDef="let alumno"> 
+              <span [class]="alumno.codigo ? 'codigo-asignado' : 'codigo-sin-asignar'">
+                {{ alumno.codigo || 'No asignado' }}
+              </span>
+            </td>
+          </ng-container>
+
           <ng-container matColumnDef="nombre">
             <th mat-header-cell *matHeaderCellDef> Nombre </th>
             <td mat-cell *matCellDef="let alumno"> {{ alumno.nombre || 'Sin nombre' }} </td>
@@ -67,7 +87,6 @@
           <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
         </table>
       </div>
-
       <!-- Controles de paginación -->
       <div *ngIf="totalPages > 1" class="pagination-controls">
         <div class="pagination-buttons">
