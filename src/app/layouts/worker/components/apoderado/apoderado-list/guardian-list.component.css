@@ -39,6 +39,17 @@
   background-color: #333;
 }
 
+.add-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #28a745 !important;
+}
+
+.add-button:hover {
+  background-color: #218838 !important;
+}
+
 .guardian-table {
   width: 100%;
   border-collapse: collapse;
@@ -136,10 +147,17 @@
   border-radius: 4px;
 }
 
-.actions mat-icon:hover {
-  background-color: rgba(255, 204, 0, 0.1);
+.edit-icon {
+  color: #007bff;
+}
+
+.edit-icon:hover {
+  background-color: rgba(0, 123, 255, 0.1);
   transform: scale(1.1);
 }
+
+/* MODAL STYLES */
+/* Se eliminaron los estilos del modal overlay ya que ahora usamos MatDialog */
 
 /* PAGINACIÓN MEJORADA */
 .pagination {
@@ -230,6 +248,15 @@
     min-width: 35px;
     height: 35px;
     font-size: 0.85rem;
+  }
+
+  .modal-content {
+    width: 95%;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
   }
 }
 
@@ -341,13 +368,24 @@
     flex-shrink: 0;
   }
 
-  /* Mostrar solo algunas páginas en móvil */
-  .pagination-buttons-mobile {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    justify-content: center;
-    max-width: 100%;
+  /* Modal responsivo */
+  .modal-content {
+    width: 95%;
+    margin: 10px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-actions button {
+    width: 100%;
   }
 }
 
@@ -391,6 +429,19 @@
     min-width: 28px;
     height: 28px;
     font-size: 0.75rem;
+  }
+
+  .modal-content {
+    width: 98%;
+    margin: 5px;
+  }
+
+  .modal-header {
+    padding: 15px;
+  }
+
+  .modal-form {
+    padding: 15px;
   }
 }
 
@@ -510,4 +561,28 @@
     display: inline-block;
     margin-top: 5px;
   }
+}
+
+/* Estilos para el modal dialog */
+::ng-deep .guardian-modal-panel {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+::ng-deep .guardian-modal-panel .mat-dialog-container {
+  padding: 0 !important;
+  border-radius: 12px !important;
+  max-height: 95vh !important;
+  overflow-y: auto !important;
+}
+
+/* Estilos para snackbar */
+::ng-deep .snackbar-success {
+  background-color: #4caf50 !important;
+  color: white !important;
+}
+
+::ng-deep .snackbar-error {
+  background-color: #f44336 !important;
+  color: white !important;
 }

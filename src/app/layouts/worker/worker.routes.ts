@@ -8,6 +8,7 @@ import { AsistenciasComponent } from './components/asistencias/asistencias-list/
 import { NotasComponent } from './components/notas/notas.component';
 import { GuardianListComponent } from './components/apoderado/apoderado-list/apoderado-list.componente';
 
+
 export const WORKER_ROUTES: Routes = [
   {
     path: '',

@@ -14,6 +14,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import {
   FormBuilder,
   FormGroup,
@@ -27,7 +29,7 @@ import {
 } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { UserService } from '../../../../../services/UserData';
-import { AddApoderadoComponent } from '../add-apoderado/add-apoderado.component';
+import { GuardianModalComponent, GuardianModalData } from '../add-apoderado/guardian-modal.component';
 
 // Interfaces
 interface Guardian {
@@ -40,12 +42,28 @@ interface Guardian {
   telefono: string;
   parentesco: string;
   genero: string;
+  tipoUsuario?: string;
+  contrasena?: string;
+  idColegio?: number;
 }
 
 interface GuardianApiResponse {
   data: Guardian[];
   totalPages: number;
   totalApoderados: number;
+}
+
+interface GuardianCreateRequest {
+  numeroDocumento: string;
+  tipoUsuario: string;
+  contrasena: string;
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  genero: string;
+  telefono: string;
+  parentesco: string;
+  idColegio: number;
 }
 
 @Component({
@@ -57,6 +75,8 @@ interface GuardianApiResponse {
     MatInputModule,
     MatIconModule,
     MatButtonModule,
+    MatSelectModule,
+    MatSnackBarModule,
     ReactiveFormsModule,
     HttpClientModule,
   ],
@@ -87,12 +107,13 @@ export class GuardianListComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    @Inject(MatDialog) public dialog: MatDialog,
+    public dialog: MatDialog,
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
     private router: Router,
     private userService: UserService,
+    private snackBar: MatSnackBar,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.searchForm = this.fb.group({
@@ -247,6 +268,7 @@ export class GuardianListComponent implements OnInit {
           console.error('Error al cargar apoderados:', error);
           this.ngZone.run(() => {
             this.loading = false;
+            this.showSnackBar('Error al cargar apoderados', 'error');
             this.cdr.detectChanges();
           });
         },
@@ -295,59 +317,98 @@ export class GuardianListComponent implements OnInit {
     });
   }
 
-  openAddDialog(): void {
-    const dialogRef = this.dialog.open(AddApoderadoComponent, {
-      width: '800px',
+  // Métodos del Modal
+  openAddGuardianModal(): void {
+    const dialogRef = this.dialog.open(GuardianModalComponent, {
+      width: this.isMobile ? '95vw' : '800px',
       maxWidth: '95vw',
-      disableClose: true,
-      data: { apoderado: null }, // No pasamos datos para creación
+      maxHeight: '95vh',
+      panelClass: 'guardian-modal-panel',
+      disableClose: false,
+      data: {
+        guardian: null,
+        isEditMode: false,
+        colegioId: this.colegioId
+      } as GuardianModalData
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        // Recargar la lista si se agregó un apoderado
-        this.loadGuardians(this.currentPage);
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.action === 'save') {
+        this.saveGuardian(result.data, false);
       }
     });
   }
 
-  openEditDialog(guardian: Guardian): void {
-    const dialogRef = this.dialog.open(AddApoderadoComponent, {
-      width: '800px',
+  openEditGuardianModal(guardian: Guardian): void {
+    const dialogRef = this.dialog.open(GuardianModalComponent, {
+      width: this.isMobile ? '95vw' : '800px',
       maxWidth: '95vw',
-      disableClose: true,
-      data: { apoderado: guardian }, // Pasamos datos para edición
+      maxHeight: '95vh',
+      panelClass: 'guardian-modal-panel',
+      disableClose: false,
+      data: {
+        guardian: guardian,
+        isEditMode: true,
+        colegioId: this.colegioId
+      } as GuardianModalData
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        // Recargar la lista si se editó un apoderado
-        this.loadGuardians(this.currentPage);
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.action === 'save') {
+        this.saveGuardian(result.data, true, result.guardianId);
       }
     });
   }
 
-  confirmDelete(id: number): void {
-    // TODO: Implementar confirmación de eliminación
-    console.log('Confirmar eliminación del apoderado:', id);
-  }
-
-  deleteGuardian(id: number): void {
-    if (!this.colegioId) {
-      console.error('ID del colegio no disponible');
-      return;
-    }
-
+  private saveGuardian(guardianData: GuardianCreateRequest, isEditMode: boolean, guardianId?: number): void {
+    this.loading = true;
     const headers = this.getHeaders();
-    this.http.delete(`${this.apiUrl}/${id}`, { headers }).subscribe({
-      next: (response) => {
-        console.log('Apoderado eliminado exitosamente');
-        // Recargar la página actual después de eliminar
-        this.loadGuardians(this.currentPage);
-      },
-      error: (error) => {
-        console.error('Error al eliminar apoderado:', error);
-      },
+
+    if (isEditMode && guardianId) {
+      // Actualizar apoderado existente
+      this.http.put(`${this.apiUrl}/${guardianId}`, guardianData, { headers })
+        .subscribe({
+          next: (response) => {
+            console.log('Apoderado actualizado exitosamente:', response);
+            this.showSnackBar('Apoderado actualizado exitosamente', 'success');
+            this.loadGuardians(this.currentPage);
+          },
+          error: (error) => {
+            console.error('Error al actualizar apoderado:', error);
+            this.showSnackBar(
+              error.error?.message || 'Error al actualizar apoderado', 
+              'error'
+            );
+            this.loading = false;
+          }
+        });
+    } else {
+      // Crear nuevo apoderado
+      this.http.post(this.apiUrl, guardianData, { headers })
+        .subscribe({
+          next: (response) => {
+            console.log('Apoderado creado exitosamente:', response);
+            this.showSnackBar('Apoderado agregado exitosamente', 'success');
+            this.loadGuardians(this.currentPage);
+          },
+          error: (error) => {
+            console.error('Error al crear apoderado:', error);
+            this.showSnackBar(
+              error.error?.message || 'Error al agregar apoderado', 
+              'error'
+            );
+            this.loading = false;
+          }
+        });
+    }
+  }
+
+  private showSnackBar(message: string, type: 'success' | 'error'): void {
+    this.snackBar.open(message, 'Cerrar', {
+      duration: 5000,
+      panelClass: type === 'success' ? 'snackbar-success' : 'snackbar-error',
+      horizontalPosition: 'center',
+      verticalPosition: 'top'
     });
   }
 
