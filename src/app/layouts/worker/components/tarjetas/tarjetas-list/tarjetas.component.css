@@ -202,11 +202,10 @@ mat-form-field .mat-error {
 }
 
 /* Contenedor y estilos para el botón Agregar Tarjeta */
-.add-tarjeta-container {
-  margin: 40px 0 30px 0;
+.table-header {
   display: flex;
   justify-content: flex-end;
-  padding: 0 10px;
+  margin: 30px 0; /* <-- Espaciado arriba y abajo */
 }
 
 .add-tarjeta-button {
@@ -298,7 +297,7 @@ mat-form-field .mat-error {
     min-width: 650px;
   }
 
-  .add-tarjeta-container {
+  .table-header {
     justify-content: center;
     margin: 30px 0;
   }
