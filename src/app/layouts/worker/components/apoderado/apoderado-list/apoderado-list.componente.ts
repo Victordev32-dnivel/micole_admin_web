@@ -202,78 +202,81 @@ export class GuardianListComponent implements OnInit {
     });
   }
 
-  loadGuardians(page: number = 1) {
-    if (!this.colegioId) {
-      console.error('ID del colegio no disponible');
-      this.loading = false;
-      return;
-    }
-
-    this.loading = true;
-    const headers = this.getHeaders();
-
-    console.log(
-      `Cargando página: ${page}, pageSize: ${this.pageSize}, colegioId: ${this.colegioId}`
-    );
-
-    // Usar la API de lista de apoderados por colegio
-    this.http
-      .get<any>(
-        `${this.apiUrl}/colegio/lista/${this.colegioId}?page=${page}&limit=${this.pageSize}`,
-        { headers }
-      )
-      .subscribe({
-        next: (response) => {
-          console.log('Respuesta de la API de apoderados:', response);
-          console.log(
-            'Número de apoderados recibidos:',
-            response.data?.length || 0
-          );
-
-          this.ngZone.run(() => {
-            // Procesar los datos para asegurar que tengan nombre completo
-            const guardians = (response.data || []).map((guardian: any) => ({
-              ...guardian,
-              // Asegurar que existe el campo nombre completo
-              nombre: guardian.nombre || this.buildFullName(guardian),
-            }));
-
-            this.guardians = guardians;
-            this.filteredGuardians = [...this.guardians];
-            this.currentPage = page;
-
-            // Calcular total de páginas
-            this.totalApoderados = response.totalApoderados || guardians.length;
-            this.totalPages =
-              response.totalPages ||
-              Math.ceil(this.totalApoderados / this.pageSize);
-
-            // Asegurar que totalPages sea al menos 1
-            if (this.totalPages < 1) {
-              this.totalPages = 1;
-            }
-
-            this.updateVisiblePages();
-
-            console.log(
-              `Página actual: ${page}, Total páginas: ${this.totalPages}, Total apoderados: ${this.totalApoderados}`
-            );
-            console.log('Apoderados mostrados:', this.filteredGuardians.length);
-
-            this.loading = false;
-            this.cdr.detectChanges();
-          });
-        },
-        error: (error) => {
-          console.error('Error al cargar apoderados:', error);
-          this.ngZone.run(() => {
-            this.loading = false;
-            this.showSnackBar('Error al cargar apoderados', 'error');
-            this.cdr.detectChanges();
-          });
-        },
-      });
+loadGuardians(page: number = 1) {
+  if (!this.colegioId) {
+    console.error('ID del colegio no disponible');
+    this.loading = false;
+    return;
   }
+
+  this.loading = true;
+  const headers = this.getHeaders();
+
+  console.log(
+    `Cargando página: ${page}, pageSize: ${this.pageSize}, colegioId: ${this.colegioId}`
+  );
+
+  // Usar la API de lista de apoderados por colegio
+  this.http
+    .get<any>(
+      `${this.apiUrl}/colegio/lista/${this.colegioId}?page=${page}&limit=${this.pageSize}`,
+      { headers }
+    )
+    .subscribe({
+      next: (response) => {
+        console.log('Respuesta de la API de apoderados:', response);
+        console.log(
+          'Número de apoderados recibidos:',
+          response.data?.length || 0
+        );
+
+        this.ngZone.run(() => {
+          // Procesar los datos para asegurar que tengan nombre completo
+          let guardians = (response.data || []).map((guardian: any) => ({
+            ...guardian,
+            // Asegurar que existe el campo nombre completo
+            nombre: guardian.nombre || this.buildFullName(guardian),
+          }));
+
+          // Invertir el orden del array para mostrar los últimos primero
+          guardians = guardians.reverse();
+
+          this.guardians = guardians;
+          this.filteredGuardians = [...this.guardians];
+          this.currentPage = page;
+
+          // Calcular total de páginas
+          this.totalApoderados = response.totalApoderados || guardians.length;
+          this.totalPages =
+            response.totalPages ||
+            Math.ceil(this.totalApoderados / this.pageSize);
+
+          // Asegurar que totalPages sea al menos 1
+          if (this.totalPages < 1) {
+            this.totalPages = 1;
+          }
+
+          this.updateVisiblePages();
+
+          console.log(
+            `Página actual: ${page}, Total páginas: ${this.totalPages}, Total apoderados: ${this.totalApoderados}`
+          );
+          console.log('Apoderados mostrados:', this.filteredGuardians.length);
+
+          this.loading = false;
+          this.cdr.detectChanges();
+        });
+      },
+      error: (error) => {
+        console.error('Error al cargar apoderados:', error);
+        this.ngZone.run(() => {
+          this.loading = false;
+          this.showSnackBar('Error al cargar apoderados', 'error');
+          this.cdr.detectChanges();
+        });
+      },
+    });
+}
 
   private buildFullName(guardian: any): string {
     const nombres = guardian.nombres || '';
@@ -340,26 +343,30 @@ export class GuardianListComponent implements OnInit {
   }
 
   openEditGuardianModal(guardian: Guardian): void {
-    const dialogRef = this.dialog.open(GuardianModalComponent, {
-      width: this.isMobile ? '95vw' : '800px',
-      maxWidth: '95vw',
-      maxHeight: '95vh',
-      panelClass: 'guardian-modal-panel',
-      disableClose: false,
-      data: {
-        guardian: guardian,
-        isEditMode: true,
-        colegioId: this.colegioId
-      } as GuardianModalData
-    });
+  const dialogRef = this.dialog.open(GuardianModalComponent, {
+    width: this.isMobile ? '95vw' : '800px',
+    maxWidth: '95vw',
+    maxHeight: '95vh',
+    panelClass: 'guardian-modal-panel',
+    disableClose: false,
+    data: {
+      guardian: {
+        ...guardian, // Pasar todos los datos del apoderado
+        tipoUsuario: guardian.tipoUsuario || 'APODERADO', // Valor por defecto si no existe
+        contrasena: '', // No mostrar la contraseña actual por seguridad
+        idColegio: this.colegioId
+      },
+      isEditMode: true,
+      colegioId: this.colegioId
+    } as GuardianModalData
+  });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && result.action === 'save') {
-        this.saveGuardian(result.data, true, result.guardianId);
-      }
-    });
-  }
-
+  dialogRef.afterClosed().subscribe(result => {
+    if (result && result.action === 'save') {
+      this.saveGuardian(result.data, true, guardian.id); // Pasar el ID del apoderado
+    }
+  });
+}
   private saveGuardian(guardianData: GuardianCreateRequest, isEditMode: boolean, guardianId?: number): void {
     this.loading = true;
     const headers = this.getHeaders();

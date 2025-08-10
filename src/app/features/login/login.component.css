@@ -59,6 +59,15 @@ input {
   box-sizing: border-box;
 }
 
+/* Estilos para texto autocompletado */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: white !important;
+  -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 input::placeholder {
   color: white !important;
   opacity: 0.7 !important;
@@ -70,7 +79,6 @@ input:focus {
   border-color: white;
 }
 
-/* Asegurar que el texto del input sea blanco */
 .white-text {
   color: white !important;
 }
@@ -89,6 +97,17 @@ input:focus {
   font-size: 20px;
   color: white;
   user-select: none;
+}
+
+/* Ocultar íconos nativos de navegadores */
+input[type="password"]::-webkit-reveal,
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  position: absolute;
+  right: -9999px;
 }
 
 button {
@@ -113,14 +132,6 @@ button:hover {
 button:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
-}
-
-.forgot-password {
-  margin-top: 20px;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  text-decoration: underline;
 }
 
 .error {
@@ -158,7 +169,7 @@ button:disabled {
   }
 }
 
-/* Media Queries para diferentes tamaños de pantalla */
+/* Media Queries */
 @media (max-width: 768px) {
   .login-form {
     padding: 30px;
@@ -205,12 +216,8 @@ button:disabled {
     margin-top: 20px;
   }
   
-  .forgot-password, .error, .loading {
+  .error, .loading {
     font-size: 14px;
-  }
-  
-  .toggle-password {
-    right: 10px;
   }
   
   .toggle-password .material-icons {

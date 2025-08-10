@@ -62,7 +62,7 @@
 
 .table-header {
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr 1.5fr 1fr;
+  grid-template-columns: 1fr 4fr 1fr; /* 3 columnas: ID pequeña, NOMBRE grande, ACCIONES pequeña */
   padding: 15px;
   background-color: #f1f3f5;
   border-bottom: 2px solid #e9ecef;
@@ -112,7 +112,7 @@
   font-weight: 500;
   text-transform: uppercase;
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr 1.5fr 1fr;
+  grid-template-columns: 1fr 4fr 1fr; /* Mismo grid que el header */
   padding: 15px;
   border-bottom: 1px solid #e9ecef;
   text-align: center;
@@ -132,6 +132,20 @@
   padding: 5px;
   color: #333;
   word-break: break-word;
+}
+
+/* Estilo específico para la columna de nombre */
+.guardian-row span[data-label="NOMBRE"] {
+  text-align: left; /* Alinear nombres a la izquierda */
+  padding-left: 20px;
+  text-transform: capitalize; /* Capitalizar en lugar de todo mayúsculas */
+}
+
+/* Estilo específico para la columna de ID */
+.guardian-row span[data-label="ID"] {
+  font-family: monospace;
+  font-weight: 600;
+  color: #424242;
 }
 
 .actions {
@@ -155,9 +169,6 @@
   background-color: rgba(0, 123, 255, 0.1);
   transform: scale(1.1);
 }
-
-/* MODAL STYLES */
-/* Se eliminaron los estilos del modal overlay ya que ahora usamos MatDialog */
 
 /* PAGINACIÓN MEJORADA */
 .pagination {
@@ -249,15 +260,6 @@
     height: 35px;
     font-size: 0.85rem;
   }
-
-  .modal-content {
-    width: 95%;
-  }
-
-  .form-row {
-    flex-direction: column;
-    gap: 12px;
-  }
 }
 
 /* RESPONSIVE DESIGN - MÓVIL */
@@ -323,9 +325,14 @@
     font-weight: bold;
     color: #666;
     display: inline-block;
-    min-width: 100px;
+    min-width: 60px; /* Reducido porque solo tenemos ID y NOMBRE */
     text-transform: uppercase;
     font-size: 0.85rem;
+  }
+
+  .guardian-row span[data-label="NOMBRE"] {
+    text-align: left;
+    padding-left: 0;
   }
 
   .actions {
@@ -367,26 +374,6 @@
     font-size: 0.8rem;
     flex-shrink: 0;
   }
-
-  /* Modal responsivo */
-  .modal-content {
-    width: 95%;
-    margin: 10px;
-  }
-
-  .form-row {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .modal-actions {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .modal-actions button {
-    width: 100%;
-  }
 }
 
 /* RESPONSIVE DESIGN - MÓVIL PEQUEÑO */
@@ -417,7 +404,7 @@
   }
 
   .guardian-row span::before {
-    min-width: 80px;
+    min-width: 50px;
     font-size: 0.8rem;
   }
 
@@ -429,19 +416,6 @@
     min-width: 28px;
     height: 28px;
     font-size: 0.75rem;
-  }
-
-  .modal-content {
-    width: 98%;
-    margin: 5px;
-  }
-
-  .modal-header {
-    padding: 15px;
-  }
-
-  .modal-form {
-    padding: 15px;
   }
 }
 
@@ -519,48 +493,6 @@
 
 .pagination-buttons::-webkit-scrollbar-thumb:hover {
   background: #555;
-}
-
-/* Estilos específicos para apoderados */
-.guardian-row span[data-label="PARENTESCO"] {
-  background-color: #e3f2fd;
-  color: #1565c0;
-  border-radius: 12px;
-  padding: 4px 12px;
-  font-weight: 500;
-  font-size: 0.85rem;
-  text-transform: capitalize;
-}
-
-.guardian-row span[data-label="DNI"] {
-  font-family: monospace;
-  font-weight: 600;
-  color: #424242;
-}
-
-.guardian-row span[data-label="TELÉFONO"] {
-  font-family: monospace;
-  color: #2e7d32;
-}
-
-/* Estados de datos faltantes */
-.guardian-row span:contains("N/A") {
-  color: #9e9e9e;
-  font-style: italic;
-}
-
-/* Hover effects mejorados */
-.guardian-row:hover span[data-label="PARENTESCO"] {
-  background-color: #bbdefb;
-  color: #0d47a1;
-}
-
-/* Responsive para parentesco */
-@media (max-width: 767px) {
-  .guardian-row span[data-label="PARENTESCO"] {
-    display: inline-block;
-    margin-top: 5px;
-  }
 }
 
 /* Estilos para el modal dialog */

@@ -65,24 +65,14 @@ export class LoginComponent {
             };
 
             this.userService.setUserData(userData);
-            this.authService.login(userData); // Pasar userData tipado
+            this.authService.login(userData);
             this.loading = false;
 
             if (response.tipoUsuario === 'trabajador') {
-              this.router
-                .navigate(['/worker/alumnos'])
-                .then(() => console.log('Redireccionado a worker/alumnos'))
-                .catch((err) => console.error('Error en redirección:', err));
+              this.router.navigate(['/worker/alumnos']);
             } else if (response.tipoUsuario === 'admin') {
-              this.router
-                .navigate(['/admin/colegios'])
-                .then(() => console.log('Redireccionado a admin/colegios'))
-                .catch((err) => console.error('Error en redirección:', err));
+              this.router.navigate(['/admin/colegios']);
             } else {
-              console.log(
-                'Tipo de usuario no soportado:',
-                response.tipoUsuario
-              );
               this.error = 'Tipo de usuario no reconocido';
             }
 
@@ -102,7 +92,6 @@ export class LoginComponent {
         },
       });
     } else {
-      console.log('Formulario inválido:', this.loginForm.errors);
       this.loading = false;
     }
   }

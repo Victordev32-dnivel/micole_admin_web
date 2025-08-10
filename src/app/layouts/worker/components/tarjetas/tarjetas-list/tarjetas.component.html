@@ -99,70 +99,7 @@
         </table>
       </div>
 
-      <!-- Controles de paginación -->
-      <div *ngIf="totalPages > 1" class="pagination-controls">
-        <div class="pagination-buttons">
-          <!-- Botón Anterior -->
-          <button 
-            mat-button 
-            [disabled]="currentPage === 1 || loading" 
-            (click)="previousPage()"
-            class="pagination-nav-btn">
-            <mat-icon>chevron_left</mat-icon>
-            Anterior
-          </button>
-
-          <!-- Números de página -->
-          <div class="page-numbers">
-            <!-- Primera página si no está visible -->
-            <button 
-              *ngIf="getPageNumbers()[0] > 1"
-              mat-button
-              (click)="changePage(1)"
-              [disabled]="loading"
-              class="page-btn">
-              1
-            </button>
-            
-            <!-- Puntos suspensivos -->
-            <span *ngIf="getPageNumbers()[0] > 2" class="page-dots">...</span>
-
-            <!-- Páginas visibles -->
-            <button 
-              *ngFor="let page of getPageNumbers()"
-              mat-button
-              [class.active]="page === currentPage"
-              (click)="changePage(page)"
-              [disabled]="loading"
-              class="page-btn">
-              {{ page }}
-            </button>
-
-            <!-- Puntos suspensivos -->
-            <span *ngIf="getPageNumbers()[getPageNumbers().length - 1] < totalPages - 1" class="page-dots">...</span>
-
-            <!-- Última página si no está visible -->
-            <button 
-              *ngIf="getPageNumbers()[getPageNumbers().length - 1] < totalPages"
-              mat-button
-              (click)="changePage(totalPages)"
-              [disabled]="loading"
-              class="page-btn">
-              {{ totalPages }}
-            </button>
-          </div>
-
-          <!-- Botón Siguiente -->
-          <button 
-            mat-button 
-            [disabled]="currentPage === totalPages || loading" 
-            (click)="nextPage()"
-            class="pagination-nav-btn">
-            Siguiente
-            <mat-icon>chevron_right</mat-icon>
-          </button>
-        </div>
-      </div>
+     
 
       <!-- Estados de carga y mensajes -->
       <div *ngIf="loading" class="loading">

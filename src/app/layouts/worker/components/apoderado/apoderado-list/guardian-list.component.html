@@ -14,10 +14,8 @@
 
   <div class="guardian-table">
     <div class="table-header">
-      <span data-label="DNI">DNI</span>
+      <span data-label="ID">ID</span>
       <span data-label="NOMBRE">NOMBRE</span>
-      <span data-label="PARENTESCO">PARENTESCO</span>
-      <span data-label="TELÉFONO">TELÉFONO</span>
       <span data-label="ACCIONES">ACCIONES</span>
     </div>
     
@@ -27,10 +25,8 @@
       </div>
       
       <div class="guardian-row" *ngFor="let guardian of filteredGuardians">
-        <span data-label="DNI">{{ guardian.numeroDocumento || 'N/A' }}</span>
+        <span data-label="ID">{{ guardian.id || 'N/A' }}</span>
         <span data-label="NOMBRE">{{ guardian.nombre || 'Sin nombre' }}</span>
-        <span data-label="PARENTESCO">{{ guardian.parentesco || 'N/A' }}</span>
-        <span data-label="TELÉFONO">{{ guardian.telefono || 'N/A' }}</span>
         <span data-label="ACCIONES" class="actions">
           <mat-icon (click)="openEditGuardianModal(guardian)" 
                     title="Modificar apoderado" 
@@ -51,97 +47,7 @@
     </div>
   </div>
 
-  <!-- PAGINACIÓN RESPONSIVA MEJORADA -->
-  <div class="pagination" *ngIf="totalPages > 1">
-    <div class="pagination-info">
-      <span>Total de apoderados: {{ totalApoderados }}</span>
-      <span>Página {{ currentPage }} de {{ totalPages }}</span>
-      <span *ngIf="searchTermControl.value && searchTermControl.value.trim() !== '' && filteredGuardians.length < guardians.length">
-        ({{ filteredGuardians.length }} coincidencias)
-      </span>
-    </div>
+  
 
-    <div class="pagination-controls">
-      <!-- Botones de navegación para móvil -->
-      <div *ngIf="isMobile" class="pagination-controls">
-        <button class="nav-button" 
-                [disabled]="!canGoToPreviousPage() || loading" 
-                (click)="goToPreviousPage()"
-                title="Página anterior">
-          <mat-icon>chevron_left</mat-icon>
-        </button>
-        
-        <span style="margin: 0 10px; font-weight: bold;">{{ currentPage }}/{{ totalPages }}</span>
-        
-        <button class="nav-button" 
-                [disabled]="!canGoToNextPage() || loading" 
-                (click)="goToNextPage()"
-                title="Página siguiente">
-          <mat-icon>chevron_right</mat-icon>
-        </button>
-      </div>
-
-      <!-- Paginación completa para desktop -->
-      <div *ngIf="!isMobile" class="pagination-buttons">
-        <!-- Botón primera página -->
-        <button class="nav-button" 
-                [disabled]="!canGoToFirstPage() || loading" 
-                (click)="goToFirstPage()"
-                title="Primera página">
-          <mat-icon>first_page</mat-icon>
-        </button>
-
-        <!-- Botón página anterior -->
-        <button class="nav-button" 
-                [disabled]="!canGoToPreviousPage() || loading" 
-                (click)="goToPreviousPage()"
-                title="Página anterior">
-          <mat-icon>chevron_left</mat-icon>
-        </button>
-
-        <!-- Puntos suspensivos antes -->
-        <span *ngIf="showEllipsisBefore()" class="ellipsis">...</span>
-
-        <!-- Números de página visibles -->
-        <button *ngFor="let page of getPageNumbers()"
-                [class.active]="page === currentPage"
-                [disabled]="loading"
-                (click)="changePage(page)"
-                class="page-button"
-                [title]="'Ir a página ' + page">
-          {{ page }}
-        </button>
-
-        <!-- Puntos suspensivos después -->
-        <span *ngIf="showEllipsisAfter()" class="ellipsis">...</span>
-
-        <!-- Botón página siguiente -->
-        <button class="nav-button" 
-                [disabled]="!canGoToNextPage() || loading" 
-                (click)="goToNextPage()"
-                title="Página siguiente">
-          <mat-icon>chevron_right</mat-icon>
-        </button>
-
-        <!-- Botón última página -->
-        <button class="nav-button" 
-                [disabled]="!canGoToLastPage() || loading" 
-                (click)="goToLastPage()"
-                title="Última página">
-          <mat-icon>last_page</mat-icon>
-        </button>
-      </div>
-    </div>
-
-    <!-- Paginación simple para móvil con números -->
-    <div *ngIf="isMobile && totalPages <= 10" class="pagination-buttons">
-      <button *ngFor="let page of getPageNumbers()"
-              [class.active]="page === currentPage"
-              [disabled]="loading"
-              (click)="changePage(page)"
-              class="page-button">
-        {{ page }}
-      </button>
-    </div>
-  </div>
+    
 </div>

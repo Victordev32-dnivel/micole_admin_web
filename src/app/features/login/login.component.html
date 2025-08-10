@@ -10,7 +10,9 @@
             id="username"
             formControlName="username"
             type="text"
-            placeholder="USERNAME"
+            placeholder="CÓDIGO"
+            autocomplete="off"
+            class="white-text"
           />
         </div>
         <div class="form-group password-field">
@@ -20,6 +22,7 @@
             [type]="showPassword ? 'text' : 'password'"
             placeholder="PASSWORD"
             class="white-text"
+            autocomplete="off"
           />
           <span class="toggle-password" (click)="togglePasswordVisibility()">
             <i class="material-icons">{{
