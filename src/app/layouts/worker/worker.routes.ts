@@ -6,6 +6,7 @@ import { ComunicadoFormComponent } from './components/comunicados/comunicado-for
 import { TarjetasComponent } from './components/tarjetas/tarjetas-list/tarjetas.component';
 import { AsistenciasComponent } from './components/asistencias/asistencias-list/asistencias-list.component';
 import { NotasComponent } from './components/notas/notas.component';
+import { GuardianListComponent } from './components/apoderado/apoderado-list/apoderado-list.componente';
 
 export const WORKER_ROUTES: Routes = [
   {
@@ -18,6 +19,7 @@ export const WORKER_ROUTES: Routes = [
       { path: 'comunicados', component: ComunicadoFormComponent },
       { path: 'tarjetas', component: TarjetasComponent },
       { path: 'notas', component: NotasComponent },
+      { path: 'apoderado', component: GuardianListComponent },
     ],
   },
 ];

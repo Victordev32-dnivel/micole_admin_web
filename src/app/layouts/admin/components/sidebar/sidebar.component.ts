@@ -31,7 +31,8 @@ export class SidebarComponent implements OnInit {
     { path: '/worker/asistencias', label: 'Asistencias', icon: 'fas fa-check-square' },
     { path: '/worker/comunicados', label: 'Comunicados', icon: 'fas fa-envelope' },
     { path: '/worker/tarjetas', label: 'Tarjetas', icon: 'fas fa-id-card' },
-    { path: '/worker/socios', label: 'Socios', icon: 'fas fa-user-friends' }
+    { path: '/worker/socios', label: 'Socios', icon: 'fas fa-user-friends' },
+    { path: '/worker/apoderado', label: 'Apoderado', icon: 'fas fa-user-friends' }
   ];
 
   constructor(

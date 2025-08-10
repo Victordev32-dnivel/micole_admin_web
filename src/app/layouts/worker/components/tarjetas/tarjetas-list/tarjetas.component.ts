@@ -30,6 +30,7 @@ import {
   HttpHeaders,
 } from '@angular/common/http';
 import { TarjetasModalComponent } from '../tarjetas-modal/tarjetas-modal.component';
+import { AddTarjetaModalComponent } from '../add-tarjeta-modal/add-tarjeta-modal.component';
 import { UserService } from '../../../../../services/UserData';
 
 @Component({
@@ -62,8 +63,11 @@ export class TarjetasComponent implements OnInit {
   error: string | null = null;
   successMessage: string | null = null;
   colegioId: number = 0;
-  private apiUrlSalon = 'https://proy-back-dnivel.onrender.com/api/salon/colegio';
-  private apiUrlAlumno = 'https://proy-back-dnivel.onrender.com/api/alumno/tarjeta';
+  private apiUrlSalon =
+    'https://proy-back-dnivel.onrender.com/api/salon/colegio';
+  private apiUrlAlumno =
+    'https://proy-back-dnivel.onrender.com/api/alumno/tarjeta';
+  private apiUrlTarjeta = 'https://proy-back-dnivel.onrender.com/api/tarjeta';
   private staticToken = '732612882';
 
   // Columnas reorganizadas con código primero
@@ -85,7 +89,7 @@ export class TarjetasComponent implements OnInit {
   ) {
     this.tarjetaForm = this.fb.group({
       idSalon: ['', Validators.required],
-      searchTerm: ['']
+      searchTerm: [''],
     });
   }
 
@@ -93,9 +97,9 @@ export class TarjetasComponent implements OnInit {
     if (isPlatformBrowser(this.platformId)) {
       this.loadUserData();
       this.loadSalones();
-      
+
       // Escuchar cambios en el campo de búsqueda
-      this.tarjetaForm.get('searchTerm')?.valueChanges.subscribe(term => {
+      this.tarjetaForm.get('searchTerm')?.valueChanges.subscribe((term) => {
         this.filterAlumnos(term);
       });
     }
@@ -127,7 +131,8 @@ export class TarjetasComponent implements OnInit {
   loadSalones() {
     if (!this.colegioId) {
       console.error('ID del colegio no disponible');
-      this.error = 'No se pudo cargar los salones: ID del colegio no disponible';
+      this.error =
+        'No se pudo cargar los salones: ID del colegio no disponible';
       this.loading = false;
       this.cdr.detectChanges();
       return;
@@ -184,7 +189,7 @@ export class TarjetasComponent implements OnInit {
     this.loading = true;
     this.error = null;
     this.successMessage = null;
-    
+
     if (page !== this.currentPage) {
       this.currentPage = page;
     }
@@ -210,7 +215,7 @@ export class TarjetasComponent implements OnInit {
               alumnos: this.alumnos,
               página: this.currentPage,
               totalPáginas: this.totalPages,
-              totalAlumnos: this.totalAlumnos
+              totalAlumnos: this.totalAlumnos,
             });
             this.loading = false;
             if (this.alumnos.length === 0) {
@@ -236,9 +241,10 @@ export class TarjetasComponent implements OnInit {
     }
 
     const term = searchTerm.toLowerCase();
-    this.filteredAlumnos = this.alumnos.filter(alumno => 
-      (alumno.nombre && alumno.nombre.toLowerCase().includes(term)) ||
-      (alumno.codigo && alumno.codigo.toString().toLowerCase().includes(term))
+    this.filteredAlumnos = this.alumnos.filter(
+      (alumno) =>
+        (alumno.nombre && alumno.nombre.toLowerCase().includes(term)) ||
+        (alumno.codigo && alumno.codigo.toString().toLowerCase().includes(term))
     );
   }
 
@@ -274,18 +280,18 @@ export class TarjetasComponent implements OnInit {
     const pages: number[] = [];
     const maxVisiblePages = 5;
     const halfVisible = Math.floor(maxVisiblePages / 2);
-    
+
     let startPage = Math.max(1, this.currentPage - halfVisible);
     let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-    
+
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
-    
+
     return pages;
   }
 
@@ -311,16 +317,112 @@ export class TarjetasComponent implements OnInit {
     });
   }
 
-  onSubmit(): void {
-    if (this.tarjetaForm.valid) {
-      this.successMessage = 'Formulario válido. Selección guardada';
-      this.error = null;
-      this.cdr.detectChanges();
-      console.log('Formulario enviado:', this.tarjetaForm.value);
-    } else {
-      this.error = 'Por favor, complete correctamente todos los campos';
-      this.successMessage = null;
-      this.cdr.detectChanges();
-    }
+// Reemplaza el método openAddTarjetaModal en tu TarjetasComponent
+// Reemplaza el método openAddTarjetaModal en tu TarjetasComponent
+
+openAddTarjetaModal(): void {
+  const salonId = this.tarjetaForm.get('idSalon')?.value;
+
+  if (!salonId) {
+    this.error = 'Debe seleccionar un salón primero';
+    this.cdr.detectChanges();
+    return;
+  }
+
+  this.loading = true;
+  this.error = null;
+  const headers = this.getHeaders();
+
+  // Usar la URL correcta para obtener alumnos con todos los datos
+  this.http
+    .get<any>(
+      `https://proy-back-dnivel.onrender.com/api/alumno/salon/${salonId}?includeAll=true`,
+      { headers }
+    )
+    .subscribe({
+      next: (response) => {
+        this.ngZone.run(() => {
+          this.loading = false;
+
+          // Verificar la estructura de la respuesta y filtrar datos válidos
+          console.log('Respuesta completa de alumnos:', response);
+
+          let alumnos = response.data || response.alumnos || response || [];
+          
+          // Filtrar y limpiar datos de alumnos - CORREGIDO para la estructura real
+          alumnos = alumnos.filter((alumno: any) => {
+            return alumno && (alumno.alumno || alumno.idAlumno);
+          }).map((alumno: any) => ({
+            id: alumno.idAlumno,
+            nombre: alumno.alumno || `Alumno ${alumno.idAlumno}`,
+            codigo: alumno.codigo || null,
+            tarjeta: alumno.tarjeta || null
+          }));
+
+          console.log('Alumnos procesados:', alumnos);
+
+          if (alumnos.length === 0) {
+            this.error = 'No hay alumnos válidos en este salón';
+            this.cdr.detectChanges();
+            return;
+          }
+
+          const dialogRef = this.dialog.open(AddTarjetaModalComponent, {
+            width: '500px',
+            disableClose: true,
+            data: {
+              colegioId: this.colegioId,
+              alumnos: alumnos,
+              salonId: salonId
+            },
+          });
+
+          dialogRef.afterClosed().subscribe((result) => {
+            if (result) {
+              this.addTarjeta(result);
+            }
+          });
+        });
+      },
+      error: (error) => {
+        console.error('Error al cargar alumnos:', error);
+        this.ngZone.run(() => {
+          this.error = 'Error al cargar los alumnos del salón: ' + 
+            (error.error?.message || error.message || 'Error desconocido');
+          this.loading = false;
+          this.cdr.detectChanges();
+        });
+      },
+    });
+}
+  // Nuevo método para agregar tarjeta
+  addTarjeta(tarjetaData: any): void {
+    this.loading = true;
+    this.error = null;
+    this.successMessage = null;
+
+    const headers = this.getHeaders();
+    this.http.post(this.apiUrlTarjeta, tarjetaData, { headers }).subscribe({
+      next: (response) => {
+        this.ngZone.run(() => {
+          this.successMessage = 'Tarjeta agregada con éxito';
+          this.loading = false;
+
+          // Recargar datos si hay un salón seleccionado
+          const salonId = this.tarjetaForm.get('idSalon')?.value;
+          if (salonId) {
+            this.loadAlumnos(salonId, this.currentPage);
+          }
+
+          this.cdr.detectChanges();
+        });
+      },
+      error: (error) => {
+        console.error('Error al agregar tarjeta:', error);
+        this.error = error.error?.message || 'Error al agregar la tarjeta';
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 }

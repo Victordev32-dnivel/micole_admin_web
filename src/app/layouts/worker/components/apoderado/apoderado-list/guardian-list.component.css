@@ -1,0 +1,513 @@
+.guardian-container {
+  margin: 80px 0 20px 15vw;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: margin-left 0.3s ease;
+  max-width: calc(100vw - 15vw - 40px);
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  border-radius: 8px;
+}
+
+.search-field {
+  width: 300px;
+  max-width: 100%;
+}
+
+.toolbar button {
+  padding: 8px 16px;
+  background-color: black;
+  color: white;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  min-width: 140px;
+}
+
+.toolbar button:hover {
+  background-color: #333;
+}
+
+.guardian-table {
+  width: 100%;
+  border-collapse: collapse;
+  max-height: 70vh;
+  overflow-y: auto;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 1.5fr 1fr;
+  padding: 15px;
+  background-color: #f1f3f5;
+  border-bottom: 2px solid #e9ecef;
+  text-align: center;
+  font-weight: 600;
+  color: #495057;
+}
+
+.table-header span {
+  padding: 5px;
+}
+
+.table-body {
+  display: block;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  background-color: #fff;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  margin-left: 10px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #334c64;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.guardian-row {
+  font-weight: 500;
+  text-transform: uppercase;
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 1.5fr 1fr;
+  padding: 15px;
+  border-bottom: 1px solid #e9ecef;
+  text-align: center;
+  transition: background-color 0.2s;
+  background-color: #fff;
+}
+
+.guardian-row:hover {
+  background-color: #f8f9fa;
+}
+
+.guardian-row:last-child {
+  border-bottom: none;
+}
+
+.guardian-row span {
+  padding: 5px;
+  color: #333;
+  word-break: break-word;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.actions mat-icon {
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.actions mat-icon:hover {
+  background-color: rgba(255, 204, 0, 0.1);
+  transform: scale(1.1);
+}
+
+/* PAGINACIÓN MEJORADA */
+.pagination {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+  gap: 15px;
+}
+
+.pagination span {
+  font-weight: bold;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 10px 0;
+}
+
+.page-button {
+  min-width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  border: 2px solid #e9ecef;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #333;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.page-button.active {
+  background-color: black;
+  color: white;
+  border-color: black;
+  transform: scale(1.05);
+}
+
+.page-button:hover:not(.active):not(:disabled) {
+  background-color: #f8f9fa;
+  border-color: #ced4da;
+  transform: translateY(-1px);
+}
+
+.page-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+  background-color: #f8f9fa;
+}
+
+.ellipsis {
+  padding: 8px;
+  color: #666;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+}
+
+/* RESPONSIVE DESIGN - TABLET */
+@media (max-width: 1024px) {
+  .guardian-container {
+    margin: 80px 10px 20px 10px;
+    padding: 15px;
+  }
+  
+  .search-field {
+    width: 250px;
+  }
+  
+  .pagination-buttons {
+    gap: 6px;
+  }
+  
+  .page-button {
+    min-width: 35px;
+    height: 35px;
+    font-size: 0.85rem;
+  }
+}
+
+/* RESPONSIVE DESIGN - MÓVIL */
+@media (max-width: 767px) {
+  .guardian-container {
+    margin: 70px 5px 20px 5px;
+    padding: 10px;
+    max-width: calc(100vw - 10px);
+  }
+
+  .toolbar {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    align-items: stretch;
+  }
+
+  .search-field {
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  .toolbar button {
+    width: 100%;
+    min-width: unset;
+    padding: 12px;
+  }
+
+  /* Tabla responsiva para móvil */
+  .guardian-table {
+    overflow-x: auto;
+    border-radius: 8px;
+  }
+
+  .table-header {
+    display: none; /* Ocultar header en móvil */
+  }
+
+  .guardian-row {
+    display: block;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    padding: 15px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .guardian-row span {
+    display: block;
+    text-align: left;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f1f1;
+    word-break: break-word;
+  }
+
+  .guardian-row span:last-child {
+    border-bottom: none;
+  }
+
+  .guardian-row span::before {
+    content: attr(data-label) ": ";
+    font-weight: bold;
+    color: #666;
+    display: inline-block;
+    min-width: 100px;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+  }
+
+  .actions {
+    justify-content: flex-start;
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+
+  .actions::before {
+    content: "ACCIONES: ";
+    font-weight: bold;
+    color: #666;
+    font-size: 0.85rem;
+    margin-right: 10px;
+  }
+
+  /* Paginación responsiva para móvil */
+  .pagination {
+    margin-top: 30px;
+    gap: 20px;
+  }
+
+  .pagination span {
+    font-size: 1rem;
+    text-align: center;
+  }
+
+  .pagination-buttons {
+    gap: 4px;
+    padding: 5px;
+    max-height: 200px;
+    overflow-y: auto;
+    justify-content: flex-start;
+  }
+
+  .page-button {
+    min-width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+
+  /* Mostrar solo algunas páginas en móvil */
+  .pagination-buttons-mobile {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+    max-width: 100%;
+  }
+}
+
+/* RESPONSIVE DESIGN - MÓVIL PEQUEÑO */
+@media (max-width: 480px) {
+  .guardian-container {
+    margin: 60px 2px 20px 2px;
+    padding: 8px;
+  }
+
+  .toolbar {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .toolbar button {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+
+  .guardian-row {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .guardian-row span {
+    padding: 6px 0;
+    font-size: 0.9rem;
+  }
+
+  .guardian-row span::before {
+    min-width: 80px;
+    font-size: 0.8rem;
+  }
+
+  .pagination span {
+    font-size: 0.95rem;
+  }
+
+  .page-button {
+    min-width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+}
+
+/* Animaciones */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Ajuste para cuando el sidebar está abierto en móvil */
+@media (max-width: 767px) {
+  .sidebar.open ~ .guardian-container {
+    margin-left: 70vw;
+    max-width: 30vw;
+  }
+}
+
+/* Mejoras adicionales para la paginación */
+.pagination-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.nav-button {
+  padding: 8px 12px;
+  background-color: #fff;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #333;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+}
+
+.nav-button:hover:not(:disabled) {
+  background-color: #f8f9fa;
+  border-color: #ced4da;
+}
+
+.nav-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Scroll horizontal suave para la paginación */
+.pagination-buttons::-webkit-scrollbar {
+  height: 6px;
+}
+
+.pagination-buttons::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.pagination-buttons::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.pagination-buttons::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Estilos específicos para apoderados */
+.guardian-row span[data-label="PARENTESCO"] {
+  background-color: #e3f2fd;
+  color: #1565c0;
+  border-radius: 12px;
+  padding: 4px 12px;
+  font-weight: 500;
+  font-size: 0.85rem;
+  text-transform: capitalize;
+}
+
+.guardian-row span[data-label="DNI"] {
+  font-family: monospace;
+  font-weight: 600;
+  color: #424242;
+}
+
+.guardian-row span[data-label="TELÉFONO"] {
+  font-family: monospace;
+  color: #2e7d32;
+}
+
+/* Estados de datos faltantes */
+.guardian-row span:contains("N/A") {
+  color: #9e9e9e;
+  font-style: italic;
+}
+
+/* Hover effects mejorados */
+.guardian-row:hover span[data-label="PARENTESCO"] {
+  background-color: #bbdefb;
+  color: #0d47a1;
+}
+
+/* Responsive para parentesco */
+@media (max-width: 767px) {
+  .guardian-row span[data-label="PARENTESCO"] {
+    display: inline-block;
+    margin-top: 5px;
+  }
+}

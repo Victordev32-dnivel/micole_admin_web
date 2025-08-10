@@ -106,6 +106,7 @@ export class SidebarComponent implements OnInit {
       label: 'Comunicados',
       icon: 'fas fa-envelope',
     },
+     { path: '/worker/apoderado', label: 'Apoderados', icon: 'fas fa-user-friends' },
     { path: '/worker/tarjetas', label: 'Tarjetas', icon: 'fas fa-id-card' },
   ];
 
