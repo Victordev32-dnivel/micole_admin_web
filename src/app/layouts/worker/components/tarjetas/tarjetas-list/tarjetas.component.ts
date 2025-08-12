@@ -80,7 +80,7 @@ interface ApiResponse<T> {
     MatDialogModule,
   ],
   templateUrl: './tarjetas.component.html',
-  styleUrls: ['./tarjetas.component.css']
+  styleUrls: ['./tarjetas.component.css'],
 })
 export class TarjetasComponent implements OnInit {
   tarjetaForm: FormGroup;
@@ -93,13 +93,24 @@ export class TarjetasComponent implements OnInit {
   colegioId: number = 0;
   totalTarjetas: number = 0;
 
-  // URLs de API
+  private ultimaTarjetaCreada: {
+    tarjetaId: number | null;
+    alumnoId: number;
+  } | null = null;
+
   private readonly baseUrl = 'https://proy-back-dnivel.onrender.com/api';
   private readonly apiUrlTarjetaLista = `${this.baseUrl}/tarjeta/lista/colegio`;
   private readonly apiUrlTarjeta = `${this.baseUrl}/tarjeta`;
   private readonly apiUrlAlumnos = `${this.baseUrl}/alumno/colegio`;
 
-  displayedColumns: string[] = ['id', 'rfid', 'codigo', 'alumno', 'estado', 'acciones'];
+  displayedColumns: string[] = [
+    'id',
+    'rfid',
+    'codigo',
+    'alumno',
+    'estado',
+    'acciones',
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -125,19 +136,15 @@ export class TarjetasComponent implements OnInit {
   private loadUserData(): void {
     try {
       const userData = this.userService.getUserData();
-      console.log('Datos del usuario:', userData);
-      
+
       if (userData && userData.colegio) {
         this.colegioId = userData.colegio;
-        console.log('Colegio ID:', this.colegioId);
         this.loadData();
       } else {
         this.error = 'No se pudieron cargar los datos del usuario';
-        console.error('No hay datos de usuario o colegio');
       }
 
       this.userService.userData$.subscribe((userData) => {
-        console.log('Observable userData:', userData);
         if (userData && userData.colegio) {
           this.colegioId = userData.colegio;
           this.loadData();
@@ -145,7 +152,6 @@ export class TarjetasComponent implements OnInit {
         }
       });
     } catch (error) {
-      console.error('Error al cargar datos del usuario:', error);
       this.error = 'Error al cargar datos del usuario';
     }
   }
@@ -158,27 +164,23 @@ export class TarjetasComponent implements OnInit {
 
   private getHeaders(): HttpHeaders {
     const jwtToken = this.userService.getJwtToken();
-    console.log('JWT Token:', jwtToken ? 'Presente' : 'No encontrado');
-    
+
     return new HttpHeaders({
-      'Authorization': `Bearer ${jwtToken}`,
+      Authorization: `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
     });
   }
 
   private handleError = (error: HttpErrorResponse) => {
-    console.error('Error HTTP completo:', error);
     let errorMessage = 'Error desconocido';
 
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Error: ${error.error.message}`;
     } else {
-      console.log('Error status:', error.status);
-      console.log('Error body:', error.error);
-      
-      errorMessage = error.error?.message || 
-                    error.message || 
-                    `Error ${error.status}: ${error.statusText}`;
+      errorMessage =
+        error.error?.message ||
+        error.message ||
+        `Error ${error.status}: ${error.statusText}`;
     }
 
     this.ngZone.run(() => {
@@ -196,8 +198,6 @@ export class TarjetasComponent implements OnInit {
       return;
     }
 
-    console.log('Iniciando carga de datos para colegio:', this.colegioId);
-
     this.loading = true;
     this.error = null;
     this.successMessage = null;
@@ -206,92 +206,123 @@ export class TarjetasComponent implements OnInit {
     const tarjetasUrl = `${this.apiUrlTarjetaLista}/${this.colegioId}`;
     const alumnosUrl = `${this.apiUrlAlumnos}/${this.colegioId}`;
 
-    console.log('URLs a consultar:');
-    console.log('Tarjetas:', tarjetasUrl);
-    console.log('Alumnos:', alumnosUrl);
-
-    const tarjetasRequest = this.http.get<ApiResponse<Tarjeta[]>>(tarjetasUrl, { headers });
-    const alumnosRequest = this.http.get<ApiResponse<Alumno[]>>(alumnosUrl, { headers });
+    const tarjetasRequest = this.http.get<ApiResponse<Tarjeta[]>>(tarjetasUrl, {
+      headers,
+    });
+    const alumnosRequest = this.http.get<ApiResponse<Alumno[]>>(alumnosUrl, {
+      headers,
+    });
 
     forkJoin({
       tarjetas: tarjetasRequest,
-      alumnos: alumnosRequest
-    }).pipe(
-      catchError(this.handleError)
-    ).subscribe({
-      next: (response) => {
-        console.log('Respuesta completa:', response);
-        
-        this.ngZone.run(() => {
-          // Limpiar nombres de alumnos (quitar \t)
-          const alumnosData = response.alumnos.data || [];
-          this.alumnos = alumnosData.map(alumno => ({
-            ...alumno,
-            nombre_completo: alumno.nombre_completo?.replace(/\t/g, ' ').trim() || ''
-          }));
-          
-          console.log('Alumnos procesados:', this.alumnos.length);
-          console.log('Datos de alumnos:', this.alumnos);
-          
-          const tarjetasRaw = response.tarjetas.data || [];
-          console.log('Tarjetas raw:', tarjetasRaw);
-          
-          // Asociar tarjetas con alumnos por orden/posición
-          this.tarjetas = this.combinarTarjetasConAlumnosPorOrden(tarjetasRaw);
-          this.filteredTarjetas = [...this.tarjetas];
-          this.totalTarjetas = this.tarjetas.length;
-          
-          console.log('Tarjetas combinadas:', this.tarjetas);
-          
-          this.loading = false;
-          this.cdr.detectChanges();
-        });
-      },
-      error: (error) => {
-        console.error('Error al cargar datos:', error);
-      }
-    });
+      alumnos: alumnosRequest,
+    })
+      .pipe(catchError(this.handleError))
+      .subscribe({
+        next: (response) => {
+          this.ngZone.run(() => {
+            const alumnosData = response.alumnos.data || [];
+            this.alumnos = alumnosData.map((alumno) => ({
+              ...alumno,
+              nombre_completo:
+                alumno.nombre_completo?.replace(/\t/g, ' ').trim() || '',
+            }));
+
+            const tarjetasRaw = response.tarjetas.data || [];
+            this.tarjetas =
+              this.combinarTarjetasConAlumnosPorOrden(tarjetasRaw);
+            this.filteredTarjetas = [...this.tarjetas];
+            this.totalTarjetas = this.tarjetas.length;
+
+            this.loading = false;
+            this.cdr.detectChanges();
+          });
+        },
+      });
   }
 
-  private combinarTarjetasConAlumnosPorOrden(tarjetas: Tarjeta[]): TarjetaConAlumno[] {
-    return tarjetas.map((tarjeta, index) => {
+  private combinarTarjetasConAlumnosPorOrden(
+    tarjetas: Tarjeta[]
+  ): TarjetaConAlumno[] {
+    return tarjetas.map((tarjeta) => {
       const tarjetaConAlumno: TarjetaConAlumno = { ...tarjeta };
-      
-      // Asociar por posición en el array (índice)
-      if (this.alumnos[index]) {
-        const alumno = this.alumnos[index];
-        tarjetaConAlumno.alumno = alumno;
-        tarjetaConAlumno.alumnoNombre = alumno.nombre_completo;
-        tarjetaConAlumno.alumnoDocumento = alumno.numero_documento;
-        tarjetaConAlumno.alumnoCodigo = alumno.codigo;
-        
-        console.log(`Tarjeta ${tarjeta.id} asociada con alumno ${alumno.id} (${alumno.nombre_completo})`);
-      } else {
-        console.log(`No hay alumno en posición ${index} para tarjeta ${tarjeta.id}`);
+
+      if (
+        this.ultimaTarjetaCreada &&
+        tarjeta.id === this.ultimaTarjetaCreada.tarjetaId
+      ) {
+        const alumno = this.alumnos.find(
+          (a) => a.id === this.ultimaTarjetaCreada!.alumnoId
+        );
+        if (alumno) {
+          this.asociarAlumnoATarjeta(tarjetaConAlumno, alumno, 'CACHÉ');
+          return tarjetaConAlumno;
+        }
       }
-      
+
+      if ('idAlumno' in tarjeta && (tarjeta as any).idAlumno) {
+        const alumnoId = (tarjeta as any).idAlumno;
+        const alumno = this.alumnos.find((a) => a.id === alumnoId);
+        if (alumno) {
+          this.asociarAlumnoATarjeta(tarjetaConAlumno, alumno, 'idAlumno');
+          return tarjetaConAlumno;
+        }
+      }
+
+      const alumnoPorRfid = this.alumnos.find(
+        (a) => (a as any).rfid === tarjeta.rfid
+      );
+      if (alumnoPorRfid) {
+        this.asociarAlumnoATarjeta(tarjetaConAlumno, alumnoPorRfid, 'RFID');
+        return tarjetaConAlumno;
+      }
+
+      const alumnoPorCodigo = this.alumnos.find(
+        (a) => a.codigo === tarjeta.codigo
+      );
+      if (alumnoPorCodigo) {
+        this.asociarAlumnoATarjeta(tarjetaConAlumno, alumnoPorCodigo, 'código');
+        return tarjetaConAlumno;
+      }
+
+      const index = tarjetas.indexOf(tarjeta);
+      if (this.alumnos[index]) {
+        this.asociarAlumnoATarjeta(
+          tarjetaConAlumno,
+          this.alumnos[index],
+          'posición'
+        );
+      }
+
       return tarjetaConAlumno;
     });
   }
 
-  private combinarTarjetasConAlumnosPorId(tarjetas: Tarjeta[]): TarjetaConAlumno[] {
-    return tarjetas.map(tarjeta => {
+  private asociarAlumnoATarjeta(
+    tarjeta: TarjetaConAlumno,
+    alumno: Alumno,
+    metodo: string
+  ): void {
+    tarjeta.alumno = alumno;
+    tarjeta.alumnoNombre = alumno.nombre_completo;
+    tarjeta.alumnoDocumento = alumno.numero_documento;
+    tarjeta.alumnoCodigo = alumno.codigo;
+  }
+
+  private combinarTarjetasConAlumnosPorId(
+    tarjetas: Tarjeta[]
+  ): TarjetaConAlumno[] {
+    return tarjetas.map((tarjeta) => {
       const tarjetaConAlumno: TarjetaConAlumno = { ...tarjeta };
-      
-      // Buscar alumno con el mismo ID que la tarjeta
-      const alumno = this.alumnos.find(a => a.id === tarjeta.id);
-      
+      const alumno = this.alumnos.find((a) => a.id === tarjeta.id);
+
       if (alumno) {
         tarjetaConAlumno.alumno = alumno;
         tarjetaConAlumno.alumnoNombre = alumno.nombre_completo;
         tarjetaConAlumno.alumnoDocumento = alumno.numero_documento;
         tarjetaConAlumno.alumnoCodigo = alumno.codigo;
-        
-        console.log(`Tarjeta ID ${tarjeta.id} asociada con alumno ID ${alumno.id} (${alumno.nombre_completo})`);
-      } else {
-        console.log(`No se encontró alumno con ID ${tarjeta.id} para la tarjeta ${tarjeta.id}`);
       }
-      
+
       return tarjetaConAlumno;
     });
   }
@@ -303,13 +334,17 @@ export class TarjetasComponent implements OnInit {
     }
 
     const term = searchTerm.toLowerCase().trim();
-    this.filteredTarjetas = this.tarjetas.filter((tarjeta) =>
-      tarjeta.rfid.toString().includes(term) ||
-      tarjeta.codigo.toLowerCase().includes(term) ||
-      tarjeta.id.toString().includes(term) ||
-      (tarjeta.alumnoNombre && tarjeta.alumnoNombre.toLowerCase().includes(term)) ||
-      (tarjeta.alumno?.codigo && tarjeta.alumno.codigo.toLowerCase().includes(term)) ||
-      (tarjeta.alumno?.numero_documento && tarjeta.alumno.numero_documento.includes(term))
+    this.filteredTarjetas = this.tarjetas.filter(
+      (tarjeta) =>
+        tarjeta.rfid.toString().includes(term) ||
+        tarjeta.codigo.toLowerCase().includes(term) ||
+        tarjeta.id.toString().includes(term) ||
+        (tarjeta.alumnoNombre &&
+          tarjeta.alumnoNombre.toLowerCase().includes(term)) ||
+        (tarjeta.alumno?.codigo &&
+          tarjeta.alumno.codigo.toLowerCase().includes(term)) ||
+        (tarjeta.alumno?.numero_documento &&
+          tarjeta.alumno.numero_documento.includes(term))
     );
   }
 
@@ -321,14 +356,14 @@ export class TarjetasComponent implements OnInit {
   editTarjeta(tarjeta: TarjetaConAlumno): void {
     const dialogRef = this.dialog.open(TarjetasModalComponent, {
       width: '500px',
-      data: { 
+      data: {
         tarjetaId: tarjeta.id,
         currentRfid: tarjeta.rfid,
         currentCodigo: tarjeta.codigo,
         colegioId: this.colegioId,
         mode: 'edit',
         alumnos: this.alumnos,
-        currentAlumno: tarjeta.alumno
+        currentAlumno: tarjeta.alumno,
       },
     });
 
@@ -344,9 +379,15 @@ export class TarjetasComponent implements OnInit {
   }
 
   deleteTarjeta(tarjeta: TarjetaConAlumno): void {
-    const alumnoInfo = tarjeta.alumnoNombre ? ` (Asignada a: ${tarjeta.alumnoNombre})` : '';
-    
-    if (confirm(`¿Está seguro de que desea eliminar la tarjeta ${tarjeta.codigo} (RFID: ${tarjeta.rfid})${alumnoInfo}?`)) {
+    const alumnoInfo = tarjeta.alumnoNombre
+      ? ` (Asignada a: ${tarjeta.alumnoNombre})`
+      : '';
+
+    if (
+      confirm(
+        `¿Está seguro de que desea eliminar la tarjeta ${tarjeta.codigo} (RFID: ${tarjeta.rfid})${alumnoInfo}?`
+      )
+    ) {
       this.loading = true;
       this.error = null;
       this.successMessage = null;
@@ -354,13 +395,11 @@ export class TarjetasComponent implements OnInit {
       const headers = this.getHeaders();
       const url = `${this.apiUrlTarjeta}/${tarjeta.id}`;
 
-      console.log('Eliminando tarjeta:', url);
-
-      this.http.delete(url, { headers })
+      this.http
+        .delete(url, { headers })
         .pipe(catchError(this.handleError))
         .subscribe({
-          next: (response) => {
-            console.log('Respuesta eliminación:', response);
+          next: () => {
             this.ngZone.run(() => {
               this.successMessage = `Tarjeta ${tarjeta.codigo} eliminada con éxito`;
               this.loading = false;
@@ -370,9 +409,6 @@ export class TarjetasComponent implements OnInit {
               }, 3000);
             });
           },
-          error: (error) => {
-            console.error('Error al eliminar tarjeta:', error);
-          }
         });
     }
   }
@@ -384,7 +420,7 @@ export class TarjetasComponent implements OnInit {
       data: {
         colegioId: this.colegioId,
         mode: 'add',
-        alumnos: this.alumnos
+        alumnos: this.alumnos,
       },
     });
 
@@ -406,67 +442,62 @@ export class TarjetasComponent implements OnInit {
       return;
     }
 
-    console.log('Datos recibidos para agregar tarjeta:', tarjetaData);
-
     try {
       const cleanedData = this.validateAndCleanTarjetaData(tarjetaData);
-      console.log('Datos limpiados para enviar:', cleanedData);
-      
       const headers = this.getHeaders();
 
-      this.http.post(this.apiUrlTarjeta, cleanedData, { headers })
-        .pipe(
-          catchError(this.handleError)
-        )
+      this.http
+        .post(this.apiUrlTarjeta, cleanedData, { headers })
+        .pipe(catchError(this.handleError))
         .subscribe({
           next: (response) => {
-            console.log('Respuesta crear tarjeta:', response);
+            this.ultimaTarjetaCreada = {
+              tarjetaId: response as number,
+              alumnoId: cleanedData.idAlumno,
+            };
+
             this.ngZone.run(() => {
               this.successMessage = 'Tarjeta agregada con éxito';
               this.loading = false;
               this.loadData();
               setTimeout(() => {
                 this.successMessage = null;
+                this.ultimaTarjetaCreada = null;
               }, 3000);
             });
-          }
+          },
         });
     } catch (error: any) {
-      console.error('Error en validación:', error);
       this.error = error.message || 'Error al validar los datos de la tarjeta';
       this.loading = false;
     }
   }
 
   private validateAndCleanTarjetaData(data: any): any {
-    console.log('Validando datos:', data);
-    
     const cleanedData = {
-      Rfid: data.rfid || data.Rfid,
-      Codigo: data.codigo || data.Codigo,
-      IdColegio: this.colegioId
+      rfid: data.rfid || data.Rfid,
+      codigo: data.codigo || data.Codigo,
+      idAlumno: data.idAlumno || 0,
+      idColegio: this.colegioId,
     };
 
-    console.log('Datos antes de validación:', cleanedData);
-
-    if (!cleanedData.Rfid && cleanedData.Rfid !== 0) {
+    if (!cleanedData.rfid && cleanedData.rfid !== 0) {
       throw new Error('RFID es requerido');
     }
-    if (!cleanedData.Codigo) {
+    if (!cleanedData.codigo) {
       throw new Error('Código es requerido');
     }
-    if (!cleanedData.IdColegio && cleanedData.IdColegio !== 0) {
+    if (!cleanedData.idColegio && cleanedData.idColegio !== 0) {
       throw new Error('ID del colegio es requerido');
     }
 
-    if (typeof cleanedData.Rfid === 'string') {
-      cleanedData.Rfid = parseInt(cleanedData.Rfid, 10);
-      if (isNaN(cleanedData.Rfid)) {
+    if (typeof cleanedData.rfid === 'string') {
+      cleanedData.rfid = parseInt(cleanedData.rfid, 10);
+      if (isNaN(cleanedData.rfid)) {
         throw new Error('RFID debe ser un número válido');
       }
     }
 
-    console.log('Datos después de validación:', cleanedData);
     return cleanedData;
   }
 
@@ -479,13 +510,12 @@ export class TarjetasComponent implements OnInit {
     this.successMessage = null;
   }
 
-  // Método para cambiar entre tipos de asociación
   cambiarTipoAsociacion(tipo: 'orden' | 'id'): void {
     if (this.tarjetas.length > 0) {
-      const tarjetasRaw = this.tarjetas.map(t => ({
+      const tarjetasRaw = this.tarjetas.map((t) => ({
         id: t.id,
         rfid: t.rfid,
-        codigo: t.codigo
+        codigo: t.codigo,
       }));
 
       if (tipo === 'orden') {
@@ -496,6 +526,18 @@ export class TarjetasComponent implements OnInit {
 
       this.filteredTarjetas = [...this.tarjetas];
       this.cdr.detectChanges();
+    }
+  }
+
+  private async obtenerTarjetaCompleta(tarjetaId: number): Promise<any> {
+    const headers = this.getHeaders();
+    const url = `${this.apiUrlTarjeta}/${tarjetaId}`;
+
+    try {
+      const response = await this.http.get(url, { headers }).toPromise();
+      return response;
+    } catch {
+      return null;
     }
   }
 }
