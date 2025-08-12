@@ -10,7 +10,6 @@ import { isPlatformBrowser } from '@angular/common';
 import {
   FormBuilder,
   FormGroup,
-  Validators,
   ReactiveFormsModule,
   FormsModule,
 } from '@angular/forms';
@@ -33,26 +32,33 @@ import {
 import { TarjetasModalComponent } from '../tarjetas-modal/tarjetas-modal.component';
 import { AddTarjetaModalComponent } from '../add-tarjeta-modal/add-tarjeta-modal.component';
 import { UserService } from '../../../../../services/UserData';
-import { catchError, throwError } from 'rxjs';
+import { catchError, throwError, forkJoin } from 'rxjs';
 
-interface Salon {
+interface Tarjeta {
   id: number;
-  nombre: string;
+  rfid: number;
+  codigo: string;
 }
 
 interface Alumno {
   id: number;
-  nombre: string;
-  codigo: string | null;
-  tarjeta: number | null;
+  numero_documento: string;
+  nombre_completo: string;
+  codigo: string;
+  telefono?: string | null;
+}
+
+interface TarjetaConAlumno extends Tarjeta {
+  alumno?: Alumno;
+  alumnoNombre?: string;
+  alumnoDocumento?: string;
+  alumnoCodigo?: string;
 }
 
 interface ApiResponse<T> {
   data?: T;
-  alumnos?: T;
   message?: string;
-  totalPages?: number;
-  totalAlumnos?: number;
+  success?: boolean;
 }
 
 @Component({
@@ -74,33 +80,26 @@ interface ApiResponse<T> {
     MatDialogModule,
   ],
   templateUrl: './tarjetas.component.html',
-  styleUrls: ['./tarjetas.component.css'],
+  styleUrls: ['./tarjetas.component.css']
 })
 export class TarjetasComponent implements OnInit {
   tarjetaForm: FormGroup;
-  salones: Salon[] = [];
+  tarjetas: TarjetaConAlumno[] = [];
+  filteredTarjetas: TarjetaConAlumno[] = [];
   alumnos: Alumno[] = [];
-  filteredAlumnos: Alumno[] = [];
   loading: boolean = false;
   error: string | null = null;
   successMessage: string | null = null;
   colegioId: number = 0;
+  totalTarjetas: number = 0;
 
-  // URLs de API consistentes
+  // URLs de API
   private readonly baseUrl = 'https://proy-back-dnivel.onrender.com/api';
-  private readonly apiUrlSalon = `${this.baseUrl}/salon/colegio`;
-  private readonly apiUrlAlumno = `${this.baseUrl}/alumno`;
+  private readonly apiUrlTarjetaLista = `${this.baseUrl}/tarjeta/lista/colegio`;
   private readonly apiUrlTarjeta = `${this.baseUrl}/tarjeta`;
+  private readonly apiUrlAlumnos = `${this.baseUrl}/alumno/colegio`;
 
-  // Columnas de la tabla
-  displayedColumns: string[] = ['codigo', 'nombre', 'tarjeta'];
-  
-  // Paginación
-  currentPage: number = 1;
-  totalPages: number = 0;
-  totalAlumnos: number = 0;
-  pageNumbers: number[] = [];
-  pageSize: number = 20;
+  displayedColumns: string[] = ['id', 'rfid', 'codigo', 'alumno', 'estado', 'acciones'];
 
   constructor(
     private fb: FormBuilder,
@@ -112,7 +111,6 @@ export class TarjetasComponent implements OnInit {
     private dialog: MatDialog
   ) {
     this.tarjetaForm = this.fb.group({
-      idSalon: ['', Validators.required],
       searchTerm: [''],
     });
   }
@@ -127,20 +125,22 @@ export class TarjetasComponent implements OnInit {
   private loadUserData(): void {
     try {
       const userData = this.userService.getUserData();
+      console.log('Datos del usuario:', userData);
+      
       if (userData && userData.colegio) {
         this.colegioId = userData.colegio;
-   
-        this.loadSalones();
+        console.log('Colegio ID:', this.colegioId);
+        this.loadData();
       } else {
         this.error = 'No se pudieron cargar los datos del usuario';
-        console.error('Datos de usuario no válidos:', userData);
+        console.error('No hay datos de usuario o colegio');
       }
 
-      // Suscribirse a cambios en los datos del usuario
       this.userService.userData$.subscribe((userData) => {
+        console.log('Observable userData:', userData);
         if (userData && userData.colegio) {
           this.colegioId = userData.colegio;
-          this.loadSalones();
+          this.loadData();
           this.cdr.detectChanges();
         }
       });
@@ -152,18 +152,14 @@ export class TarjetasComponent implements OnInit {
 
   private setupSearchListener(): void {
     this.tarjetaForm.get('searchTerm')?.valueChanges.subscribe((term) => {
-      this.filterAlumnos(term || '');
+      this.filterTarjetas(term || '');
     });
   }
 
   private getHeaders(): HttpHeaders {
     const jwtToken = this.userService.getJwtToken();
+    console.log('JWT Token:', jwtToken ? 'Presente' : 'No encontrado');
     
-    if (!jwtToken) {
-      console.warn('No se encontró token JWT');
-      this.error = 'Token de autenticación no válido';
-    }
-
     return new HttpHeaders({
       'Authorization': `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
@@ -171,14 +167,15 @@ export class TarjetasComponent implements OnInit {
   }
 
   private handleError = (error: HttpErrorResponse) => {
-    console.error('Error HTTP:', error);
+    console.error('Error HTTP completo:', error);
     let errorMessage = 'Error desconocido';
 
     if (error.error instanceof ErrorEvent) {
-      // Error del lado del cliente
       errorMessage = `Error: ${error.error.message}`;
     } else {
-      // Error del lado del servidor
+      console.log('Error status:', error.status);
+      console.log('Error body:', error.error);
+      
       errorMessage = error.error?.message || 
                     error.message || 
                     `Error ${error.status}: ${error.statusText}`;
@@ -193,259 +190,209 @@ export class TarjetasComponent implements OnInit {
     return throwError(() => error);
   };
 
-  loadSalones(): void {
+  loadData(): void {
     if (!this.colegioId) {
       this.error = 'ID del colegio no disponible';
       return;
     }
 
+    console.log('Iniciando carga de datos para colegio:', this.colegioId);
+
     this.loading = true;
     this.error = null;
     this.successMessage = null;
 
     const headers = this.getHeaders();
-    const url = `${this.apiUrlSalon}/${this.colegioId}?page=1&pageSize=200`;
+    const tarjetasUrl = `${this.apiUrlTarjetaLista}/${this.colegioId}`;
+    const alumnosUrl = `${this.apiUrlAlumnos}/${this.colegioId}`;
 
-   
+    console.log('URLs a consultar:');
+    console.log('Tarjetas:', tarjetasUrl);
+    console.log('Alumnos:', alumnosUrl);
 
-    this.http.get<ApiResponse<Salon[]>>(url, { headers })
-      .pipe(catchError(this.handleError))
-      .subscribe({
-        next: (response) => {
-          this.ngZone.run(() => {
-            this.salones = response.data || response as any[] || [];
+    const tarjetasRequest = this.http.get<ApiResponse<Tarjeta[]>>(tarjetasUrl, { headers });
+    const alumnosRequest = this.http.get<ApiResponse<Alumno[]>>(alumnosUrl, { headers });
+
+    forkJoin({
+      tarjetas: tarjetasRequest,
+      alumnos: alumnosRequest
+    }).pipe(
+      catchError(this.handleError)
+    ).subscribe({
+      next: (response) => {
+        console.log('Respuesta completa:', response);
+        
+        this.ngZone.run(() => {
+          // Limpiar nombres de alumnos (quitar \t)
+          const alumnosData = response.alumnos.data || [];
+          this.alumnos = alumnosData.map(alumno => ({
+            ...alumno,
+            nombre_completo: alumno.nombre_completo?.replace(/\t/g, ' ').trim() || ''
+          }));
           
-            
-            this.loading = false;
-            if (this.salones.length === 0) {
-              this.error = 'No se encontraron salones para este colegio';
-            }
-            this.cdr.detectChanges();
-          });
-        },
-        error: (error) => {
-          console.error('Error al cargar salones:', error);
-        }
-      });
+          console.log('Alumnos procesados:', this.alumnos.length);
+          console.log('Datos de alumnos:', this.alumnos);
+          
+          const tarjetasRaw = response.tarjetas.data || [];
+          console.log('Tarjetas raw:', tarjetasRaw);
+          
+          // Asociar tarjetas con alumnos por orden/posición
+          this.tarjetas = this.combinarTarjetasConAlumnosPorOrden(tarjetasRaw);
+          this.filteredTarjetas = [...this.tarjetas];
+          this.totalTarjetas = this.tarjetas.length;
+          
+          console.log('Tarjetas combinadas:', this.tarjetas);
+          
+          this.loading = false;
+          this.cdr.detectChanges();
+        });
+      },
+      error: (error) => {
+        console.error('Error al cargar datos:', error);
+      }
+    });
   }
 
-  onSalonChange(salonId: number): void {
-  
-    this.resetPagination();
-    if (salonId) {
-      this.loadAlumnos(salonId);
-    }
-    this.cdr.detectChanges();
+  private combinarTarjetasConAlumnosPorOrden(tarjetas: Tarjeta[]): TarjetaConAlumno[] {
+    return tarjetas.map((tarjeta, index) => {
+      const tarjetaConAlumno: TarjetaConAlumno = { ...tarjeta };
+      
+      // Asociar por posición en el array (índice)
+      if (this.alumnos[index]) {
+        const alumno = this.alumnos[index];
+        tarjetaConAlumno.alumno = alumno;
+        tarjetaConAlumno.alumnoNombre = alumno.nombre_completo;
+        tarjetaConAlumno.alumnoDocumento = alumno.numero_documento;
+        tarjetaConAlumno.alumnoCodigo = alumno.codigo;
+        
+        console.log(`Tarjeta ${tarjeta.id} asociada con alumno ${alumno.id} (${alumno.nombre_completo})`);
+      } else {
+        console.log(`No hay alumno en posición ${index} para tarjeta ${tarjeta.id}`);
+      }
+      
+      return tarjetaConAlumno;
+    });
   }
 
-  private resetPagination(): void {
-    this.alumnos = [];
-    this.filteredAlumnos = [];
-    this.totalPages = 0;
-    this.totalAlumnos = 0;
-    this.pageNumbers = [];
-    this.currentPage = 1;
-    this.tarjetaForm.get('searchTerm')?.setValue('');
+  private combinarTarjetasConAlumnosPorId(tarjetas: Tarjeta[]): TarjetaConAlumno[] {
+    return tarjetas.map(tarjeta => {
+      const tarjetaConAlumno: TarjetaConAlumno = { ...tarjeta };
+      
+      // Buscar alumno con el mismo ID que la tarjeta
+      const alumno = this.alumnos.find(a => a.id === tarjeta.id);
+      
+      if (alumno) {
+        tarjetaConAlumno.alumno = alumno;
+        tarjetaConAlumno.alumnoNombre = alumno.nombre_completo;
+        tarjetaConAlumno.alumnoDocumento = alumno.numero_documento;
+        tarjetaConAlumno.alumnoCodigo = alumno.codigo;
+        
+        console.log(`Tarjeta ID ${tarjeta.id} asociada con alumno ID ${alumno.id} (${alumno.nombre_completo})`);
+      } else {
+        console.log(`No se encontró alumno con ID ${tarjeta.id} para la tarjeta ${tarjeta.id}`);
+      }
+      
+      return tarjetaConAlumno;
+    });
   }
 
-  loadAlumnos(salonId: number, page: number = 1): void {
-    this.loading = true;
-    this.error = null;
-    this.successMessage = null;
-
-    if (page !== this.currentPage) {
-      this.currentPage = page;
-    }
-
-    const headers = this.getHeaders();
-    const url = `${this.apiUrlAlumno}/tarjeta/${salonId}?page=${this.currentPage}&pageSize=${this.pageSize}`;
-
-
-
-    this.http.get<ApiResponse<Alumno[]>>(url, { headers })
-      .pipe(catchError(this.handleError))
-      .subscribe({
-        next: (response) => {
-          this.ngZone.run(() => {
-            // Manejar diferentes estructuras de respuesta
-            const alumnosData = response.alumnos || response.data || [];
-            this.alumnos = this.normalizeAlumnosData(alumnosData);
-            this.filteredAlumnos = [...this.alumnos];
-            
-            this.totalPages = response.totalPages || 1;
-            this.totalAlumnos = response.totalAlumnos || this.alumnos.length;
-            this.pageNumbers = Array.from({ length: this.totalPages }, (_, i) => i + 1);
-            
-           
-
-            this.loading = false;
-            if (this.alumnos.length === 0) {
-              this.error = 'No se encontraron alumnos en este salón';
-            }
-            this.cdr.detectChanges();
-          });
-        },
-        error: (error) => {
-          console.error('Error al cargar alumnos:', error);
-        }
-      });
-  }
-
-  private normalizeAlumnosData(data: any[]): Alumno[] {
-    return data.map((item: any) => ({
-      id: item.id || item.idAlumno || item.alumnoId,
-      nombre: item.nombre || item.alumno || `Alumno ${item.id || item.idAlumno}`,
-      codigo: item.codigo || null,
-      tarjeta: item.tarjeta || null
-    })).filter(alumno => alumno.id); // Filtrar elementos sin ID válido
-  }
-
-  filterAlumnos(searchTerm: string): void {
+  filterTarjetas(searchTerm: string): void {
     if (!searchTerm) {
-      this.filteredAlumnos = [...this.alumnos];
+      this.filteredTarjetas = [...this.tarjetas];
       return;
     }
 
     const term = searchTerm.toLowerCase().trim();
-    this.filteredAlumnos = this.alumnos.filter((alumno) =>
-      (alumno.nombre && alumno.nombre.toLowerCase().includes(term)) ||
-      (alumno.codigo && alumno.codigo.toString().toLowerCase().includes(term))
+    this.filteredTarjetas = this.tarjetas.filter((tarjeta) =>
+      tarjeta.rfid.toString().includes(term) ||
+      tarjeta.codigo.toLowerCase().includes(term) ||
+      tarjeta.id.toString().includes(term) ||
+      (tarjeta.alumnoNombre && tarjeta.alumnoNombre.toLowerCase().includes(term)) ||
+      (tarjeta.alumno?.codigo && tarjeta.alumno.codigo.toLowerCase().includes(term)) ||
+      (tarjeta.alumno?.numero_documento && tarjeta.alumno.numero_documento.includes(term))
     );
   }
 
   clearSearch(): void {
     this.tarjetaForm.get('searchTerm')?.setValue('');
-    this.filteredAlumnos = [...this.alumnos];
+    this.filteredTarjetas = [...this.tarjetas];
   }
 
-  // Métodos de paginación
-  changePage(page: number): void {
-    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
-      const salonId = this.tarjetaForm.get('idSalon')?.value;
-      if (salonId) {
-        this.loadAlumnos(salonId, page);
-      }
-    }
-  }
-
-  previousPage(): void {
-    if (this.currentPage > 1) {
-      this.changePage(this.currentPage - 1);
-    }
-  }
-
-  nextPage(): void {
-    if (this.currentPage < this.totalPages) {
-      this.changePage(this.currentPage + 1);
-    }
-  }
-
-  getPageNumbers(): number[] {
-    const pages: number[] = [];
-    const maxVisiblePages = 5;
-    const halfVisible = Math.floor(maxVisiblePages / 2);
-
-    let startPage = Math.max(1, this.currentPage - halfVisible);
-    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return pages;
-  }
-
-  openRfidModal(alumnoId: number, currentRfid: number | null): void {
+  editTarjeta(tarjeta: TarjetaConAlumno): void {
     const dialogRef = this.dialog.open(TarjetasModalComponent, {
-      width: '1000px',
-      maxHeight: '90vh',
-      disableClose: false,
+      width: '500px',
       data: { 
-        alumnoId, 
-        currentRfid, 
-        colegioId: this.colegioId 
+        tarjetaId: tarjeta.id,
+        currentRfid: tarjeta.rfid,
+        currentCodigo: tarjeta.codigo,
+        colegioId: this.colegioId,
+        mode: 'edit',
+        alumnos: this.alumnos,
+        currentAlumno: tarjeta.alumno
       },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.successMessage = `Tarjeta ${currentRfid ? 'actualizada' : 'asignada'} con éxito`;
-        const salonId = this.tarjetaForm.get('idSalon')?.value;
-        if (salonId) {
-          this.loadAlumnos(salonId, this.currentPage);
-        }
+        this.successMessage = 'Tarjeta actualizada con éxito';
+        this.loadData();
+        setTimeout(() => {
+          this.successMessage = null;
+        }, 3000);
       }
-      this.cdr.detectChanges();
     });
   }
 
-  openAddTarjetaModal(): void {
-    const salonId = this.tarjetaForm.get('idSalon')?.value;
+  deleteTarjeta(tarjeta: TarjetaConAlumno): void {
+    const alumnoInfo = tarjeta.alumnoNombre ? ` (Asignada a: ${tarjeta.alumnoNombre})` : '';
+    
+    if (confirm(`¿Está seguro de que desea eliminar la tarjeta ${tarjeta.codigo} (RFID: ${tarjeta.rfid})${alumnoInfo}?`)) {
+      this.loading = true;
+      this.error = null;
+      this.successMessage = null;
 
-    if (!salonId) {
-      this.error = 'Debe seleccionar un salón primero';
-      this.cdr.detectChanges();
-      return;
+      const headers = this.getHeaders();
+      const url = `${this.apiUrlTarjeta}/${tarjeta.id}`;
+
+      console.log('Eliminando tarjeta:', url);
+
+      this.http.delete(url, { headers })
+        .pipe(catchError(this.handleError))
+        .subscribe({
+          next: (response) => {
+            console.log('Respuesta eliminación:', response);
+            this.ngZone.run(() => {
+              this.successMessage = `Tarjeta ${tarjeta.codigo} eliminada con éxito`;
+              this.loading = false;
+              this.loadData();
+              setTimeout(() => {
+                this.successMessage = null;
+              }, 3000);
+            });
+          },
+          error: (error) => {
+            console.error('Error al eliminar tarjeta:', error);
+          }
+        });
     }
+  }
 
-    this.loading = true;
-    this.error = null;
-    const headers = this.getHeaders();
+  openAddTarjetaModal(): void {
+    const dialogRef = this.dialog.open(AddTarjetaModalComponent, {
+      width: '500px',
+      disableClose: true,
+      data: {
+        colegioId: this.colegioId,
+        mode: 'add',
+        alumnos: this.alumnos
+      },
+    });
 
-    // Usar endpoint consistente para obtener todos los alumnos del salón
-    const url = `${this.apiUrlAlumno}/salon/${salonId}`;
-  
-
-    this.http.get<ApiResponse<any[]>>(url, { headers })
-      .pipe(catchError(this.handleError))
-      .subscribe({
-        next: (response) => {
-          this.ngZone.run(() => {
-            this.loading = false;
-
-        
-
-            // Manejar diferentes estructuras de respuesta
-            let alumnosRaw = response.data || response.alumnos || response as any[] || [];
-            
-            // Si la respuesta es un array directamente
-            if (Array.isArray(response)) {
-              alumnosRaw = response;
-            }
-
-            const alumnos = this.normalizeAlumnosData(alumnosRaw);
-      
-            if (alumnos.length === 0) {
-              this.error = 'No hay alumnos válidos en este salón';
-              this.cdr.detectChanges();
-              return;
-            }
-
-            const dialogRef = this.dialog.open(AddTarjetaModalComponent, {
-              width: '500px',
-              disableClose: true,
-              data: {
-                colegioId: this.colegioId,
-                alumnos: alumnos,
-                salonId: salonId
-              },
-            });
-
-            dialogRef.afterClosed().subscribe((result) => {
-              if (result) {
-                this.addTarjeta(result);
-              }
-            });
-          });
-        },
-        error: (error) => {
-          console.error('Error al cargar alumnos para modal:', error);
-        }
-      });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.addTarjeta(result);
+      }
+    });
   }
 
   addTarjeta(tarjetaData: any): void {
@@ -453,129 +400,102 @@ export class TarjetasComponent implements OnInit {
     this.error = null;
     this.successMessage = null;
 
-    // Validar datos antes de enviar
     if (!tarjetaData) {
       this.error = 'No se proporcionaron datos para la tarjeta';
       this.loading = false;
-      this.cdr.detectChanges();
       return;
     }
 
-    ('=== DATOS PARA AGREGAR TARJETA ===');
-   
+    console.log('Datos recibidos para agregar tarjeta:', tarjetaData);
+
     try {
-      // Limpiar y validar datos según los requisitos de la API
       const cleanedData = this.validateAndCleanTarjetaData(tarjetaData);
+      console.log('Datos limpiados para enviar:', cleanedData);
+      
       const headers = this.getHeaders();
 
       this.http.post(this.apiUrlTarjeta, cleanedData, { headers })
         .pipe(
-          catchError((error: HttpErrorResponse) => {
-            console.error('=== ERROR DETALLADO ===');
-            console.error('Status:', error.status);
-            console.error('Error body:', error.error);
-            
-            let errorMessage = 'Error al agregar tarjeta';
-            
-            if (error.error && error.error.errors) {
-              // Manejar errores de validación de la API
-              const validationErrors = error.error.errors;
-              const errorMessages = [];
-              
-              for (const field in validationErrors) {
-                errorMessages.push(`${field}: ${validationErrors[field].join(', ')}`);
-              }
-              
-              errorMessage = `Errores de validación: ${errorMessages.join('; ')}`;
-            } else if (error.error && error.error.message) {
-              errorMessage = error.error.message;
-            } else if (error.message) {
-              errorMessage = error.message;
-            }
-
-            this.ngZone.run(() => {
-              this.error = `Error ${error.status}: ${errorMessage}`;
-              this.loading = false;
-              this.cdr.detectChanges();
-            });
-
-            return throwError(() => error);
-          })
+          catchError(this.handleError)
         )
         .subscribe({
           next: (response) => {
-          
+            console.log('Respuesta crear tarjeta:', response);
             this.ngZone.run(() => {
               this.successMessage = 'Tarjeta agregada con éxito';
               this.loading = false;
-
-              // Recargar datos si hay un salón seleccionado
-              const salonId = this.tarjetaForm.get('idSalon')?.value;
-              if (salonId) {
-                this.loadAlumnos(salonId, this.currentPage);
-              }
-
-              this.cdr.detectChanges();
+              this.loadData();
+              setTimeout(() => {
+                this.successMessage = null;
+              }, 3000);
             });
           }
         });
-
     } catch (error: any) {
+      console.error('Error en validación:', error);
       this.error = error.message || 'Error al validar los datos de la tarjeta';
       this.loading = false;
-      this.cdr.detectChanges();
     }
   }
 
   private validateAndCleanTarjetaData(data: any): any {
-    // Basado en el error de validación de la API, necesita exactamente estos campos con esta capitalización
+    console.log('Validando datos:', data);
+    
     const cleanedData = {
-      Rfid: data.rfid,           // Capital R - requerido por la API
-      IdAlumno: data.idAlumno,   // Capital I y A - requerido por la API
-      IdColegio: data.idColegio, // Capital I y C - requerido por la API
-      Codigo: data.codigo        // Capital C - requerido por la API
+      Rfid: data.rfid || data.Rfid,
+      Codigo: data.codigo || data.Codigo,
+      IdColegio: this.colegioId
     };
 
-    ('=== DATOS LIMPIADOS PARA API ===');
-   
-    
-    // Validar que todos los campos requeridos estén presentes y no sean null/undefined
+    console.log('Datos antes de validación:', cleanedData);
+
     if (!cleanedData.Rfid && cleanedData.Rfid !== 0) {
       throw new Error('RFID es requerido');
     }
-    if (!cleanedData.IdAlumno && cleanedData.IdAlumno !== 0) {
-      throw new Error('ID del alumno es requerido');
+    if (!cleanedData.Codigo) {
+      throw new Error('Código es requerido');
     }
     if (!cleanedData.IdColegio && cleanedData.IdColegio !== 0) {
       throw new Error('ID del colegio es requerido');
     }
-    if (!cleanedData.Codigo && cleanedData.Codigo !== '') {
-      throw new Error('Código del alumno es requerido');
+
+    if (typeof cleanedData.Rfid === 'string') {
+      cleanedData.Rfid = parseInt(cleanedData.Rfid, 10);
+      if (isNaN(cleanedData.Rfid)) {
+        throw new Error('RFID debe ser un número válido');
+      }
     }
 
+    console.log('Datos después de validación:', cleanedData);
     return cleanedData;
   }
 
-  // Método para limpiar mensajes
+  refreshTarjetas(): void {
+    this.loadData();
+  }
+
   clearMessages(): void {
     this.error = null;
     this.successMessage = null;
-    this.cdr.detectChanges();
   }
 
-  
+  // Método para cambiar entre tipos de asociación
+  cambiarTipoAsociacion(tipo: 'orden' | 'id'): void {
+    if (this.tarjetas.length > 0) {
+      const tarjetasRaw = this.tarjetas.map(t => ({
+        id: t.id,
+        rfid: t.rfid,
+        codigo: t.codigo
+      }));
 
-  // Método temporal para testear la estructura de datos esperada por la API
-  testApiTarjeta(): void {
-    const testData = {
-      Rfid: "123456789",
-      IdAlumno: 1,
-      IdColegio: this.colegioId,
-      Codigo: "ABC123"
-    };
-    
-    ('=== TEST API TARJETA ===');
+      if (tipo === 'orden') {
+        this.tarjetas = this.combinarTarjetasConAlumnosPorOrden(tarjetasRaw);
+      } else {
+        this.tarjetas = this.combinarTarjetasConAlumnosPorId(tarjetasRaw);
+      }
 
-    ('Todos los campos requeridos: Rfid, IdAlumno, IdColegio, Codigo');
+      this.filteredTarjetas = [...this.tarjetas];
+      this.cdr.detectChanges();
+    }
   }
 }
