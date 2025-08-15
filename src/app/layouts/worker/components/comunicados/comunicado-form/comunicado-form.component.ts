@@ -35,13 +35,12 @@ import { S3 } from 'aws-sdk';
 import { Buffer } from 'buffer';
 import { ManagedUpload } from 'aws-sdk/clients/s3';
 import { UserData, UserService } from '../../../../../services/UserData';
+import { environment  } from '../../../../../environments/environments';
 
 // Polyfill para Buffer
 if (typeof Buffer === 'undefined') {
   (window as any).Buffer = Buffer;
 }
-
-const BUCKET_NAME = 'bckpdfs';
 
 @Component({
   selector: 'app-comunicado-form',
@@ -102,9 +101,10 @@ export class ComunicadoFormComponent implements OnInit {
       idColegio: [0],
     });
 
+    // Configuración de S3 usando environment
     this.s3 = new S3({
-      accessKeyId: 'AKIASYIUVPYK5L3ET47F',
-      secretAccessKey: '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',
+      accessKeyId: environment.awsAccessKeyId,
+      secretAccessKey: environment.awsSecretKey,
       region: 'us-east-1',
       signatureVersion: 'v4',
       s3ForcePathStyle: true,
@@ -124,13 +124,11 @@ export class ComunicadoFormComponent implements OnInit {
     if (userData) {
       this.colegioId = userData.colegio;
       this.generalForm.patchValue({ idColegio: this.colegioId });
-
     }
     this.userService.userData$.subscribe((userData: UserData | null) => {
       if (userData) {
         this.colegioId = userData.colegio;
         this.generalForm.patchValue({ idColegio: this.colegioId });
-
         this.loadSalones();
         this.cdr.detectChanges();
       }
@@ -170,12 +168,10 @@ export class ComunicadoFormComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-
             this.salones = response.data.map((item: any) => ({
               id: item.id,
               nombre: item.nombre,
             }));
-
             this.loading = false;
             this.cdr.detectChanges();
           });
@@ -191,7 +187,6 @@ export class ComunicadoFormComponent implements OnInit {
 
   async uploadPdfToS3(file: File): Promise<string> {
     try {
-
       this.uploadProgress = 0;
 
       if (!file) {
@@ -212,16 +207,14 @@ export class ComunicadoFormComponent implements OnInit {
       const randomId = Math.random().toString(36).substring(2);
       const fileName = `announcements/${timestamp}_${randomId}.pdf`;
 
-
-
       const params = {
-        Bucket: BUCKET_NAME,
+        Bucket: 'bckpdfs', // o puedes agregarlo al environment también
         Key: fileName,
         Body: buffer,
         ContentType: 'application/pdf',
       };
 
-      ('⚙️ Parámetros de subida configurados (archivo privado)');
+      console.log('⚙️ Parámetros de subida configurados (archivo privado)');
 
       const upload = this.s3.upload(params);
 
@@ -229,25 +222,23 @@ export class ComunicadoFormComponent implements OnInit {
         const percent = Math.round((progress.loaded / progress.total) * 100);
         this.ngZone.run(() => {
           this.uploadProgress = percent;
-          (`📈 Progreso: ${percent}%`);
+          console.log(`📈 Progreso: ${percent}%`);
           this.cdr.detectChanges();
         });
       });
 
       await upload.promise();
-      ('✅ Archivo subido exitosamente (privado)');
+      console.log('✅ Archivo subido exitosamente (privado)');
 
       const signedUrl = this.s3.getSignedUrl('getObject', {
-        Bucket: BUCKET_NAME,
+        Bucket: 'bckpdfs',
         Key: fileName,
         Expires: 7 * 24 * 60 * 60,
       });
 
-
       return signedUrl;
     } catch (error: unknown) {
       console.error('❌ Error detallado en uploadPdfToS3:', error);
-
 
       const isAWSError = (
         err: unknown
@@ -291,7 +282,6 @@ export class ComunicadoFormComponent implements OnInit {
 
   async uploadImageToS3(file: File): Promise<string> {
     try {
-
       this.uploadProgress = 0;
 
       if (!file) {
@@ -313,21 +303,19 @@ export class ComunicadoFormComponent implements OnInit {
       const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `announcements/images/${timestamp}_${randomId}.${fileExtension}`;
 
-
-
       let contentType = 'image/jpeg';
       if (fileExtension === 'png') contentType = 'image/png';
       else if (fileExtension === 'gif') contentType = 'image/gif';
       else if (fileExtension === 'webp') contentType = 'image/webp';
 
       const params = {
-        Bucket: BUCKET_NAME,
+        Bucket: 'bckpdfs',
         Key: fileName,
         Body: buffer,
         ContentType: contentType,
       };
 
-      ('⚙️ Parámetros de subida configurados (archivo privado)');
+      console.log('⚙️ Parámetros de subida configurados (archivo privado)');
 
       const upload = this.s3.upload(params, {
         partSize: 5 * 1024 * 1024,
@@ -338,21 +326,19 @@ export class ComunicadoFormComponent implements OnInit {
         const percent = Math.round((progress.loaded / progress.total) * 100);
         this.ngZone.run(() => {
           this.uploadProgress = percent;
-          (`📈 Progreso: ${percent}%`);
+          console.log(`📈 Progreso: ${percent}%`);
           this.cdr.detectChanges();
         });
       });
 
       await upload.promise();
-      ('✅ Imagen subida exitosamente (privada)');
+      console.log('✅ Imagen subida exitosamente (privada)');
 
       const signedUrl = this.s3.getSignedUrl('getObject', {
-        Bucket: BUCKET_NAME,
+        Bucket: 'bckpdfs',
         Key: fileName,
         Expires: 7 * 24 * 60 * 60,
       });
-
-
 
       return signedUrl;
     } catch (error: unknown) {
@@ -403,7 +389,6 @@ export class ComunicadoFormComponent implements OnInit {
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
 
-
       this.loading = true;
       this.pdfFile = file;
 
@@ -413,7 +398,6 @@ export class ComunicadoFormComponent implements OnInit {
             this.comunicadoForm.patchValue({ pdf: signedUrl });
             this.loading = false;
             this.uploadProgress = 0;
-
             this.cdr.detectChanges();
           });
         })
@@ -433,7 +417,6 @@ export class ComunicadoFormComponent implements OnInit {
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
 
-
       this.loading = true;
       this.imageFile = file;
 
@@ -443,10 +426,7 @@ export class ComunicadoFormComponent implements OnInit {
             this.generalForm.patchValue({ imagen: signedUrl });
             this.loading = false;
             this.uploadProgress = 0;
-            (
-
-              signedUrl
-            );
+            console.log('Imagen subida correctamente:', signedUrl);
             this.cdr.detectChanges();
           });
         })
@@ -485,10 +465,7 @@ export class ComunicadoFormComponent implements OnInit {
         Pdf: this.comunicadoForm.get('pdf')?.value.trim(),
         IdColegio: this.colegioId,
       };
-      (
-
-        JSON.stringify(data, null, 2)
-      );
+      console.log('Datos a enviar (Salon):', JSON.stringify(data, null, 2));
 
       const headers = this.getHeaders();
       this.loading = true;
@@ -498,9 +475,7 @@ export class ComunicadoFormComponent implements OnInit {
         })
         .subscribe({
           next: (response) => {
-            (
-              response
-            );
+            console.log('Respuesta del servidor (Salon):', response);
             this.successMessage = 'Anuncio por salón publicado correctamente';
             this.error = null;
             this.comunicadoForm.reset();
@@ -528,7 +503,6 @@ export class ComunicadoFormComponent implements OnInit {
     } else {
       this.error = 'Por favor, complete correctamente todos los campos (Salon)';
       this.successMessage = null;
-
       this.cdr.detectChanges();
     }
   }
@@ -541,9 +515,7 @@ export class ComunicadoFormComponent implements OnInit {
         imagen: this.generalForm.get('imagen')?.value.trim() || null,
         idColegio: this.colegioId,
       };
-      (
-        JSON.stringify(data, null, 2)
-      );
+      console.log('Datos a enviar (General):', JSON.stringify(data, null, 2));
 
       const headers = this.getHeaders();
       this.loading = true;
@@ -555,10 +527,7 @@ export class ComunicadoFormComponent implements OnInit {
         )
         .subscribe({
           next: (response) => {
-            (
-
-              response
-            );
+            console.log('Respuesta del servidor (General):', response);
             this.successMessage = 'Anuncio general publicado correctamente';
             this.error = null;
             this.generalForm.reset();
@@ -587,7 +556,6 @@ export class ComunicadoFormComponent implements OnInit {
       this.error =
         'Por favor, complete correctamente todos los campos (General)';
       this.successMessage = null;
-
       this.cdr.detectChanges();
     }
   }

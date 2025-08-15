@@ -41,3 +41,6 @@ testem.log
 .DS_Store
 Thumbs.db
 .vercel
+# Excluir componente específico
+# Excluir environments.ts
+/src/app/environments/environments.ts
