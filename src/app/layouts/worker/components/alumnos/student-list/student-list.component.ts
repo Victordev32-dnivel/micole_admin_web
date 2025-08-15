@@ -59,7 +59,7 @@ export class StudentListComponent implements OnInit {
   userName: string = '';
   userType: string = '';
   colegioId: number = 0;
-  
+
   // Variables para paginación responsiva
   isMobile: boolean = false;
   visiblePages: number[] = [];
@@ -109,7 +109,10 @@ export class StudentListComponent implements OnInit {
 
   private updateVisiblePages(): void {
     if (this.totalPages <= this.maxVisiblePages) {
-      this.visiblePages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
+      this.visiblePages = Array.from(
+        { length: this.totalPages },
+        (_, i) => i + 1
+      );
     } else {
       const half = Math.floor(this.maxVisiblePages / 2);
       let start = this.currentPage - half;
@@ -123,7 +126,10 @@ export class StudentListComponent implements OnInit {
         start = this.totalPages - this.maxVisiblePages + 1;
       }
 
-      this.visiblePages = Array.from({ length: end - start + 1 }, (_, i) => start + i);
+      this.visiblePages = Array.from(
+        { length: end - start + 1 },
+        (_, i) => start + i
+      );
     }
   }
 
@@ -133,7 +139,6 @@ export class StudentListComponent implements OnInit {
       this.userName = userData.nombre;
       this.userType = userData.tipoUsuario;
       this.colegioId = userData.colegio;
-   
     }
 
     this.userService.userData$.subscribe((userData) => {
@@ -163,33 +168,37 @@ export class StudentListComponent implements OnInit {
 
     this.loading = true;
     const headers = this.getHeaders();
-    
-    (`Cargando página: ${page}, pageSize: ${this.pageSize}, colegioId: ${this.colegioId}`);
-    
+
+    `Cargando página: ${page}, pageSize: ${this.pageSize}, colegioId: ${this.colegioId}`;
+
     this.http
-      .get<any>(`${this.apiUrl}/${this.colegioId}?page=${page}&limit=${this.pageSize}`, { headers })
+      .get<any>(
+        `${this.apiUrl}/${this.colegioId}?page=${page}&limit=${this.pageSize}`,
+        { headers }
+      )
       .subscribe({
         next: (response) => {
-         
           this.ngZone.run(() => {
             // Asignar datos directamente sin invertir
             this.students = response.data || [];
             this.filteredStudents = [...this.students];
             this.currentPage = page;
-            
+
             // Calcular total de páginas correctamente
             this.totalAlumnos = response.totalAlumnos || 0;
-            this.totalPages = response.totalPages || Math.ceil(this.totalAlumnos / this.pageSize);
-            
+            this.totalPages =
+              response.totalPages ||
+              Math.ceil(this.totalAlumnos / this.pageSize);
+
             // Asegurar que totalPages sea al menos 1
             if (this.totalPages < 1) {
               this.totalPages = 1;
             }
-            
+
             this.updateVisiblePages();
-            
-            (`Página actual: ${page}, Total páginas: ${this.totalPages}, Total alumnos: ${this.totalAlumnos}`);
-          
+
+            `Página actual: ${page}, Total páginas: ${this.totalPages}, Total alumnos: ${this.totalAlumnos}`;
+
             this.loading = false;
             this.cdr.detectChanges();
           });
@@ -214,15 +223,20 @@ export class StudentListComponent implements OnInit {
           const searchTerm = term.toLowerCase().trim();
           this.filteredStudents = this.students.filter((student) => {
             // Buscar por nombre completo
-            const matchesName = student.nombre_completo?.toLowerCase().includes(searchTerm);
+            const matchesName = student.nombre_completo
+              ?.toLowerCase()
+              .includes(searchTerm);
             // Buscar por DNI/número de documento
-            const matchesDNI = student.numero_documento?.toString().toLowerCase().includes(searchTerm);
-            
+            const matchesDNI = student.numero_documento
+              ?.toString()
+              .toLowerCase()
+              .includes(searchTerm);
+
             return matchesName || matchesDNI;
           });
         }
-        (`Estudiantes filtrados: ${this.filteredStudents.length} de ${this.students.length} total`);
-       
+        `Estudiantes filtrados: ${this.filteredStudents.length} de ${this.students.length} total`;
+
         this.loading = false;
         this.cdr.detectChanges();
       }, 100);
@@ -302,7 +316,7 @@ export class StudentListComponent implements OnInit {
 
   changePage(page: number) {
     if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
-      (`Cambiando a página: ${page}`);
+      `Cambiando a página: ${page}`;
       this.loadStudents(page);
     }
   }
@@ -363,7 +377,10 @@ export class StudentListComponent implements OnInit {
   }
 
   showEllipsisAfter(): boolean {
-    return this.visiblePages.length > 0 && this.visiblePages[this.visiblePages.length - 1] < this.totalPages;
+    return (
+      this.visiblePages.length > 0 &&
+      this.visiblePages[this.visiblePages.length - 1] < this.totalPages
+    );
   }
 
   logout() {

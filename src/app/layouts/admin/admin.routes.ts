@@ -10,8 +10,6 @@ export const ADMIN_ROUTES: Routes = [
     children: [
       { path: 'colegios', component: ColegioListComponent },
       { path: 'trabajadores', component: TrabajadoresListComponent },
-      { path: '', redirectTo: 'colegios', pathMatch: 'full' }, // Ruta por defecto
-      { path: '**', redirectTo: 'colegios' } // Redirección para rutas no encontradas
-    ]
-  }
+    ],
+  },
 ];

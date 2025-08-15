@@ -1,21 +1,37 @@
-<div mat-dialog-content class="dialog-content">
-  <h2 class="dialog-title">Agregar Asistencia</h2>
-  <form [formGroup]="asistenciaForm" (ngSubmit)="onSave()">
-    <mat-form-field appearance="outline" class="full-width">
-      <input matInput placeholder="Sección" formControlName="section">
-    </mat-form-field>
-    <mat-form-field appearance="outline" class="full-width">
-      <input matInput placeholder="Horario" formControlName="schedule">
-    </mat-form-field>
-    <mat-form-field appearance="outline" class="full-width">
-      <input matInput placeholder="Tipo" formControlName="type">
-    </mat-form-field>
-    <mat-form-field appearance="outline" class="full-width">
-      <input matInput placeholder="Tolerancia" formControlName="tolerance">
-    </mat-form-field>
-    <div class="dialog-actions">
-      <button mat-button (click)="onCancel()">Cancelar</button>
-      <button mat-raised-button color="primary" type="submit" [disabled]="!asistenciaForm.valid">Guardar</button>
-    </div>
-  </form>
+<div class="student-container">
+  <div class="form-row">
+    <mat-card class="form-card">
+      <mat-card-header>
+        <mat-card-title>Agregar Nuevo Colegio</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="colegioForm">
+          <mat-form-field class="full-width">
+            <mat-label>Nombre del Colegio *</mat-label>
+            <input matInput formControlName="colegio" required>
+          </mat-form-field>
+
+          <mat-form-field class="full-width">
+            <mat-label>Dirección *</mat-label>
+            <input matInput formControlName="direccion" required>
+          </mat-form-field>
+
+          <mat-form-field class="full-width">
+            <mat-label>Celular *</mat-label>
+            <input matInput formControlName="celular" required [errorStateMatcher]="customErrorStateMatcher">
+          </mat-form-field>
+
+          <div class="button-container">
+            <button mat-raised-button color="primary" class="submit-button" (click)="onSubmit()" [disabled]="loading">
+              <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+              <span *ngIf="!loading">Guardar</span>
+            </button>
+            <button mat-button class="back-button" (click)="onCancel()">Cancelar</button>
+          </div>
+        </form>
+        <div *ngIf="error" class="error-message">{{ error }}</div>
+        <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+      </mat-card-content>
+    </mat-card>
+  </div>
 </div>

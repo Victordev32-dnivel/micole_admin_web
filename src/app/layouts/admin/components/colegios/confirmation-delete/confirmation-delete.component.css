@@ -1,0 +1,19 @@
+:host ::ng-deep .mat-mdc-dialog-container {
+  padding: 0 !important;
+}
+
+:host ::ng-deep .student-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  min-width: 260px;
+}
+
+:host ::ng-deep .form-card {
+  width: 100%;
+  max-width: 350px;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+}

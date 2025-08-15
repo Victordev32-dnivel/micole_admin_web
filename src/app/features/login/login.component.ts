@@ -71,7 +71,7 @@ export class LoginComponent {
             if (response.tipoUsuario === 'trabajador') {
               this.router.navigate(['/worker/alumnos']);
             } else if (response.tipoUsuario === 'admin') {
-              this.router.navigate(['/admin/colegios']);
+              this.router.navigate(['/admin']);
             } else {
               this.error = 'Tipo de usuario no reconocido';
             }

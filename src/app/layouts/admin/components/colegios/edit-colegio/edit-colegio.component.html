@@ -1,100 +1,37 @@
-<h2 mat-dialog-title>Actualizar Estudiante</h2>
+<div class="student-container">
+  <div class="form-row">
+    <mat-card class="form-card">
+      <mat-card-header>
+        <mat-card-title>Editar Colegio</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="colegioForm">
+          <mat-form-field class="full-width">
+            <mat-label>Nombre del Colegio *</mat-label>
+            <input matInput formControlName="colegio" required>
+          </mat-form-field>
 
-<mat-dialog-content class="dialog-content">
-  <form [formGroup]="editForm" class="edit-form">
-    <div class="form-sections">
-      <!-- Sección Datos del Alumno -->
-      <div class="section student-section">
-        <h3>Datos del Alumno</h3>
-        
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>DNI</mat-label>
-            <input matInput formControlName="numeroDocumento" placeholder="Ingrese DNI (8 dígitos)" readonly>
+          <mat-form-field class="full-width">
+            <mat-label>Dirección *</mat-label>
+            <input matInput formControlName="direccion" required>
           </mat-form-field>
-        </div>
 
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Nombres</mat-label>
-            <input matInput formControlName="nombres" placeholder="Ingrese nombres">
+          <mat-form-field class="full-width">
+            <mat-label>Celular *</mat-label>
+            <input matInput formControlName="celular" required [errorStateMatcher]="customErrorStateMatcher">
           </mat-form-field>
-        </div>
 
-        <div class="form-row form-row-two">
-          <mat-form-field appearance="outline">
-            <mat-label>Apellido Paterno</mat-label>
-            <input matInput formControlName="apellidoPaterno" placeholder="Ingrese apellido paterno">
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Apellido Materno</mat-label>
-            <input matInput formControlName="apellidoMaterno" placeholder="Ingrese apellido materno">
-          </mat-form-field>
-        </div>
-
-        <div class="form-row form-row-two">
-          <mat-form-field appearance="outline">
-            <mat-label>Género</mat-label>
-            <mat-select formControlName="genero">
-              <mat-option *ngFor="let gender of genders" [value]="gender">{{ gender }}</mat-option>
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Teléfono</mat-label>
-            <input matInput formControlName="telefono" placeholder="Ingrese teléfono (9 dígitos)">
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Fecha de Nacimiento</mat-label>
-            <input matInput [matDatepicker]="picker" formControlName="fechaNacimiento" (click)="openCalendar()">
-            <mat-datepicker-toggle matIconSuffix [for]="picker" (click)="openCalendar(); $event.stopPropagation()"></mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Dirección</mat-label>
-            <input matInput formControlName="direccion" placeholder="Ingrese dirección">
-          </mat-form-field>
-        </div>
-
-        <div class="form-row form-row-two">
-          <mat-form-field appearance="outline">
-            <mat-label>Estado</mat-label>
-            <mat-select formControlName="estado">
-              <mat-option value="activo">Activo</mat-option>
-              <mat-option value="inactivo">Inactivo</mat-option>
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>ID Salón</mat-label>
-            <input matInput formControlName="idSalon" type="number" placeholder="Ingrese ID del salón">
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>ID Apoderado</mat-label>
-            <input matInput formControlName="idApoderado" type="number" placeholder="Ingrese ID del apoderado">
-          </mat-form-field>
-        </div>
-      </div>
-    </div>
-
-    <div *ngIf="loading" class="loading">
-      Cargando datos <span class="spinner"></span>
-    </div>
-    <div *ngIf="error" class="error">{{ error }}</div>
-  </form>
-</mat-dialog-content>
-
-<mat-dialog-actions align="end" class="dialog-actions">
-  <button mat-button (click)="onCancel()" class="cancel-btn">Cancelar</button>
-  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="loading || !editForm.valid" class="save-btn">
-    <span *ngIf="!loading">Guardar</span>
-    <span *ngIf="loading">Guardando...</span>
-  </button>
-</mat-dialog-actions>
+          <div class="button-container">
+            <button mat-raised-button color="primary" class="submit-button" (click)="onSubmit()" [disabled]="loading">
+              <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+              <span *ngIf="!loading">Guardar</span>
+            </button>
+            <button mat-button class="back-button" (click)="onCancel()">Cancelar</button>
+          </div>
+        </form>
+        <div *ngIf="error" class="error-message">{{ error }}</div>
+        <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

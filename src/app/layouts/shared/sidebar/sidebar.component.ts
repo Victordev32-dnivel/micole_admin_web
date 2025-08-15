@@ -80,7 +80,7 @@ export class SidebarComponent implements OnInit {
   @ViewChild('logoutDialog', { static: true }) logoutDialog!: TemplateRef<any>;
 
   adminItems = [
-    { path: '/admin/colegios', label: 'Crear Colegio', icon: 'fas fa-school' },
+    { path: '/admin/colegios', label: 'Colegios', icon: 'fas fa-school' },
     {
       path: '/admin/trabajadores',
       label: 'Crear Trabajador',
@@ -106,7 +106,11 @@ export class SidebarComponent implements OnInit {
       label: 'Comunicados',
       icon: 'fas fa-envelope',
     },
-     { path: '/worker/apoderado', label: 'Apoderados', icon: 'fas fa-user-friends' },
+    {
+      path: '/worker/apoderado',
+      label: 'Apoderados',
+      icon: 'fas fa-user-friends',
+    },
     { path: '/worker/tarjetas', label: 'Tarjetas', icon: 'fas fa-id-card' },
   ];
 

@@ -1,9 +1,11 @@
-.student-container {
-  margin: 80px 0 20px 300px;
+.colegio-container {
+  margin: 80px 0 20px 15vw;
   padding: 20px;
   background: #ffffff;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: margin-left 0.3s ease;
+  max-width: calc(100vw - 15vw - 40px);
 }
 
 .toolbar {
@@ -14,46 +16,66 @@
   padding: 10px;
   background-color: #f8f9fa;
   border-bottom: 1px solid #e9ecef;
+  border-radius: 8px;
 }
 
 .search-field {
   width: 300px;
+  max-width: 100%;
 }
 
 .toolbar button {
   padding: 8px 16px;
   background-color: black;
   color: white;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  min-width: 140px;
 }
 
-.student-table {
+.toolbar button:hover {
+  background-color: #333;
+}
+
+.colegio-table {
   width: 100%;
   border-collapse: collapse;
+  max-height: 70vh;
+  overflow-y: auto;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .table-header {
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr 1.5fr 1fr;
+  grid-template-columns: 1fr 2fr 1.5fr 1fr 1fr;
   padding: 15px;
   background-color: #f1f3f5;
   border-bottom: 2px solid #e9ecef;
   text-align: center;
+  font-weight: 600;
+  color: #495057;
 }
 
 .table-header span {
   padding: 5px;
-  color: #333;
 }
 
 .table-body {
   display: block;
+  max-height: 60vh;
+  overflow-y: auto;
 }
 
 .loading-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 200px; /* Asegura un espacio mínimo para el spinner */
+  min-height: 200px;
+  background-color: #fff;
 }
 
 .loading {
@@ -76,14 +98,15 @@
 }
 
 .student-row {
-  font-weight: bold;
+  font-weight: 500;
   text-transform: uppercase;
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr 1.5fr 1fr;
+  grid-template-columns: 1fr 2fr 1.5fr 1fr 1fr;
   padding: 15px;
   border-bottom: 1px solid #e9ecef;
   text-align: center;
   transition: background-color 0.2s;
+  background-color: #fff;
 }
 
 .student-row:hover {
@@ -97,6 +120,7 @@
 .student-row span {
   padding: 5px;
   color: #333;
+  word-break: break-word;
 }
 
 .actions {
@@ -107,90 +131,119 @@
 
 .actions mat-icon {
   cursor: pointer;
-  transition: color 0.2s;
+  transition: all 0.2s;
+  padding: 4px;
+  border-radius: 4px;
 }
 
 .actions mat-icon:hover {
-  opacity: 0.8;
+  background-color: rgba(255, 204, 0, 0.1);
+  transform: scale(1.1);
 }
 
-.pagination {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 20px;
+@media (max-width: 1024px) {
+  .colegio-container {
+    margin: 80px 10px 20px 10px;
+    padding: 15px;
+  }
+  .search-field {
+    width: 250px;
+  }
 }
 
-.pagination span {
-  margin-bottom: 10px;
-  font-weight: bold;
-  color: #333;
-}
-
-.pagination-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.page-button {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 2px solid #e9ecef;
-  background: #fff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  color: #333;
-  transition: background-color 0.2s, border-color 0.2s;
-}
-
-.page-button.active {
-  background-color: black;
-  color: white;
-  border-color: black;
-}
-
-.page-button:hover {
-  background-color: #f8f9fa;
-  border-color: #ced4da;
-}
-
-.page-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-@media (max-width: 768px) {
-  .student-container {
-    margin-left: 0;
+@media (max-width: 767px) {
+  .colegio-container {
+    margin: 70px 5px 20px 5px;
     padding: 10px;
+    max-width: calc(100vw - 10px);
+  }
+  .toolbar {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    align-items: stretch;
+  }
+  .search-field {
+    width: 100%;
+    margin-bottom: 0;
+  }
+  .toolbar button {
+    width: 100%;
+    min-width: unset;
+    padding: 12px;
+  }
+  .colegio-table {
+    overflow-x: auto;
+  }
+  .table-header {
+    display: none;
   }
   .student-row {
-    grid-template-columns: 1fr;
+    display: block;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    padding: 15px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  .student-row span {
+    display: block;
     text-align: left;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f1f1;
+    word-break: break-word;
+  }
+  .student-row span:last-child {
+    border-bottom: none;
+  }
+  .student-row span::before {
+    content: attr(data-label) ": ";
+    font-weight: bold;
+    color: #666;
+    display: inline-block;
+    min-width: 100px;
+    text-transform: uppercase;
+    font-size: 0.85rem;
   }
   .actions {
     justify-content: flex-start;
     margin-top: 10px;
+    padding-top: 10px;
+  }
+  .actions::before {
+    content: "ACCIONES: ";
+    font-weight: bold;
+    color: #666;
+    font-size: 0.85rem;
+    margin-right: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .colegio-container {
+    margin: 60px 2px 20px 2px;
+    padding: 8px;
   }
   .toolbar {
-    flex-direction: column;
+    padding: 10px;
     gap: 10px;
   }
-  .search-field {
-    width: 100%;
-  }
-  .pagination-buttons {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .page-button {
-    width: 35px;
-    height: 35px;
+  .toolbar button {
+    padding: 10px;
     font-size: 0.9rem;
+  }
+  .student-row {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  .student-row span {
+    padding: 6px 0;
+    font-size: 0.9rem;
+  }
+  .student-row span::before {
+    min-width: 80px;
+    font-size: 0.8rem;
   }
 }
 

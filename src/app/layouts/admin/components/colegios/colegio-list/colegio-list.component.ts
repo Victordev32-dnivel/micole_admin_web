@@ -1,128 +1,150 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { MatTableModule } from '@angular/material/table';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmationDeleteComponent } from '../confirmation-delete/confirmation-delete.component';
+import { AddColegioComponent } from '../add-colegio/add-colegio.component';
+import { EditColegioComponent } from '../edit-colegio/edit-colegio.component';
 
 @Component({
   selector: 'app-colegio-list',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, FormsModule],
-  template: `
-    <div class="container">
-      <h2>Listado de Colegios</h2>
-      
-      <div class="header-actions">
-        <button class="btn btn-primary" (click)="openCreateModal()">
-          <i class="fas fa-plus"></i> Crear Colegio
-        </button>
-      </div>
-
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Dirección</th>
-        
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let colegio of colegios">
-            <td>{{ colegio.id }}</td>
-            <td>{{ colegio.nombre }}</td>
-            <td>{{ colegio.direccion }}</td>
-            <td>
-              <button class="btn btn-sm btn-edit" (click)="editColegio(colegio)">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-delete" (click)="deleteColegio(colegio.id)">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- Modal para crear/editar colegio -->
-      <div class="modal" [class.show]="showModal">
-        <div class="modal-content">
-          <span class="close" (click)="closeModal()">&times;</span>
-          <h3>{{ isEditing ? 'Editar Colegio' : 'Crear Colegio' }}</h3>
-          
-          <form (ngSubmit)="submitForm()">
-            <div class="form-group">
-              <label>Nombre:</label>
-              <input type="text" [(ngModel)]="currentColegio.nombre" name="nombre" required>
-            </div>
-            <div class="form-group">
-              <label>Dirección:</label>
-              <input type="text" [(ngModel)]="currentColegio.direccion" name="direccion" required>
-            </div>
-            <button type="submit" class="btn btn-submit">
-              {{ isEditing ? 'Actualizar' : 'Crear' }}
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  `,
-  styleUrls: ['./colegio-list.component.css']
+  imports: [
+    ReactiveFormsModule,
+    CommonModule,
+    MatTableModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+  ],
+  templateUrl: './colegio-list.component.html',
+  styleUrls: ['./colegio-list.component.css'],
 })
-export class ColegioListComponent {
+export class ColegioListComponent implements OnInit {
   colegios: any[] = [];
-  showModal = false;
-  isEditing = false;
-  currentColegio: any = { id: null, nombre: '', direccion: '' };
+  filteredColegios: any[] = [];
+  loading: boolean = true;
+  error: string | null = null;
+  displayedColumns: string[] = [
+    'id',
+    'colegio',
+    'direccion',
+    'celular',
+    'actions',
+  ];
+  searchTermControl = new FormControl('');
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone,
+    public dialog: MatDialog
+  ) {}
 
   ngOnInit() {
     this.loadColegios();
+    this.searchTermControl.valueChanges.subscribe((value) => {
+      this.filterColegios(value || '');
+    });
+  }
+
+  private getHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      Authorization: `Bearer 732612882`,
+      'Content-Type': 'application/json',
+    });
   }
 
   loadColegios() {
-    this.http.get<any[]>('https://tu-api.com/colegios').subscribe(
-      data => this.colegios = data,
-      error => console.error('Error cargando colegios:', error)
-    );
+    this.http
+      .get<any>('https://proy-back-dnivel.onrender.com/api/colegio', {
+        headers: this.getHeaders(),
+      })
+      .subscribe({
+        next: (response) => {
+          this.colegios = response.data || [];
+          this.filteredColegios = [...this.colegios];
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error al cargar colegios:', error);
+          this.error = 'Error al cargar los colegios. Intente de nuevo';
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+      });
   }
 
-  openCreateModal() {
-    this.isEditing = false;
-    this.currentColegio = { id: null, nombre: '', direccion: '' };
-    this.showModal = true;
+  filterColegios(term: string) {
+    this.ngZone.run(() => {
+      this.loading = true;
+      setTimeout(() => {
+        if (!term || term.trim() === '') {
+          this.filteredColegios = [...this.colegios];
+        } else {
+          const searchTerm = term.toLowerCase().trim();
+          this.filteredColegios = this.colegios.filter((colegio) => {
+            const matchesName = colegio.colegio
+              .toLowerCase()
+              .includes(searchTerm);
+            const matchesDireccion = colegio.direccion
+              .toLowerCase()
+              .includes(searchTerm);
+            return matchesName || matchesDireccion;
+          });
+        }
+        console.log(
+          `Colegios filtrados: ${this.filteredColegios.length} de ${this.colegios.length} total`
+        );
+        this.loading = false;
+        this.cdr.detectChanges();
+      }, 100);
+    });
   }
 
-  editColegio(colegio: any) {
-    this.isEditing = true;
-    this.currentColegio = { ...colegio };
-    this.showModal = true;
+  openAddDialog() {
+    const dialogRef = this.dialog.open(AddColegioComponent, {
+      width: '500px', // ancho fijo más compacto
+      maxWidth: '90vw', // responsive
+      height: 'auto',
+      panelClass: 'custom-dialog',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.loadColegios();
+    });
   }
 
-  submitForm() {
-    if (this.isEditing) {
-      this.http.put(`https://tu-api.com/colegios/${this.currentColegio.id}`, this.currentColegio)
-        .subscribe(() => {
-          this.loadColegios();
-          this.closeModal();
-        });
-    } else {
-      this.http.post('https://tu-api.com/colegios', this.currentColegio)
-        .subscribe(() => {
-          this.loadColegios();
-          this.closeModal();
-        });
-    }
+  openEditDialog(id: number) {
+    const dialogRef = this.dialog.open(EditColegioComponent, {
+      width: '100vw', // ancho un poco más amplio para edición
+      maxWidth: '90vw', // responsive
+      panelClass: 'custom-dialog',
+      data: { id },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.loadColegios();
+    });
   }
 
-  deleteColegio(id: number) {
-    if (confirm('¿Estás seguro de eliminar este colegio?')) {
-      this.http.delete(`https://tu-api.com/colegios/${id}`)
-        .subscribe(() => this.loadColegios());
-    }
-  }
+  confirmDelete(id: number) {
+    const dialogRef = this.dialog.open(ConfirmationDeleteComponent, {
+      width: '300px',
+      maxWidth: '90vw',
+      data: { id, message: '¿Estás seguro de eliminar este colegio?' }, // ahora incluye el id
+    });
 
-  closeModal() {
-    this.showModal = false;
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.loadColegios();
+    });
   }
 }

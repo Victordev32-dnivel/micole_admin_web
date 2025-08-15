@@ -1,46 +1,48 @@
-<div class="student-container">
+<div class="colegio-container">
   <div class="toolbar">
     <mat-form-field appearance="outline" class="search-field">
-      <input matInput placeholder="Buscar por nombre" [formControl]="searchTermControl">
+      <input matInput placeholder="Buscar por nombre o dirección" [formControl]="searchTermControl">
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
-    <button mat-raised-button color="primary" class="add-button" [disabled]="loading" (click)="openAddDialog()">Agregar Alumno</button>
+    <button mat-raised-button color="primary" class="add-button" [disabled]="loading" (click)="openAddDialog()">
+      <mat-icon>add</mat-icon>
+      Agregar Colegio
+    </button>
   </div>
-  <div class="student-table">
+
+  <div class="colegio-table">
     <div class="table-header">
-      <span>DNI</span>
-      <span>NOMBRE</span>
-      <span>CÓDIGO</span>
-      <span>TELÉFONO</span>
-   
+      <span data-label="ID">ID</span>
+      <span data-label="COLEGIO">COLEGIO</span>
+      <span data-label="DIRECCIÓN">DIRECCIÓN</span>
+      <span data-label="CELULAR">CELULAR</span>
+      <span data-label="ACCIONES">ACCIONES</span>
     </div>
+
     <div class="table-body">
       <div *ngIf="loading" class="loading-container">
         <div class="loading">Cargando datos <span class="spinner"></span></div>
       </div>
-      <div class="student-row" *ngFor="let student of filteredStudents">
-        <span>{{ student.numero_documento }}</span>
-        <span>{{ student.nombre_completo }}</span>
-        <span>{{ student.codigo }}</span>
-        <span>{{ student.telefono }}</span>
-        <span class="actions">
-          <mat-icon (click)="openEditDialog(student)" style="color: #ffcc00;">edit</mat-icon>
-          <mat-icon (click)="confirmDelete(student.numero_documento)" style="color: #ff0000;">delete</mat-icon>
+
+      <div class="student-row" *ngFor="let colegio of filteredColegios">
+        <span data-label="ID">{{ colegio.id }}</span>
+        <span data-label="COLEGIO">{{ colegio.colegio }}</span>
+        <span data-label="DIRECCIÓN">{{ colegio.direccion }}</span>
+        <span data-label="CELULAR">{{ colegio.celular }}</span>
+        <span class="actions" data-label="ACCIONES">
+          <mat-icon (click)="openEditDialog(colegio.id)" style="color: #ffcc00;" title="Editar">edit</mat-icon>
+          <mat-icon (click)="confirmDelete(colegio.id)" style="color: #f44336;" title="Eliminar">delete</mat-icon>
         </span>
       </div>
-      <div *ngIf="filteredStudents.length === 0 && !loading">No hay estudiantes para mostrar</div>
-    </div>
-  </div>
-  <div class="pagination">
-    <span>Total de alumnos: {{ totalAlumnos }}</span>
-    <div class="pagination-buttons">
-      <button *ngFor="let page of getPageNumbers()"
-              [class.active]="page === currentPage"
-              [disabled]="loading"
-              (click)="changePage(page)"
-              class="page-button">
-        {{ page }}
-      </button>
+
+      <div *ngIf="filteredColegios.length === 0 && !loading" style="text-align: center; padding: 40px; color: #666;">
+        <p *ngIf="searchTermControl.value && searchTermControl.value.trim() !== ''">
+          No se encontraron colegios que coincidan con "<strong>{{ searchTermControl.value }}</strong>"
+        </p>
+        <p *ngIf="!searchTermControl.value || searchTermControl.value.trim() === ''">
+          No hay colegios para mostrar
+        </p>
+      </div>
     </div>
   </div>
 </div>
