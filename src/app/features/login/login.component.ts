@@ -24,7 +24,8 @@ export class LoginComponent {
   showPassword: boolean = false;
   loading: boolean = false;
   error: string | null = null;
-  private apiUrl = 'https://proy-back-dnivel.onrender.com/api/usuario/login';
+  private apiUrl =
+    'https://proy-back-dnivel-44j5.onrender.com/api/usuario/login';
 
   constructor(
     private fb: FormBuilder,
@@ -54,8 +55,6 @@ export class LoginComponent {
       this.http.post<any>(this.apiUrl, loginData).subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-
-
             const userData: UserData = {
               id: response.id,
               tipoUsuario: response.tipoUsuario,

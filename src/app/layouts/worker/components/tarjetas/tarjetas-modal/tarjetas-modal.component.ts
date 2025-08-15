@@ -48,8 +48,9 @@ export class TarjetasModalComponent {
   modalTitle: string = '';
   loading: boolean = false;
   isEditMode: boolean = false; // Nueva propiedad para identificar el modo
-  
-  private apiUrlTarjeta = 'https://proy-back-dnivel.onrender.com/api/tarjeta';
+
+  private apiUrlTarjeta =
+    'https://proy-back-dnivel-44j5.onrender.com/api/tarjeta';
   private staticToken = '732612882';
 
   constructor(
@@ -68,10 +69,10 @@ export class TarjetasModalComponent {
       this.currentRfid = this.data.currentRfid;
       this.colegioId = this.data.colegioId;
       this.rfidInput = this.currentRfid?.toString() || '';
-      
+
       // Determinar si es modo edición o asignación
       this.isEditMode = this.currentRfid !== null && this.currentRfid > 0;
-      
+
       this.modalTitle = this.isEditMode
         ? 'Actualizar Tarjeta RFID'
         : 'Asignar Tarjeta RFID';
@@ -109,8 +110,6 @@ export class TarjetasModalComponent {
       idColegio: this.colegioId,
     };
 
-  
-
     this.http.post<any>(this.apiUrlTarjeta, body, { headers }).subscribe({
       next: (response) => {
         this.ngZone.run(() => {
@@ -131,11 +130,9 @@ export class TarjetasModalComponent {
 
   private updateTarjeta(headers: HttpHeaders) {
     const body = {
-      rfid: parseInt(this.rfidInput)
+      rfid: parseInt(this.rfidInput),
     };
-    
-   
-    
+
     const updateUrl = `${this.apiUrlTarjeta}/alumno/${this.alumnoId}`;
 
     this.http.patch<any>(updateUrl, body, { headers }).subscribe({

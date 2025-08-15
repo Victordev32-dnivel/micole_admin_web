@@ -98,28 +98,30 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
   addForm: FormGroup;
   genders = ['Masculino', 'Femenino', 'Otro'];
   states = ['Activo', 'Inactivo'];
-  
+
   // Datos originales
   salones: Salon[] = [];
   apoderados: Apoderado[] = [];
-  
+
   // Datos filtrados para mostrar en los selects
   filteredSalones: Salon[] = [];
   filteredApoderados: Apoderado[] = [];
-  
+
   // FormControls para la búsqueda
   salonSearchCtrl: FormControl = new FormControl('');
   apoderadoSearchCtrl: FormControl = new FormControl('');
-  
+
   // Subject para manejar la limpieza de subscripciones
   private _onDestroy = new Subject<void>();
-  
+
   loadingSalones = false;
   loadingApoderados = false;
-  
-  private apiUrl = 'https://proy-back-dnivel.onrender.com/api/alumno';
-  private salonesApiUrl = 'https://proy-back-dnivel.onrender.com/api/salon/colegio/lista';
-  private apoderadosApiUrl = 'https://proy-back-dnivel.onrender.com/api/apoderado/colegio/lista';
+
+  private apiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno';
+  private salonesApiUrl =
+    'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista';
+  private apoderadosApiUrl =
+    'https://proy-back-dnivel-44j5.onrender.com/api/apoderado/colegio/lista';
   private staticToken = '732612882';
 
   @ViewChild('picker') datepicker: MatDatepicker<Date> | undefined;
@@ -169,7 +171,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     // Cargar salones y apoderados cuando se inicializa el componente
     this.loadSalones();
     this.loadApoderados();
-    
+
     // Configurar filtros de búsqueda
     this.setupSearchFilters();
   }
@@ -208,14 +210,16 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     }
 
     const search = searchValue.toLowerCase().trim();
-    this.filteredSalones = this.salones.filter(salon => {
+    this.filteredSalones = this.salones.filter((salon) => {
       const nombre = (salon.nombre || '').toLowerCase();
       const descripcion = (salon.descripcion || '').toLowerCase();
       const id = salon.id.toString();
-      
-      return nombre.includes(search) || 
-             descripcion.includes(search) || 
-             id.includes(search);
+
+      return (
+        nombre.includes(search) ||
+        descripcion.includes(search) ||
+        id.includes(search)
+      );
     });
   }
 
@@ -226,10 +230,10 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     }
 
     const search = searchValue.toLowerCase().trim();
-    this.filteredApoderados = this.apoderados.filter(apoderado => {
+    this.filteredApoderados = this.apoderados.filter((apoderado) => {
       const nombre = (apoderado.nombre || '').toLowerCase();
       const id = apoderado.id.toString();
-      
+
       return nombre.includes(search) || id.includes(search);
     });
   }
@@ -249,7 +253,6 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     const salon = event.option.value;
     const salonId = salon ? salon.id : '';
     this.addForm.patchValue({ idSalon: salonId });
-  
   }
 
   onApoderadoSelected(event: MatAutocompleteSelectedEvent): void {
@@ -268,14 +271,12 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
 
   private loadSalones(): void {
     let colegioId = this.data?.colegioId;
-    
+
     if (!colegioId) {
       const userData = this.userService.getUserData();
       colegioId = userData?.colegio;
     }
 
-   
-    
     if (!colegioId) {
       console.error('No se encontró ID del colegio para salones');
       return;
@@ -285,12 +286,8 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     const headers = this.getHeaders();
     const url = `${this.salonesApiUrl}/${colegioId}`;
 
-  
-
     this.http.get<any>(url, { headers }).subscribe({
       next: (response) => {
-      
-        
         let salonesData = response;
         if (response && response.data) {
           salonesData = response.data;
@@ -303,8 +300,6 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
         this.salones = salonesData || [];
         this.filteredSalones = this.salones.slice(); // Inicializar filteredSalones
         this.loadingSalones = false;
-        
-     
       },
       error: (error) => {
         console.error('Error al cargar salones:', error);
@@ -318,14 +313,12 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
 
   private loadApoderados(): void {
     let colegioId = this.data?.colegioId;
-    
+
     if (!colegioId) {
       const userData = this.userService.getUserData();
       colegioId = userData?.colegio;
     }
 
-   
-    
     if (!colegioId) {
       console.error('No se encontró ID del colegio para apoderados');
       return;
@@ -335,11 +328,8 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     const headers = this.getHeaders();
     const url = `${this.apoderadosApiUrl}/${colegioId}`;
 
-
-
     this.http.get<any>(url, { headers }).subscribe({
       next: (response) => {
-     
         let apoderadosData = [];
         if (response && response.data && Array.isArray(response.data)) {
           apoderadosData = response.data;
@@ -350,20 +340,22 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
         this.apoderados = apoderadosData || [];
         this.filteredApoderados = this.apoderados.slice(); // Inicializar filteredApoderados
         this.loadingApoderados = false;
-        
-       
-        
+
         if (this.apoderados.length === 0) {
           console.warn('No se encontraron apoderados');
-          this.snackBar.open('No se encontraron apoderados para este colegio', 'Cerrar', {
-            duration: 3000,
-          });
+          this.snackBar.open(
+            'No se encontraron apoderados para este colegio',
+            'Cerrar',
+            {
+              duration: 3000,
+            }
+          );
         }
       },
       error: (error) => {
         console.error('Error detallado al cargar apoderados:', error);
         this.loadingApoderados = false;
-        
+
         let errorMessage = 'Error al cargar los apoderados';
         if (error.status === 401) {
           errorMessage = 'Token no válido. Inicia sesión nuevamente.';
@@ -383,27 +375,34 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
   private isFormValidForSave(): boolean {
     const numeroDocumento = this.addForm.get('numeroDocumento')?.value;
     const telefono = this.addForm.get('telefono')?.value;
-    
+
     const dniValid = numeroDocumento && /^[0-9]{8}$/.test(numeroDocumento);
     const telefonoValid = !telefono || /^[0-9]{9}$/.test(telefono);
-    
+
     return Boolean(dniValid && telefonoValid);
   }
 
   onSave(): void {
     if (this.isFormValidForSave()) {
       const formValue = this.addForm.value;
-      
+
       const payload = {
         numeroDocumento: formValue.numeroDocumento,
         nombres: formValue.nombres || '',
         apellidoPaterno: formValue.apellidoPaterno || '',
         apellidoMaterno: formValue.apellidoMaterno || '',
-        genero: formValue.genero === 'Masculino' ? 'm' : 
-               formValue.genero === 'Femenino' ? 'f' : 
-               formValue.genero === 'Otro' ? 'o' : '',
+        genero:
+          formValue.genero === 'Masculino'
+            ? 'm'
+            : formValue.genero === 'Femenino'
+            ? 'f'
+            : formValue.genero === 'Otro'
+            ? 'o'
+            : '',
         telefono: formValue.telefono || '',
-        fechaNacimiento: formValue.fechaNacimiento ? this.formatDate(formValue.fechaNacimiento) : '',
+        fechaNacimiento: formValue.fechaNacimiento
+          ? this.formatDate(formValue.fechaNacimiento)
+          : '',
         direccion: formValue.direccion || '',
         estado: formValue.estado || 'Activo',
         idApoderado: formValue.idApoderado ? +formValue.idApoderado : null,
@@ -411,11 +410,9 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
         idColegio: this.data?.colegioId || 0,
       };
 
-    
       const headers = this.getHeaders();
       this.http.post<any>(this.apiUrl, payload, { headers }).subscribe({
         next: (response) => {
-         
           this.snackBar.open('Alumno agregado exitosamente!', 'Cerrar', {
             duration: 5000,
             verticalPosition: 'top',

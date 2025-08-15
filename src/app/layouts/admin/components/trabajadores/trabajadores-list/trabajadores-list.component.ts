@@ -1,158 +1,164 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { MatTableModule } from '@angular/material/table';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmationDeleteComponent } from '../confirmation-delete/confirmation-delete.component';
+import { AddTrabajadoresComponent } from '../add-trabajadores/add-trabajador.component';
+import { EditTrabajadoresComponent } from '../edit-trabajadores/edit-trabajadores.component';
 
 @Component({
   selector: 'app-trabajadores-list',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, FormsModule],
-  template: `
-    <div class="container">
-      <h2>Listado de Trabajadores</h2>
-      
-      <div class="header-actions">
-        <button class="btn btn-primary" (click)="openCreateModal()">
-          <i class="fas fa-plus"></i> Crear Trabajador
-        </button>
-      </div>
-
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Documento</th>
-            <th>Tipo</th>
-        
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let trabajador of trabajadores">
-            <td>{{ trabajador.id }}</td>
-            <td>{{ trabajador.nombre }}</td>
-            <td>{{ trabajador.numeroDocumento }}</td>
-            <td>{{ trabajador.tipoUsuario }}</td>
-            <td>
-              <button class="btn btn-sm btn-edit" (click)="editTrabajador(trabajador)">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-delete" (click)="deleteTrabajador(trabajador.id)">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- Modal para crear/editar trabajador -->
-      <div class="modal" [class.show]="showModal">
-        <div class="modal-content">
-          <span class="close" (click)="closeModal()">&times;</span>
-          <h3>{{ isEditing ? 'Editar Trabajador' : 'Crear Trabajador' }}</h3>
-          
-          <form (ngSubmit)="submitForm()">
-            <div class="form-group">
-              <label>Nombre:</label>
-              <input type="text" [(ngModel)]="currentTrabajador.nombre" name="nombre" required>
-            </div>
-            <div class="form-group">
-              <label>Documento:</label>
-              <input type="text" [(ngModel)]="currentTrabajador.numeroDocumento" name="documento" required>
-            </div>
-            <div class="form-group">
-              <label>Contraseña:</label>
-              <input type="password" [(ngModel)]="currentTrabajador.contrasena" name="contrasena" [required]="!isEditing">
-            </div>
-            <div class="form-group">
-              <label>Tipo de Usuario:</label>
-              <select [(ngModel)]="currentTrabajador.tipoUsuario" name="tipoUsuario" required>
-                <option value="admin">Administrador</option>
-                <option value="trabajador">Trabajador</option>
-              </select>
-            </div>
-            <button type="submit" class="btn btn-submit">
-              {{ isEditing ? 'Actualizar' : 'Crear' }}
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  `,
-  styleUrls: ['./trabajadores-list.component.css']
+  imports: [
+    ReactiveFormsModule,
+    CommonModule,
+    MatTableModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+  ],
+  templateUrl: './trabajadores-list.component.html',
+  styleUrls: ['./trabajadores-list.component.css'],
 })
-export class TrabajadoresListComponent {
+export class TrabajadoresListComponent implements OnInit {
   trabajadores: any[] = [];
-  showModal = false;
-  isEditing = false;
-  currentTrabajador: any = { 
-    id: null, 
-    nombre: '', 
-    numeroDocumento: '', 
-    contrasena: '', 
-    tipoUsuario: 'trabajador' 
-  };
+  filteredTrabajadores: any[] = [];
+  loading: boolean = true;
+  error: string | null = null;
+  displayedColumns: string[] = [
+    'id',
+    'nombre',
+    'apellidoPaterno',
+    'apellidoMaterno',
+    'dni',
+    'telefono',
+    'actions',
+  ];
+  searchTermControl = new FormControl('');
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone,
+    public dialog: MatDialog
+  ) {}
 
   ngOnInit() {
     this.loadTrabajadores();
+    this.searchTermControl.valueChanges.subscribe((value) => {
+      this.filterTrabajadores(value || '');
+    });
+  }
+
+  private getHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      Authorization: `Bearer 732612882`,
+      'Content-Type': 'application/json',
+    });
   }
 
   loadTrabajadores() {
-    this.http.get<any[]>('https://tu-api.com/trabajadores').subscribe(
-      data => this.trabajadores = data,
-      error => console.error('Error cargando trabajadores:', error)
-    );
+    this.http
+      .get<any>('https://proy-back-dnivel-44j5.onrender.com/api/Trabajador', {
+        headers: this.getHeaders(),
+      })
+      .subscribe({
+        next: (response) => {
+          this.trabajadores = response.data || [];
+          this.filteredTrabajadores = [...this.trabajadores];
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error al cargar trabajadores:', error);
+          this.error = 'Error al cargar los trabajadores. Intente de nuevo';
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+      });
   }
 
-  openCreateModal() {
-    this.isEditing = false;
-    this.currentTrabajador = { 
-      id: null, 
-      nombre: '', 
-      numeroDocumento: '', 
-      contrasena: '', 
-      tipoUsuario: 'trabajador' 
-    };
-    this.showModal = true;
+  filterTrabajadores(term: string) {
+    this.ngZone.run(() => {
+      this.loading = true;
+      setTimeout(() => {
+        if (!term || term.trim() === '') {
+          this.filteredTrabajadores = [...this.trabajadores];
+        } else {
+          const searchTerm = term.toLowerCase().trim();
+          this.filteredTrabajadores = this.trabajadores.filter((trabajador) => {
+            const matchesName = trabajador.nombre
+              .toLowerCase()
+              .includes(searchTerm);
+            const matchesApellidoPaterno = trabajador.apellidoPaterno
+              .toLowerCase()
+              .includes(searchTerm);
+            const matchesApellidoMaterno = trabajador.apellidoMaterno
+              .toLowerCase()
+              .includes(searchTerm);
+            const matchesDNI = trabajador.dni
+              .toLowerCase()
+              .includes(searchTerm);
+            return (
+              matchesName ||
+              matchesApellidoPaterno ||
+              matchesApellidoMaterno ||
+              matchesDNI
+            );
+          });
+        }
+        console.log(
+          `Trabajadores filtrados: ${this.filteredTrabajadores.length} de ${this.trabajadores.length} total`
+        );
+        this.loading = false;
+        this.cdr.detectChanges();
+      }, 100);
+    });
   }
 
-  editTrabajador(trabajador: any) {
-    this.isEditing = true;
-    this.currentTrabajador = { ...trabajador };
-    this.showModal = true;
+  openAddDialog() {
+    const dialogRef = this.dialog.open(AddTrabajadoresComponent, {
+      width: '25vw',
+      maxWidth: '50vw',
+      height: '30.2vw',
+      panelClass: 'custom-dialog',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.loadTrabajadores();
+    });
   }
 
-  submitForm() {
-    const payload = { ...this.currentTrabajador };
-    if (!this.isEditing) {
-      payload.valueToken = 'string';
-    }
+  openEditDialog(id: number) {
+    const dialogRef = this.dialog.open(EditTrabajadoresComponent, {
+      width: '25vw',
+      maxWidth: '50vw',
+      height: '25vw',
+      panelClass: 'custom-dialog',
+      data: { id, trabajadores: this.trabajadores },
+    });
 
-    if (this.isEditing) {
-      this.http.put(`https://tu-api.com/trabajadores/${this.currentTrabajador.id}`, payload)
-        .subscribe(() => {
-          this.loadTrabajadores();
-          this.closeModal();
-        });
-    } else {
-      this.http.post('https://tu-api.com/trabajadores', payload)
-        .subscribe(() => {
-          this.loadTrabajadores();
-          this.closeModal();
-        });
-    }
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.loadTrabajadores();
+    });
   }
 
-  deleteTrabajador(id: number) {
-    if (confirm('¿Estás seguro de eliminar este trabajador?')) {
-      this.http.delete(`https://tu-api.com/trabajadores/${id}`)
-        .subscribe(() => this.loadTrabajadores());
-    }
-  }
+  confirmDelete(id: number) {
+    const dialogRef = this.dialog.open(ConfirmationDeleteComponent, {
+      width: '20vw',
+      maxWidth: '50vw',
+      data: { id, message: '¿Estás seguro de eliminar este trabajador?' },
+    });
 
-  closeModal() {
-    this.showModal = false;
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.loadTrabajadores();
+    });
   }
 }

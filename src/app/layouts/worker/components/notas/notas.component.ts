@@ -134,14 +134,14 @@ export class NotasComponent implements OnInit {
     this.successMessage = null;
     this.http
       .get<any>(
-        `https://proy-back-dnivel.onrender.com/api/salon/colegio/lista/${this.colegioId}`,
+        `https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista/${this.colegioId}`,
         { headers: this.getHeaders() }
       )
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
             this.salones = response.data || [];
-           
+
             this.loadingSalones = false;
             if (this.salones.length === 0) {
               this.error = 'No se encontraron salones para este colegio';
@@ -178,7 +178,7 @@ export class NotasComponent implements OnInit {
     this.alumnos = [];
     this.http
       .get<any>(
-        `https://proy-back-dnivel.onrender.com/api/alumno/salon/${salonId}`,
+        `https://proy-back-dnivel-44j5.onrender.com/api/alumno/salon/${salonId}`,
         { headers: this.getHeaders() }
       )
       .subscribe({
@@ -188,7 +188,7 @@ export class NotasComponent implements OnInit {
               id: item.idAlumno,
               nombre: item.alumno || 'Alumno sin nombre',
             }));
-          
+
             this.loadingAlumnos = false;
             if (this.alumnos.length === 0) {
               this.error = 'No se encontraron alumnos en este salón';
@@ -207,7 +207,7 @@ export class NotasComponent implements OnInit {
 
   async uploadPdfToS3(file: File): Promise<string> {
     try {
-     
+
       this.uploadProgress = 0;
 
       if (!file) throw new Error('El archivo no existe');
@@ -226,7 +226,7 @@ export class NotasComponent implements OnInit {
       const randomId = Math.random().toString(36).substring(2);
       const fileName = `notes/${timestamp}_${randomId}.pdf`;
 
-      
+
 
       const params = {
         Bucket: BUCKET_NAME,
@@ -256,7 +256,7 @@ export class NotasComponent implements OnInit {
         Expires: 7 * 24 * 60 * 60,
       });
 
-      
+
 
       return signedUrl;
     } catch (error: unknown) {
@@ -294,7 +294,7 @@ export class NotasComponent implements OnInit {
     try {
       ('🔄 Iniciando proceso de guardado de notas...');
       const pdfUrl = await this.uploadPdfToS3(this.pdfFile);
-      
+
 
       const payload = {
         IdAlumno: this.noteForm.get('idAlumno')?.value,
@@ -304,12 +304,12 @@ export class NotasComponent implements OnInit {
       };
 
       (
-        
+
         JSON.stringify(payload, null, 2)
       );
 
       const response = await this.http
-        .post('https://proy-back-dnivel.onrender.com/api/nota', payload, {
+        .post('https://proy-back-dnivel-44j5.onrender.com/api/nota', payload, {
           headers: this.getHeaders(),
         })
         .toPromise();

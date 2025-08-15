@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, Inject } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -10,17 +10,14 @@ import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogRef } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { FormControl, FormGroupDirective, NgForm } from '@angular/forms';
 
 export class CustomErrorStateMatcher implements ErrorStateMatcher {
-  isErrorState(
-    control: FormControl | null,
-    form: FormGroupDirective | NgForm | null
-  ): boolean {
-    const isSubmitted = form && form.submitted;
+  isErrorState(control: FormControl | null): boolean {
+    const isSubmitted = false;
     return !!(
       control &&
       control.invalid &&
@@ -30,7 +27,7 @@ export class CustomErrorStateMatcher implements ErrorStateMatcher {
 }
 
 @Component({
-  selector: 'app-edit-trabajador',
+  selector: 'app-add-trabajador',
   standalone: true,
   imports: [
     CommonModule,
@@ -40,25 +37,22 @@ export class CustomErrorStateMatcher implements ErrorStateMatcher {
     MatButtonModule,
     MatProgressSpinnerModule,
   ],
-  templateUrl: './edit-trabajadores.component.html',
-  styleUrls: ['./edit-trabajadores.component.css'],
+  templateUrl: './add-trabajador.component.html',
+  styleUrls: ['./add-trabajador.component.css'],
 })
-export class EditTrabajadoresComponent implements OnInit {
+export class AddTrabajadoresComponent implements OnInit {
   trabajadorForm: FormGroup;
   loading: boolean = false;
   error: string | null = null;
   successMessage: string | null = null;
-  trabajadorId: number;
   customErrorStateMatcher = new CustomErrorStateMatcher();
 
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
-    public dialogRef: MatDialogRef<EditTrabajadoresComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { id: number; trabajadores: any[] }
+    public dialogRef: MatDialogRef<AddTrabajadoresComponent>
   ) {
-    this.trabajadorId = data.id;
     this.trabajadorForm = this.fb.group({
       nombre: ['', Validators.required],
       apellidoPaterno: ['', Validators.required],
@@ -68,9 +62,7 @@ export class EditTrabajadoresComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
-    this.loadTrabajador();
-  }
+  ngOnInit() {}
 
   private getHeaders(): HttpHeaders {
     return new HttpHeaders({
@@ -79,50 +71,29 @@ export class EditTrabajadoresComponent implements OnInit {
     });
   }
 
-  loadTrabajador() {
-    this.loading = true;
-    this.error = null;
-
-    const trabajador = this.data.trabajadores.find(
-      (t) => t.id === this.trabajadorId
-    );
-    if (trabajador) {
-      this.trabajadorForm.patchValue({
-        nombre: trabajador.nombre,
-        apellidoPaterno: trabajador.apellidoPaterno,
-        apellidoMaterno: trabajador.apellidoMaterno,
-        dni: trabajador.dni,
-        telefono: trabajador.telefono,
-      });
-    } else {
-      this.error = 'No se encontró el trabajador con el ID especificado';
-    }
-
-    this.loading = false;
-    this.cdr.detectChanges();
-  }
-
   onSubmit() {
     if (this.trabajadorForm.valid) {
       this.loading = true;
       this.error = null;
       const formData = this.trabajadorForm.value;
       this.http
-        .put(
-          `https://proy-back-dnivel-44j5.onrender.com/api/trabajador/${this.trabajadorId}`,
+        .post(
+          'https://proy-back-dnivel-44j5.onrender.com/api/trabajador',
           formData,
-          { headers: this.getHeaders() }
+          {
+            headers: this.getHeaders(),
+          }
         )
         .subscribe({
           next: () => {
-            this.successMessage = 'Trabajador actualizado exitosamente';
+            this.successMessage = 'Trabajador agregado exitosamente';
             this.loading = false;
             this.cdr.detectChanges();
             setTimeout(() => this.dialogRef.close(true), 1000);
           },
           error: (error) => {
-            console.error('Error al actualizar trabajador:', error);
-            this.error = 'Error al actualizar el trabajador. Intente de nuevo';
+            console.error('Error al agregar trabajador:', error);
+            this.error = 'Error al agregar el trabajador. Intente de nuevo';
             this.loading = false;
             this.cdr.detectChanges();
           },

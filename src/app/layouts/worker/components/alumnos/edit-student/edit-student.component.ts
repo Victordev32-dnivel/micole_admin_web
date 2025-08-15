@@ -101,7 +101,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
   error: string | null = null;
   genders = ['Masculino', 'Femenino', 'Otro'];
   states = ['Activo', 'Inactivo'];
-  
+
   // Datos para salones y apoderados
   salones: Salon[] = [];
   apoderados: Apoderado[] = [];
@@ -111,14 +111,16 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
   apoderadoSearchCtrl: FormControl = new FormControl('');
   loadingSalones = false;
   loadingApoderados = false;
-  
+
   private _onDestroy = new Subject<void>();
-  
-  private apiUrl = 'https://proy-back-dnivel.onrender.com/api/alumno';
-  private salonesApiUrl = 'https://proy-back-dnivel.onrender.com/api/salon/colegio/lista';
-  private apoderadosApiUrl = 'https://proy-back-dnivel.onrender.com/api/apoderado/colegio/lista';
+
+  private apiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno';
+  private salonesApiUrl =
+    'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista';
+  private apoderadosApiUrl =
+    'https://proy-back-dnivel-44j5.onrender.com/api/apoderado/colegio/lista';
   private staticToken = '732612882';
-  
+
   isFormChanged: boolean = false;
   initialNumeroDocumento: string = '';
 
@@ -135,7 +137,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.studentData = data;
-    
+
     this.editForm = this.fb.group({
       numeroDocumento: [
         { value: '', disabled: true },
@@ -175,10 +177,10 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
     // Cargar salones y apoderados cuando se inicializa el componente
     this.loadSalones();
     this.loadApoderados();
-    
+
     // Configurar filtros de búsqueda
     this.setupSearchFilters();
-    
+
     // Cargar datos iniciales al abrir el diálogo
     if (this.data && this.data.id) {
       this.loadInitialData();
@@ -219,14 +221,16 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
     }
 
     const search = searchValue.toLowerCase().trim();
-    this.filteredSalones = this.salones.filter(salon => {
+    this.filteredSalones = this.salones.filter((salon) => {
       const nombre = (salon.nombre || '').toLowerCase();
       const descripcion = (salon.descripcion || '').toLowerCase();
       const id = salon.id.toString();
-      
-      return nombre.includes(search) || 
-             descripcion.includes(search) || 
-             id.includes(search);
+
+      return (
+        nombre.includes(search) ||
+        descripcion.includes(search) ||
+        id.includes(search)
+      );
     });
   }
 
@@ -237,10 +241,10 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
     }
 
     const search = searchValue.toLowerCase().trim();
-    this.filteredApoderados = this.apoderados.filter(apoderado => {
+    this.filteredApoderados = this.apoderados.filter((apoderado) => {
       const nombre = (apoderado.nombre || '').toLowerCase();
       const id = apoderado.id.toString();
-      
+
       return nombre.includes(search) || id.includes(search);
     });
   }
@@ -266,7 +270,6 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
     const apoderado = event.option.value;
     const apoderadoId = apoderado ? apoderado.id : '';
     this.editForm.patchValue({ idApoderado: apoderadoId });
-   
   }
 
   private getHeaders(): HttpHeaders {
@@ -279,14 +282,12 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
 
   private loadSalones(): void {
     let colegioId = this.data?.colegioId;
-    
+
     if (!colegioId) {
       const userData = this.userService.getUserData();
       colegioId = userData?.colegio;
     }
 
-  
-    
     if (!colegioId) {
       console.error('No se encontró ID del colegio para salones');
       return;
@@ -296,12 +297,9 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
     const headers = this.getHeaders();
     const url = `${this.salonesApiUrl}/${colegioId}`;
 
-   
     this.http.get<any>(url, { headers }).subscribe({
       next: (response) => {
         this.ngZone.run(() => {
-          
-          
           let salonesData = response;
           if (response && response.data) {
             salonesData = response.data;
@@ -315,8 +313,6 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
           this.filteredSalones = this.salones.slice();
           this.loadingSalones = false;
           this.cdr.detectChanges();
-          
-        
         });
       },
       error: (error) => {
@@ -331,14 +327,12 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
 
   private loadApoderados(): void {
     let colegioId = this.data?.colegioId;
-    
+
     if (!colegioId) {
       const userData = this.userService.getUserData();
       colegioId = userData?.colegio;
     }
 
-    
-    
     if (!colegioId) {
       console.error('No se encontró ID del colegio para apoderados');
       return;
@@ -348,7 +342,6 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
     const headers = this.getHeaders();
     const url = `${this.apoderadosApiUrl}/${colegioId}`;
 
-    
     this.http.get<any>(url, { headers }).subscribe({
       next: (response) => {
         this.ngZone.run(() => {
@@ -363,8 +356,6 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
           this.filteredApoderados = this.apoderados.slice();
           this.loadingApoderados = false;
           this.cdr.detectChanges();
-          
-       
         });
       },
       error: (error) => {
@@ -387,17 +378,21 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
       return;
     }
     const url = `${this.apiUrl}/${studentId}`;
-   
+
     this.http.get<any>(url, { headers: this.getHeaders() }).subscribe({
       next: (response) => {
         this.ngZone.run(() => {
           const student = response;
           this.initialNumeroDocumento = student.numeroDocumento;
-          
+
           // Buscar el apoderado y salón actual para mostrarlos en los inputs
-          const currentApoderado = this.apoderados.find(a => a.id === student.idApoderado);
-          const currentSalon = this.salones.find(s => s.id === student.idSalon);
-          
+          const currentApoderado = this.apoderados.find(
+            (a) => a.id === student.idApoderado
+          );
+          const currentSalon = this.salones.find(
+            (s) => s.id === student.idSalon
+          );
+
           this.editForm.patchValue({
             numeroDocumento: student.numeroDocumento,
             nombres: student.nombres || '',
@@ -420,18 +415,18 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
             idSalon: student.idSalon || '',
             idApoderado: student.idApoderado || '',
           });
-          
+
           // Establecer valores en los controles de búsqueda
           if (currentApoderado) {
             this.apoderadoSearchCtrl.setValue(currentApoderado);
           }
-          
+
           if (currentSalon) {
             this.salonSearchCtrl.setValue(currentSalon);
           }
-          
+
           this.isFormChanged = false; // Inicialmente no hay cambios
-      
+
           this.loading = false;
           this.cdr.detectChanges();
         });
@@ -471,7 +466,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
       idSalon: this.studentData?.idSalon || '',
       idApoderado: this.studentData?.idApoderado || '',
     };
-    
+
     const hasChanges = !this.deepEqual(currentValues, initialValues);
     this.isFormChanged = Boolean(hasChanges || !this.studentData);
     this.cdr.detectChanges();
@@ -484,31 +479,31 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
   private isFormValidForSave(): boolean {
     const numeroDocumento = this.editForm.get('numeroDocumento')?.value;
     const telefono = this.editForm.get('telefono')?.value;
-    
+
     const dniValid = numeroDocumento && /^[0-9]{8}$/.test(numeroDocumento);
     const telefonoValid = !telefono || /^[0-9]{9}$/.test(telefono);
-    
+
     return Boolean(dniValid && telefonoValid);
   }
 
   onSave(): void {
     const telefono = this.editForm.get('telefono')?.value;
     const telefonoValid = !telefono || /^[0-9]{9}$/.test(telefono);
-    
+
     if (!telefonoValid) {
       this.error = 'Si ingresa teléfono, debe tener exactamente 9 dígitos.';
       return;
     }
-    
+
     if (this.isFormChanged) {
       this.loading = true;
       this.error = null;
-      
+
       const formValues = this.editForm.value;
-      
+
       const editData = {
         numeroDocumento: this.initialNumeroDocumento,
-        nombres: formValues.nombres || '', 
+        nombres: formValues.nombres || '',
         apellidoPaterno: formValues.apellidoPaterno || '',
         apellidoMaterno: formValues.apellidoMaterno || '',
         genero:
@@ -518,23 +513,21 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
             ? 'f'
             : formValues.genero === 'Otro'
             ? 'o'
-            : '', 
+            : '',
         telefono: formValues.telefono || '',
-        fechaNacimiento: formValues.fechaNacimiento 
+        fechaNacimiento: formValues.fechaNacimiento
           ? this.formatDate(formValues.fechaNacimiento)
-          : '', 
+          : '',
         direccion: formValues.direccion || '',
-        estado: formValues.estado || 'Activo', 
-        idApoderado: formValues.idApoderado ? +formValues.idApoderado : null, 
-        idSalon: formValues.idSalon ? +formValues.idSalon : null, 
+        estado: formValues.estado || 'Activo',
+        idApoderado: formValues.idApoderado ? +formValues.idApoderado : null,
+        idSalon: formValues.idSalon ? +formValues.idSalon : null,
         idColegio: this.data.colegioId || 0,
       };
-      
-    
-      
+
       const studentId = Number(this.data.id);
       const url = `${this.apiUrl}/${studentId}`;
-      
+
       this.http
         .put<any>(url, editData, { headers: this.getHeaders() })
         .subscribe({

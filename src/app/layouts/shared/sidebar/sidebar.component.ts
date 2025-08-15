@@ -83,11 +83,9 @@ export class SidebarComponent implements OnInit {
     { path: '/admin/colegios', label: 'Colegios', icon: 'fas fa-school' },
     {
       path: '/admin/trabajadores',
-      label: 'Crear Trabajador',
+      label: 'Trabajadores',
       icon: 'fas fa-user-plus',
     },
-    { path: '/admin/alumnos', label: 'Alumnos', icon: 'fas fa-users' },
-    { path: '/admin/matriculas', label: 'Matrículas', icon: 'fas fa-file-alt' },
   ];
   workerItems = [
     { path: '/worker/alumnos', label: 'Alumnos', icon: 'fas fa-users' },

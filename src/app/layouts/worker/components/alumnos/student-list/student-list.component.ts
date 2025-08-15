@@ -65,7 +65,8 @@ export class StudentListComponent implements OnInit {
   visiblePages: number[] = [];
   maxVisiblePages: number = 5;
 
-  private apiUrl = 'https://proy-back-dnivel.onrender.com/api/alumno/colegio';
+  private apiUrl =
+    'https://proy-back-dnivel-44j5.onrender.com/api/alumno/colegio';
   private staticToken = '732612882';
 
   constructor(

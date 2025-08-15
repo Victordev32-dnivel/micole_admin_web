@@ -1,0 +1,75 @@
+<div class="apoderado-container">
+  <div class="toolbar">
+    <mat-form-field appearance="outline" class="search-field">
+      <input
+        matInput
+        placeholder="Buscar por nombre, apellido o DNI"
+        [formControl]="searchTermControl"
+      />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <button
+      mat-raised-button
+      color="primary"
+      class="add-button"
+      [disabled]="loading"
+      (click)="openAddDialog()"
+    >
+      <mat-icon>add</mat-icon>
+      Agregar Apoderado
+    </button>
+  </div>
+
+  <div class="apoderado-table">
+    <div class="table-header">
+      <span data-label="NOMBRE">NOMBRE</span>
+      <span data-label="APELLIDO">APELLIDO</span>
+      <span data-label="DNI">DNI</span>
+      <span data-label="TELÉFONO">TELÉFONO</span>
+      <span data-label="CORREO">CORREO</span>
+      <span data-label="ACCIONES">ACCIONES</span>
+    </div>
+
+    <div class="table-body">
+      <div *ngIf="loading" class="loading-container">
+        <div class="loading">Cargando datos <span class="spinner"></span></div>
+      </div>
+
+      <div class="student-row" *ngFor="let apoderado of filteredApoderados">
+        <span data-label="NOMBRE">{{ apoderado.nombre }}</span>
+        <span data-label="APELLIDO">{{ apoderado.apellido }}</span>
+        <span data-label="DNI">{{ apoderado.dni }}</span>
+        <span data-label="TELÉFONO">{{ apoderado.telefono }}</span>
+        <span data-label="CORREO">{{ apoderado.correo }}</span>
+        <span class="actions" data-label="ACCIONES">
+          <mat-icon
+            (click)="openEditDialog(apoderado)"
+            style="color: #ffcc00;"
+            title="Editar"
+            >edit</mat-icon
+          >
+          <mat-icon
+            (click)="confirmDelete(apoderado.id)"
+            style="color: #f44336;"
+            title="Eliminar"
+            >delete</mat-icon
+          >
+        </span>
+      </div>
+
+      <div
+        *ngIf="filteredApoderados.length === 0 && !loading"
+        style="text-align: center; padding: 40px; color: #666;"
+      >
+        <p *ngIf="searchTermControl.value && searchTermControl.value.trim() !== ''">
+          No se encontraron apoderados que coincidan con
+          "<strong>{{ searchTermControl.value }}</strong>"
+        </p>
+        <p *ngIf="!searchTermControl.value || searchTermControl.value.trim() === ''">
+          No hay apoderados para mostrar
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

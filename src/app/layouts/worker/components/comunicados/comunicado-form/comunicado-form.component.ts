@@ -124,13 +124,13 @@ export class ComunicadoFormComponent implements OnInit {
     if (userData) {
       this.colegioId = userData.colegio;
       this.generalForm.patchValue({ idColegio: this.colegioId });
-      
+
     }
     this.userService.userData$.subscribe((userData: UserData | null) => {
       if (userData) {
         this.colegioId = userData.colegio;
         this.generalForm.patchValue({ idColegio: this.colegioId });
-   
+
         this.loadSalones();
         this.cdr.detectChanges();
       }
@@ -139,7 +139,7 @@ export class ComunicadoFormComponent implements OnInit {
 
   private getHeaders(): HttpHeaders {
     const jwtToken = this.userService.getJwtToken() || '732612882';
-   
+
     return new HttpHeaders({
       Authorization: `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
@@ -160,22 +160,22 @@ export class ComunicadoFormComponent implements OnInit {
     this.loading = true;
     this.error = null;
     this.successMessage = null;
-   
+
     const headers = this.getHeaders();
     this.http
       .get<any>(
-        `https://proy-back-dnivel.onrender.com/api/salon/colegio/${this.colegioId}`,
+        `https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/${this.colegioId}`,
         { headers }
       )
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-          
+
             this.salones = response.data.map((item: any) => ({
               id: item.id,
               nombre: item.nombre,
             }));
-          
+
             this.loading = false;
             this.cdr.detectChanges();
           });
@@ -191,7 +191,7 @@ export class ComunicadoFormComponent implements OnInit {
 
   async uploadPdfToS3(file: File): Promise<string> {
     try {
-     
+
       this.uploadProgress = 0;
 
       if (!file) {
@@ -212,7 +212,7 @@ export class ComunicadoFormComponent implements OnInit {
       const randomId = Math.random().toString(36).substring(2);
       const fileName = `announcements/${timestamp}_${randomId}.pdf`;
 
-    
+
 
       const params = {
         Bucket: BUCKET_NAME,
@@ -243,11 +243,11 @@ export class ComunicadoFormComponent implements OnInit {
         Expires: 7 * 24 * 60 * 60,
       });
 
-    
+
       return signedUrl;
     } catch (error: unknown) {
       console.error('❌ Error detallado en uploadPdfToS3:', error);
- 
+
 
       const isAWSError = (
         err: unknown
@@ -291,7 +291,7 @@ export class ComunicadoFormComponent implements OnInit {
 
   async uploadImageToS3(file: File): Promise<string> {
     try {
-   
+
       this.uploadProgress = 0;
 
       if (!file) {
@@ -313,7 +313,7 @@ export class ComunicadoFormComponent implements OnInit {
       const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `announcements/images/${timestamp}_${randomId}.${fileExtension}`;
 
-    
+
 
       let contentType = 'image/jpeg';
       if (fileExtension === 'png') contentType = 'image/png';
@@ -352,7 +352,7 @@ export class ComunicadoFormComponent implements OnInit {
         Expires: 7 * 24 * 60 * 60,
       });
 
-     
+
 
       return signedUrl;
     } catch (error: unknown) {
@@ -402,7 +402,7 @@ export class ComunicadoFormComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-     
+
 
       this.loading = true;
       this.pdfFile = file;
@@ -413,7 +413,7 @@ export class ComunicadoFormComponent implements OnInit {
             this.comunicadoForm.patchValue({ pdf: signedUrl });
             this.loading = false;
             this.uploadProgress = 0;
-           
+
             this.cdr.detectChanges();
           });
         })
@@ -432,7 +432,7 @@ export class ComunicadoFormComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-     
+
 
       this.loading = true;
       this.imageFile = file;
@@ -444,7 +444,7 @@ export class ComunicadoFormComponent implements OnInit {
             this.loading = false;
             this.uploadProgress = 0;
             (
-              
+
               signedUrl
             );
             this.cdr.detectChanges();
@@ -486,14 +486,14 @@ export class ComunicadoFormComponent implements OnInit {
         IdColegio: this.colegioId,
       };
       (
-      
+
         JSON.stringify(data, null, 2)
       );
 
       const headers = this.getHeaders();
       this.loading = true;
       this.http
-        .post('https://proy-back-dnivel.onrender.com/api/anuncio/salon', data, {
+        .post('https://proy-back-dnivel-44j5.onrender.com/api/anuncio/salon', data, {
           headers,
         })
         .subscribe({
@@ -528,7 +528,7 @@ export class ComunicadoFormComponent implements OnInit {
     } else {
       this.error = 'Por favor, complete correctamente todos los campos (Salon)';
       this.successMessage = null;
-   
+
       this.cdr.detectChanges();
     }
   }
@@ -549,14 +549,14 @@ export class ComunicadoFormComponent implements OnInit {
       this.loading = true;
       this.http
         .post(
-          'https://proy-back-dnivel.onrender.com/api/anuncio/general',
+          'https://proy-back-dnivel-44j5.onrender.com/api/anuncio/general',
           data,
           { headers }
         )
         .subscribe({
           next: (response) => {
             (
-           
+
               response
             );
             this.successMessage = 'Anuncio general publicado correctamente';
@@ -587,7 +587,7 @@ export class ComunicadoFormComponent implements OnInit {
       this.error =
         'Por favor, complete correctamente todos los campos (General)';
       this.successMessage = null;
-     
+
       this.cdr.detectChanges();
     }
   }
