@@ -34,11 +34,11 @@ export class ColegioListComponent implements OnInit {
   error: string | null = null;
   displayedColumns: string[] = [
     'id',
-    'colegio',
+    'nombre',
     'direccion',
     'celular',
     'actions',
-  ];
+  ]; // Ajusté 'colegio' a 'nombre' para consistencia
   searchTermControl = new FormControl('');
 
   constructor(
@@ -92,7 +92,7 @@ export class ColegioListComponent implements OnInit {
         } else {
           const searchTerm = term.toLowerCase().trim();
           this.filteredColegios = this.colegios.filter((colegio) => {
-            const matchesName = colegio.colegio
+            const matchesName = colegio.nombre
               .toLowerCase()
               .includes(searchTerm);
             const matchesDireccion = colegio.direccion
@@ -112,8 +112,8 @@ export class ColegioListComponent implements OnInit {
 
   openAddDialog() {
     const dialogRef = this.dialog.open(AddColegioComponent, {
-      width: '30vw', // ancho fijo más compacto
-      maxWidth: '90vw', // responsive
+      width: '95vw',
+      maxWidth: '100vw',
       height: 'auto',
       panelClass: 'custom-dialog',
     });
@@ -125,10 +125,11 @@ export class ColegioListComponent implements OnInit {
 
   openEditDialog(id: number) {
     const dialogRef = this.dialog.open(EditColegioComponent, {
-      width: '30vw', // ancho un poco más amplio para edición
-      maxWidth: '90vw', // responsive
+      width: '95vw',
+      maxWidth: '100vw',
+      height: 'auto',
       panelClass: 'custom-dialog',
-      data: { id },
+      data: { id, colegios: this.colegios },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -138,9 +139,9 @@ export class ColegioListComponent implements OnInit {
 
   confirmDelete(id: number) {
     const dialogRef = this.dialog.open(ConfirmationDeleteComponent, {
-      width: '20vw',
-      maxWidth: '90vw',
-      data: { id, message: '¿Estás seguro de eliminar este colegio?' }, // ahora incluye el id
+      width: '90vw',
+      maxWidth: '300px',
+      data: { id, message: '¿Estás seguro de eliminar este colegio?' },
     });
 
     dialogRef.afterClosed().subscribe((result) => {

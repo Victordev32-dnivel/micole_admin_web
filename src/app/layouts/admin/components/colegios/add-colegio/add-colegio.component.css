@@ -1,39 +1,66 @@
-/* Contenedor principal del diálogo */
-.custom-dialog {
-  max-width: 500px !important; /* Ancho reducido */
-  width: 90vw !important;
-  max-height: 90vh !important;
-  margin: auto;
-  border-radius: 12px;
-}
-
-/* Contenido con scroll interno */
-.dialog-content {
-  padding: 20px;
-  overflow-y: auto;
-  max-height: calc(90vh - 80px);
-}
-
-/* Formulario vertical */
-.edit-form {
+/* Contenedor principal dentro del modal */
+.student-container {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  justify-content: center;
+  padding: 10px;
 }
 
-/* Campos */
-mat-form-field {
+/* Tarjeta centrada y de ancho reducido */
+.form-card {
+  width: 100%;
+  max-width: 400px; /* Limita el ancho para que no ocupe toda la pantalla */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 15px;
+  background-color: #fff;
+}
+
+/* Espaciado entre filas */
+.form-row {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+}
+
+/* Campos de formulario a ancho completo */
+.full-width {
   width: 100%;
 }
 
-/* Botones inferiores */
-mat-dialog-actions {
-  padding: 12px 20px;
+/* Botones alineados y con espacio */
+.button-container {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  background: white;
-  border-top: 1px solid #eee;
-  position: sticky;
-  bottom: 0;
+  margin-top: 15px;
+}
+
+.submit-button {
+  background-color: #1976d2;
+  color: white;
+}
+
+.submit-button:hover {
+  background-color: #145ca1;
+}
+
+.back-button {
+  color: #555;
+}
+
+.back-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Mensajes */
+.error-message {
+  margin-top: 10px;
+  color: #d32f2f;
+  font-size: 0.9rem;
+}
+
+.success-message {
+  margin-top: 10px;
+  color: #388e3c;
+  font-size: 0.9rem;
 }

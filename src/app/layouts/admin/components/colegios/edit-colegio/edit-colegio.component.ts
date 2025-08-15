@@ -56,7 +56,7 @@ export class EditColegioComponent implements OnInit {
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
     public dialogRef: MatDialogRef<EditColegioComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { id: number }
+    @Inject(MAT_DIALOG_DATA) public data: { id: number; colegios: any[] }
   ) {
     this.colegioId = data.id;
     this.colegioForm = this.fb.group({
@@ -79,29 +79,22 @@ export class EditColegioComponent implements OnInit {
 
   loadColegio() {
     this.loading = true;
-    this.http
-      .get<any>(
-        `https://proy-back-dnivel.onrender.com/api/colegio/${this.colegioId}`,
-        { headers: this.getHeaders() }
-      )
-      .subscribe({
-        next: (response) => {
-          const colegio = response.data;
-          this.colegioForm.patchValue({
-            nombre: colegio.nombre,
-            direccion: colegio.direccion,
-            celular: colegio.celular,
-          });
-          this.loading = false;
-          this.cdr.detectChanges();
-        },
-        error: (error) => {
-          console.error('Error al cargar colegio:', error);
-          this.error = 'Error al cargar el colegio. Intente de nuevo';
-          this.loading = false;
-          this.cdr.detectChanges();
-        },
+    this.error = null;
+
+    // Buscar el colegio y asegurar que 'nombre' exista
+    const colegio = this.data.colegios.find((c) => c.id === this.colegioId);
+    if (colegio) {
+      this.colegioForm.patchValue({
+        nombre: colegio.nombre || colegio.colegio, // Ajuste aquí
+        direccion: colegio.direccion,
+        celular: colegio.celular,
       });
+    } else {
+      this.error = 'No se encontró el colegio con el ID especificado';
+    }
+
+    this.loading = false;
+    this.cdr.detectChanges();
   }
 
   onSubmit() {
@@ -109,6 +102,7 @@ export class EditColegioComponent implements OnInit {
       this.loading = true;
       this.error = null;
       const formData = this.colegioForm.value;
+
       this.http
         .put(
           `https://proy-back-dnivel.onrender.com/api/colegio/${this.colegioId}`,

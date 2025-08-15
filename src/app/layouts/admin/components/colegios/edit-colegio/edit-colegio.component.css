@@ -1,58 +1,53 @@
-/* Modal centrado y reducido */
-.custom-dialog {
-  max-width: 550px !important; /* Ancho reducido */
-  width: 90vw !important;
-  max-height: 80vh !important;
-  height: auto !important;
-  margin: auto !important;
-  position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  border-radius: 12px;
-}
-
-/* Contenedor del diálogo */
-.cdk-overlay-container {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  min-height: 100vh !important;
-}
-
-/* Contenido */
-.dialog-content {
-  padding: 20px;
-  max-height: 65vh;
-  overflow-y: auto;
-}
-
-/* Formulario */
-.edit-form {
+.student-container {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  justify-content: center;
+  padding: 20px;
 }
 
-/* Campos */
-mat-form-field {
+.form-row {
+  width: 100%;
+  max-width: 500px;
+}
+
+.form-card {
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.full-width {
   width: 100%;
 }
 
-/* Acciones */
-mat-dialog-actions {
-  padding: 12px 20px;
-  margin-top: 10px;
-  border-top: 1px solid #eee;
+.button-container {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+  justify-content: space-between;
+  margin-top: 20px;
 }
 
-/* Responsivo */
-@media (max-width: 600px) {
-  .custom-dialog {
-    width: 95vw !important;
-    max-width: 95vw !important;
-  }
+.submit-button {
+  min-width: 100px;
+}
+
+.back-button {
+  color: #555;
+}
+
+.error-message {
+  padding-top: 5px;
+  color: #d32f2f;
+  font-weight: bold;
+  margin-top: 15px;
+  text-align: center;
+}
+
+.success-message {
+  color: #2e7d32;
+  font-weight: bold;
+  margin-top: 15px;
+  text-align: center;
+}
+
+/* Spinner alineado en botón */
+.submit-button mat-spinner {
+  margin-right: 8px;
 }
