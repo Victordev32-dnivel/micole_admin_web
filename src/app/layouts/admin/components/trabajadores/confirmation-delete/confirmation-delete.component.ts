@@ -19,7 +19,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   styleUrls: ['./confirmation-delete.component.css'],
 })
 export class ConfirmationDeleteComponent {
-  colegioId: number;
+  trabajadorId: number;
   loading: boolean = false;
   error: string | null = null;
 
@@ -28,7 +28,7 @@ export class ConfirmationDeleteComponent {
     @Inject(MAT_DIALOG_DATA) public data: { id: number; message: string },
     private http: HttpClient
   ) {
-    this.colegioId = data.id;
+    this.trabajadorId = data.id;
   }
 
   private getHeaders(): HttpHeaders {
@@ -42,8 +42,10 @@ export class ConfirmationDeleteComponent {
     this.loading = true;
     this.http
       .delete(
-        `https://proy-back-dnivel-44j5.onrender.com/api/colegio/${this.colegioId}`,
-        { headers: this.getHeaders() }
+        `https://proy-back-dnivel-44j5.onrender.com/api/Trabajador/${this.trabajadorId}`,
+        {
+          headers: this.getHeaders(),
+        }
       )
       .subscribe({
         next: () => {
@@ -51,8 +53,8 @@ export class ConfirmationDeleteComponent {
           this.dialogRef.close(true);
         },
         error: (error) => {
-          console.error('Error al eliminar colegio:', error);
-          this.error = 'Error al eliminar el colegio. Intente de nuevo';
+          console.error('Error al eliminar trabajador:', error);
+          this.error = 'Error al eliminar el trabajador. Intente de nuevo';
           this.loading = false;
         },
       });
