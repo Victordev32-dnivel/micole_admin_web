@@ -17,7 +17,7 @@ import { ErrorStateMatcher } from '@angular/material/core';
 
 class CustomErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(control: FormControl | null): boolean {
-    const isSubmitted = false; // puedes adaptarlo si usas submit tracking
+    const isSubmitted = false;
     return !!(
       control &&
       control.invalid &&
@@ -45,8 +45,6 @@ export class AddColegioComponent implements OnInit {
   loading: boolean = false;
   error: string | null = null;
   successMessage: string | null = null;
-
-  // aquí definimos el matcher para usarlo en el HTML
   customErrorStateMatcher = new CustomErrorStateMatcher();
 
   constructor(
@@ -56,7 +54,7 @@ export class AddColegioComponent implements OnInit {
     public dialogRef: MatDialogRef<AddColegioComponent>
   ) {
     this.colegioForm = this.fb.group({
-      colegio: ['', Validators.required],
+      nombre: ['', Validators.required],
       direccion: ['', Validators.required],
       celular: ['', [Validators.required, Validators.pattern('^[0-9]{9}$')]],
     });
@@ -75,12 +73,11 @@ export class AddColegioComponent implements OnInit {
     if (this.colegioForm.valid) {
       this.loading = true;
       this.error = null;
+      const formData = this.colegioForm.value;
       this.http
-        .post(
-          'https://proy-back-dnivel.onrender.com/api/colegio',
-          this.colegioForm.value,
-          { headers: this.getHeaders() }
-        )
+        .post('https://proy-back-dnivel.onrender.com/api/colegio', formData, {
+          headers: this.getHeaders(),
+        })
         .subscribe({
           next: () => {
             this.successMessage = 'Colegio agregado exitosamente';

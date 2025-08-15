@@ -49,7 +49,7 @@ export class EditColegioComponent implements OnInit {
   error: string | null = null;
   successMessage: string | null = null;
   colegioId: number;
-  customErrorStateMatcher = new CustomErrorStateMatcher(); // ← Aquí la propiedad
+  customErrorStateMatcher = new CustomErrorStateMatcher();
 
   constructor(
     private fb: FormBuilder,
@@ -60,7 +60,7 @@ export class EditColegioComponent implements OnInit {
   ) {
     this.colegioId = data.id;
     this.colegioForm = this.fb.group({
-      colegio: ['', Validators.required],
+      nombre: ['', Validators.required],
       direccion: ['', Validators.required],
       celular: ['', [Validators.required, Validators.pattern('^[0-9]{9}$')]],
     });
@@ -88,7 +88,7 @@ export class EditColegioComponent implements OnInit {
         next: (response) => {
           const colegio = response.data;
           this.colegioForm.patchValue({
-            colegio: colegio.colegio,
+            nombre: colegio.nombre,
             direccion: colegio.direccion,
             celular: colegio.celular,
           });
@@ -108,10 +108,11 @@ export class EditColegioComponent implements OnInit {
     if (this.colegioForm.valid) {
       this.loading = true;
       this.error = null;
+      const formData = this.colegioForm.value;
       this.http
         .put(
           `https://proy-back-dnivel.onrender.com/api/colegio/${this.colegioId}`,
-          this.colegioForm.value,
+          formData,
           { headers: this.getHeaders() }
         )
         .subscribe({

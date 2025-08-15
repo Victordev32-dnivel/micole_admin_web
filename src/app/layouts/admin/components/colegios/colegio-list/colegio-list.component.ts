@@ -112,7 +112,7 @@ export class ColegioListComponent implements OnInit {
 
   openAddDialog() {
     const dialogRef = this.dialog.open(AddColegioComponent, {
-      width: '500px', // ancho fijo más compacto
+      width: '30vw', // ancho fijo más compacto
       maxWidth: '90vw', // responsive
       height: 'auto',
       panelClass: 'custom-dialog',
@@ -125,7 +125,7 @@ export class ColegioListComponent implements OnInit {
 
   openEditDialog(id: number) {
     const dialogRef = this.dialog.open(EditColegioComponent, {
-      width: '100vw', // ancho un poco más amplio para edición
+      width: '30vw', // ancho un poco más amplio para edición
       maxWidth: '90vw', // responsive
       panelClass: 'custom-dialog',
       data: { id },
@@ -138,7 +138,7 @@ export class ColegioListComponent implements OnInit {
 
   confirmDelete(id: number) {
     const dialogRef = this.dialog.open(ConfirmationDeleteComponent, {
-      width: '300px',
+      width: '20vw',
       maxWidth: '90vw',
       data: { id, message: '¿Estás seguro de eliminar este colegio?' }, // ahora incluye el id
     });
