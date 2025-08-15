@@ -12,3 +12,10 @@ app-sidebar {
   padding: 20px;
   background-color: #f9f9f9;
 }
+
+.custom-dialog .mat-dialog-container {
+  padding: 24px; /* espacio interno */
+  border-radius: 12px; /* opcional */
+  box-sizing: border-box;
+}
+

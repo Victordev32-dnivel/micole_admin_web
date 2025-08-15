@@ -1,3 +1,11 @@
+/* styles.css o el CSS global */
+.custom-dialog .mat-dialog-container {
+  padding: 24px; /* Aquí controlas el espaciado interno */
+  border-radius: 12px; /* opcional, bordes redondeados */
+  box-sizing: border-box;
+}
+
+
 .colegio-container {
   margin: 80px 0 20px 15vw;
   padding: 20px;
@@ -132,7 +140,7 @@
 .actions mat-icon {
   cursor: pointer;
   transition: all 0.2s;
-  padding: 4px;
+  padding: 1px;
   border-radius: 4px;
 }
 

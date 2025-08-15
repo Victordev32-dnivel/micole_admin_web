@@ -26,12 +26,14 @@
 
       <div class="student-row" *ngFor="let colegio of filteredColegios">
         <span data-label="ID">{{ colegio.id }}</span>
-        <span data-label="COLEGIO">{{ colegio.colegio }}</span>
+        <span data-label="COLEGIO">{{ colegio.nombre || colegio.colegio }}</span>
         <span data-label="DIRECCIÓN">{{ colegio.direccion }}</span>
         <span data-label="CELULAR">{{ colegio.celular }}</span>
         <span class="actions" data-label="ACCIONES">
           <mat-icon (click)="openEditDialog(colegio.id)" style="color: #ffcc00;" title="Editar">edit</mat-icon>
           <mat-icon (click)="confirmDelete(colegio.id)" style="color: #f44336;" title="Eliminar">delete</mat-icon>
+          <mat-icon (click)="openAsignarTrabajadoresDialog(colegio.id)" style="color: #2196F3;" title="Agregar Trabajador">person_add</mat-icon>
+          <mat-icon (click)="openVerTrabajadoresDialog(colegio.id)" style="color: #3F51B5;" title="Ver Trabajadores">visibility</mat-icon>
         </span>
       </div>
 

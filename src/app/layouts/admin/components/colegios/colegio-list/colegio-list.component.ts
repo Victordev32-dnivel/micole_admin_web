@@ -11,6 +11,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { ConfirmationDeleteComponent } from '../confirmation-delete/confirmation-delete.component';
 import { AddColegioComponent } from '../add-colegio/add-colegio.component';
 import { EditColegioComponent } from '../edit-colegio/edit-colegio.component';
+import { AsignarTrabajadoresComponent } from '../asignar-trabajadores/asignar-trabajadores.component';
+import { VerTrabajadoresComponent } from '../ver-trabajadores/ver-trabajadores.component';
 
 @Component({
   selector: 'app-colegio-list',
@@ -38,7 +40,7 @@ export class ColegioListComponent implements OnInit {
     'direccion',
     'celular',
     'actions',
-  ]; // Ajusté 'colegio' a 'nombre' para consistencia
+  ];
   searchTermControl = new FormControl('');
 
   constructor(
@@ -64,7 +66,7 @@ export class ColegioListComponent implements OnInit {
 
   loadColegios() {
     this.http
-      .get<any>('https://proy-back-dnivel.onrender.com/api/colegio', {
+      .get<any>('https://proy-back-dnivel-44j5.onrender.com/api/colegio', {
         headers: this.getHeaders(),
       })
       .subscribe({
@@ -112,9 +114,9 @@ export class ColegioListComponent implements OnInit {
 
   openAddDialog() {
     const dialogRef = this.dialog.open(AddColegioComponent, {
-      width: '95vw',
-      maxWidth: '100vw',
-      height: 'auto',
+      width: '25vw',
+      maxWidth: '50vw',
+      height: '23vw',
       panelClass: 'custom-dialog',
     });
 
@@ -125,9 +127,9 @@ export class ColegioListComponent implements OnInit {
 
   openEditDialog(id: number) {
     const dialogRef = this.dialog.open(EditColegioComponent, {
-      width: '95vw',
-      maxWidth: '100vw',
-      height: 'auto',
+      width: '25vw',
+      maxWidth: '50vw',
+      height: '25vw',
       panelClass: 'custom-dialog',
       data: { id, colegios: this.colegios },
     });
@@ -139,13 +141,69 @@ export class ColegioListComponent implements OnInit {
 
   confirmDelete(id: number) {
     const dialogRef = this.dialog.open(ConfirmationDeleteComponent, {
-      width: '90vw',
-      maxWidth: '300px',
+      width: '20vw',
+      maxWidth: '50vw',
       data: { id, message: '¿Estás seguro de eliminar este colegio?' },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) this.loadColegios();
     });
+  }
+
+  openAsignarTrabajadoresDialog(id: number) {
+    const dialogRef = this.dialog.open(AsignarTrabajadoresComponent, {
+      width: '60vw',
+      maxWidth: '90vw',
+      height: '70vh',
+      panelClass: 'custom-dialog',
+      data: { colegioId: id },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        console.log('Trabajadores asignados:', result);
+      }
+    });
+  }
+
+  openVerTrabajadoresDialog(id: number) {
+    const dialogRef = this.dialog.open(VerTrabajadoresComponent, {
+      width: '60vw',
+      maxWidth: '90vw',
+      height: '70vh',
+      panelClass: 'custom-dialog',
+      data: {
+        colegioId: id,
+        trabajadoresAsignados: this.simulateAsignados(id),
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        console.log('Trabajadores desasignados:', result);
+      }
+    });
+  }
+
+  private simulateAsignados(colegioId: number) {
+    return [
+      {
+        id: 1,
+        nombre: 'Juan',
+        apellidoPaterno: 'Pérez',
+        apellidoMaterno: 'García',
+        dni: '12345678',
+        telefono: '987654321',
+      },
+      {
+        id: 2,
+        nombre: 'María',
+        apellidoPaterno: 'López',
+        apellidoMaterno: 'Martínez',
+        dni: '87654321',
+        telefono: '123456789',
+      },
+    ].filter((t) => Math.random() > 0.5 || t.id % colegioId === 0);
   }
 }

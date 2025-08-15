@@ -3,13 +3,26 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
-import { MatCard, MatCardContent, MatCardHeader, MatCardTitle } from "@angular/material/card";
+import {
+  MatCard,
+  MatCardContent,
+  MatCardHeader,
+  MatCardTitle,
+} from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-confirmation-delete',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatCardContent, MatCardTitle, MatCardHeader, MatCard, MatProgressSpinnerModule],
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatCardContent,
+    MatCardTitle,
+    MatCardHeader,
+    MatCard,
+    MatProgressSpinnerModule,
+  ],
   templateUrl: './confirmation-delete.component.html',
   styleUrls: ['./confirmation-delete.component.css'],
 })
@@ -35,19 +48,21 @@ export class ConfirmationDeleteComponent {
 
   onConfirm() {
     this.loading = true;
+    console.log('Enviando solicitud DELETE para ID:', this.colegioId); // Depuración
     this.http
       .delete(
-        `https://proy-back-dnivel.onrender.com/api/colegio/${this.colegioId}`,
+        `https://proy-back-dnivel-44j5.onrender.com/api/colegio/${this.colegioId}`,
         { headers: this.getHeaders() }
       )
       .subscribe({
-        next: () => {
+        next: (response) => {
+          console.log('Respuesta del servidor:', response);
           this.loading = false;
           this.dialogRef.close(true);
         },
         error: (error) => {
           console.error('Error al eliminar colegio:', error);
-          this.error = 'Error al eliminar el colegio. Intente de nuevo';
+          this.error = `Error al eliminar el colegio: ${error.status} - ${error.statusText}. Detalle: ${error.message}`;
           this.loading = false;
         },
       });

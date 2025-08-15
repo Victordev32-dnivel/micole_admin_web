@@ -1,0 +1,189 @@
+/* ===================== */
+/* Contenedor modal */
+/* ===================== */
+.modal-content-container {
+  padding: 20px;
+  box-sizing: border-box;
+  background-color: #fff;
+  border-radius: 12px;
+}
+
+.modal-content-container > *:first-child {
+  margin-top: 0;
+}
+
+.modal-content-container > *:last-child {
+  margin-bottom: 0;
+}
+
+/* ===================== */
+/* Toolbar */
+/* ===================== */
+.toolbar {
+  display: flex;
+  justify-content: center;
+  padding: 15px;
+  background: #f4f6f8;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* ===================== */
+/* Tabla */
+/* ===================== */
+.mat-elevation-z8 {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e6ecf5;
+}
+
+tr[mat-header-row] {
+  background: #fff; /* sin color de fondo */
+}
+
+th[mat-header-cell] {
+  color: #37474f;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  font-size: 12.5px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+th[mat-header-cell]:first-child {
+  padding-left: 20px;
+}
+
+th[mat-header-cell]:last-child {
+  text-align: center;
+}
+
+tr[mat-row] {
+  transition: background-color .18s ease;
+}
+
+tr[mat-row]:hover {
+  background: #f5f9ff;
+}
+
+td[mat-cell] {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eef2f7;
+  vertical-align: middle;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-size: 14.5px;
+}
+
+td[mat-cell]:first-child {
+  padding-left: 20px;
+}
+
+tr[mat-row]:nth-child(even) td[mat-cell] {
+  background-color: #fafbff;
+}
+
+/* ===================== */
+/* Botón desasignar (rojo) */
+/* ===================== */
+td[mat-cell]:last-child {
+  text-align: center;
+  width: 92px;
+}
+
+.btn-remove {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #ffebee;
+  border: 1px solid #ffc9c9;
+  transition: background-color .2s ease, box-shadow .2s ease;
+}
+
+.btn-remove .mat-icon {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+.btn-remove:hover {
+  background: #ffcdd2;
+  box-shadow: 0 6px 14px rgba(211,47,47,.18);
+}
+
+.btn-remove:focus-visible {
+  outline: 3px solid rgba(211,47,47,.35);
+  outline-offset: 2px;
+}
+
+/* ===================== */
+/* Bordes */
+/* ===================== */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+tr[mat-header-row] th[mat-header-cell],
+tr[mat-row] td[mat-cell] {
+  border-right: 1px solid #eef2f7;
+}
+
+tr[mat-header-row] th[mat-header-cell]:last-child,
+tr[mat-row] td[mat-cell]:last-child {
+  border-right: none;
+}
+
+/* ===================== */
+/* Mensaje vacío */
+/* ===================== */
+.table-empty {
+  padding: 24px;
+  text-align: center;
+  color: #607d8b;
+  background: #f7fafc;
+  border-radius: 12px;
+  border: 1px dashed #d7e3f4;
+}
+
+/* ===================== */
+/* Botones finales */
+/* ===================== */
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.button-container button {
+  border-radius: 8px;
+  padding: 8px 16px;
+}
+
+/* ===================== */
+/* Responsive */
+/* ===================== */
+@media (max-width: 900px) {
+  th[mat-header-cell], td[mat-cell] {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  td[mat-cell]:last-child {
+    width: 80px;
+  }
+}
+
+@media (max-width: 600px) {
+  th[mat-header-cell] {
+    font-size: 11.5px;
+  }
+
+  td[mat-cell] {
+    font-size: 13.5px;
+  }
+}

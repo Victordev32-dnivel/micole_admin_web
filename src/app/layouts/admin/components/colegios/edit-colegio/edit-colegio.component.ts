@@ -81,11 +81,10 @@ export class EditColegioComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    // Buscar el colegio y asegurar que 'nombre' exista
     const colegio = this.data.colegios.find((c) => c.id === this.colegioId);
     if (colegio) {
       this.colegioForm.patchValue({
-        nombre: colegio.nombre || colegio.colegio, // Ajuste aquí
+        nombre: colegio.nombre || colegio.colegio,
         direccion: colegio.direccion,
         celular: colegio.celular,
       });
@@ -102,15 +101,16 @@ export class EditColegioComponent implements OnInit {
       this.loading = true;
       this.error = null;
       const formData = this.colegioForm.value;
-
+      console.log('Enviando datos al PUT:', formData); // Depuración
       this.http
         .put(
-          `https://proy-back-dnivel.onrender.com/api/colegio/${this.colegioId}`,
+          `https://proy-back-dnivel-44j5.onrender.com/api/colegio/${this.colegioId}`,
           formData,
           { headers: this.getHeaders() }
         )
         .subscribe({
-          next: () => {
+          next: (response) => {
+            console.log('Respuesta del servidor:', response);
             this.successMessage = 'Colegio actualizado exitosamente';
             this.loading = false;
             this.cdr.detectChanges();
@@ -118,7 +118,7 @@ export class EditColegioComponent implements OnInit {
           },
           error: (error) => {
             console.error('Error al actualizar colegio:', error);
-            this.error = 'Error al actualizar el colegio. Intente de nuevo';
+            this.error = `Error al actualizar el colegio: ${error.status} - ${error.statusText}. Detalle: ${error.message}`;
             this.loading = false;
             this.cdr.detectChanges();
           },

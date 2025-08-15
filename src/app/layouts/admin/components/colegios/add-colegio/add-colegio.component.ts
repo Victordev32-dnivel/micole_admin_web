@@ -5,6 +5,7 @@ import {
   Validators,
   ReactiveFormsModule,
   FormControl,
+  FormGroupDirective,
 } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MatCardModule } from '@angular/material/card';
@@ -16,8 +17,11 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ErrorStateMatcher } from '@angular/material/core';
 
 class CustomErrorStateMatcher implements ErrorStateMatcher {
-  isErrorState(control: FormControl | null): boolean {
-    const isSubmitted = false;
+  isErrorState(
+    control: FormControl | null,
+    form: FormGroupDirective | null
+  ): boolean {
+    const isSubmitted = form && form.submitted;
     return !!(
       control &&
       control.invalid &&
@@ -74,12 +78,18 @@ export class AddColegioComponent implements OnInit {
       this.loading = true;
       this.error = null;
       const formData = this.colegioForm.value;
+      console.log('Enviando datos al POST:', formData); // Depuración
       this.http
-        .post('https://proy-back-dnivel.onrender.com/api/colegio', formData, {
-          headers: this.getHeaders(),
-        })
+        .post(
+          'https://proy-back-dnivel-44j5.onrender.com/api/colegio',
+          formData,
+          {
+            headers: this.getHeaders(),
+          }
+        )
         .subscribe({
-          next: () => {
+          next: (response) => {
+            console.log('Respuesta del servidor:', response);
             this.successMessage = 'Colegio agregado exitosamente';
             this.loading = false;
             this.cdr.detectChanges();
@@ -87,7 +97,7 @@ export class AddColegioComponent implements OnInit {
           },
           error: (error) => {
             console.error('Error al agregar colegio:', error);
-            this.error = 'Error al agregar el colegio. Intente de nuevo';
+            this.error = `Error al agregar el colegio: ${error.status} - ${error.statusText}. Detalle: ${error.message}`;
             this.loading = false;
             this.cdr.detectChanges();
           },
