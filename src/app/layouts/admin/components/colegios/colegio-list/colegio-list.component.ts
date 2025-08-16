@@ -161,8 +161,8 @@ export class ColegioListComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        console.log('Trabajadores asignados:', result);
+      if (result && result.length > 0) {
+        this.assignTrabajadores(id, result);
       }
     });
   }
@@ -205,5 +205,27 @@ export class ColegioListComponent implements OnInit {
         telefono: '123456789',
       },
     ].filter((t) => Math.random() > 0.5 || t.id % colegioId === 0);
+  }
+
+  private assignTrabajadores(colegioId: number, trabajadores: any[]) {
+    const requests = trabajadores.map((trabajador) =>
+      this.http.patch(
+        `https://proy-back-dnivel-44j5.onrender.com/api/Trabajador/${trabajador.id}`,
+        `"${colegioId}"`,
+        {
+          headers: this.getHeaders(),
+        }
+      )
+    );
+
+    Promise.all(requests.map((request) => request.toPromise()))
+      .then(() => {
+        this.loadColegios(); // Recargar la lista después de asignar
+      })
+      .catch((error) => {
+        console.error('Error al asignar trabajadores:', error);
+        this.error = 'Error al asignar los trabajadores. Intente de nuevo';
+        this.cdr.detectChanges();
+      });
   }
 }

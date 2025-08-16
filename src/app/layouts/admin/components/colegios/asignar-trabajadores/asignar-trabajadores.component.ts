@@ -5,18 +5,28 @@ import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
-import { MatToolbar } from "@angular/material/toolbar";
+import { MatToolbar } from '@angular/material/toolbar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 @Component({
   selector: 'app-asignar-trabajadores',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, MatTableModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatFormFieldModule, MatInputModule],
+  imports: [
+    ReactiveFormsModule,
+    CommonModule,
+    MatTableModule,
+    MatIconModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    MatFormFieldModule,
+    MatInputModule,
+  ],
   templateUrl: './asignar-trabajadores.component.html',
   styleUrls: ['./asignar-trabajadores.component.css'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
 })
 export class AsignarTrabajadoresComponent {
   trabajadores: any[] = [];
@@ -31,101 +41,59 @@ export class AsignarTrabajadoresComponent {
     'telefono',
     'actions',
   ];
+  loading: boolean = false;
+  error: string | null = null;
 
   constructor(
     public dialogRef: MatDialogRef<AsignarTrabajadoresComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { colegioId: number }
+    @Inject(MAT_DIALOG_DATA) public data: { colegioId: number },
+    private http: HttpClient
   ) {
-    this.trabajadores = this.simulateTrabajadores();
-    this.filteredTrabajadores = [...this.trabajadores];
     this.searchTermControl.valueChanges.subscribe((value) => {
       this.filterTrabajadores(value || '');
     });
   }
 
-  private simulateTrabajadores() {
-    return [
-      {
-        id: 1,
-        nombre: 'Juan',
-        apellidoPaterno: 'Pérez',
-        apellidoMaterno: 'García',
-        dni: '12345678',
-        telefono: '987654321',
-      },
-      {
-        id: 2,
-        nombre: 'María',
-        apellidoPaterno: 'López',
-        apellidoMaterno: 'Martínez',
-        dni: '87654321',
-        telefono: '123456789',
-      },
-      {
-        id: 3,
-        nombre: 'Carlos',
-        apellidoPaterno: 'Hernández',
-        apellidoMaterno: 'Rodríguez',
-        dni: '11223344',
-        telefono: '555666777',
-      },
-      {
-        id: 4,
-        nombre: 'Ana',
-        apellidoPaterno: 'González',
-        apellidoMaterno: 'Sánchez',
-        dni: '44332211',
-        telefono: '444555666',
-      },
-      {
-        id: 5,
-        nombre: 'Luis',
-        apellidoPaterno: 'Ramírez',
-        apellidoMaterno: 'Torres',
-        dni: '99887766',
-        telefono: '333444555',
-      },
-      {
-        id: 6,
-        nombre: 'Sofía',
-        apellidoPaterno: 'Flores',
-        apellidoMaterno: 'Ríos',
-        dni: '66554433',
-        telefono: '222333444',
-      },
-      {
-        id: 7,
-        nombre: 'Miguel',
-        apellidoPaterno: 'Cruz',
-        apellidoMaterno: 'Morales',
-        dni: '55443322',
-        telefono: '111222333',
-      },
-      {
-        id: 8,
-        nombre: 'Elena',
-        apellidoPaterno: 'Ortiz',
-        apellidoMaterno: 'Vargas',
-        dni: '33221100',
-        telefono: '000111222',
-      },
-      {
-        id: 9,
-        nombre: 'David',
-        apellidoPaterno: 'Reyes',
-        apellidoMaterno: 'Guzmán',
-        dni: '22110099',
-        telefono: '999000111',
-      },
-      {
-        id: 10,
-        nombre: 'Laura',
-        apellidoPaterno: 'Mendoza',
-        apellidoMaterno: 'Castillo',
-        dni: '11009988',
-        telefono: '888999000',
-      },
-    ];
+  ngOnInit() {
+    this.loadTrabajadores();
+  }
+
+  private getHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      Authorization: `Bearer 732612882`,
+      'Content-Type': 'application/json',
+    });
+  }
+
+  loadTrabajadores() {
+    this.loading = true;
+    this.error = null;
+    this.http
+      .get<any>('https://proy-back-dnivel-44j5.onrender.com/api/Trabajador', {
+        headers: this.getHeaders(),
+      })
+      .subscribe({
+        next: (response) => {
+          this.trabajadores = response
+            .filter((t: any) => t.idColegio === 0) // Solo trabajadores libres
+            .map((t: any) => ({
+              id: t.idTrabajador,
+              nombre: t.nombre,
+              apellidoPaterno: t.apellidoPaterno,
+              apellidoMaterno: t.apellidoMaterno,
+              dni: t.dni,
+              telefono: t.telefono,
+            }));
+          this.filteredTrabajadores = [...this.trabajadores];
+          this.loading = false;
+          this.filterTrabajadores(this.searchTermControl.value || '');
+        },
+        error: (error) => {
+          console.error('Error al cargar trabajadores:', error);
+          this.error = 'Error al cargar los trabajadores. Intente de nuevo';
+          this.loading = false;
+        },
+      });
   }
 
   filterTrabajadores(term: string) {
@@ -152,8 +120,35 @@ export class AsignarTrabajadoresComponent {
   }
 
   onConfirm() {
-    // Por ahora, solo cierra el modal
-    this.dialogRef.close(this.selectedTrabajadores);
+    if (this.selectedTrabajadores.length === 0) {
+      this.error = 'Seleccione al menos un trabajador';
+      return;
+    }
+
+    this.loading = true;
+    this.error = null;
+
+    const requests = this.selectedTrabajadores.map((trabajador) => {
+      const url = `https://proy-back-dnivel-44j5.onrender.com/api/Trabajador/${trabajador.id}/colegio`;
+      console.log(
+        `Asignando trabajador ID ${trabajador.id} a colegio ID ${this.data.colegioId}`
+      );
+      return this.http.patch(url, `"${this.data.colegioId}"`, {
+        headers: this.getHeaders(),
+      });
+    });
+
+    Promise.all(requests.map((request) => request.toPromise()))
+      .then((responses) => {
+        console.log('Respuestas de las solicitudes:', responses);
+        this.loading = false;
+        this.dialogRef.close(this.selectedTrabajadores);
+      })
+      .catch((error) => {
+        console.error('Error al asignar trabajadores:', error);
+        this.error = 'Error al asignar los trabajadores. Intente de nuevo';
+        this.loading = false;
+      });
   }
 
   onCancel() {

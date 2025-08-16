@@ -36,7 +36,7 @@
     <ng-container matColumnDef="actions">
       <th mat-header-cell *matHeaderCellDef>Agregar</th>
       <td mat-cell *matCellDef="let element">
-        <button mat-icon-button color="primary" (click)="onAsignar(element)">
+        <button mat-icon-button color="primary" [disabled]="loading" (click)="onAsignar(element)">
           <mat-icon>add</mat-icon>
         </button>
       </td>
@@ -51,15 +51,17 @@
     <ul>
       <li *ngFor="let trabajador of selectedTrabajadores">
         {{ trabajador.nombre }} {{ trabajador.apellidoPaterno }} {{ trabajador.apellidoMaterno }}
-        <button mat-icon-button color="warn" (click)="onRemove(trabajador)">
+        <button mat-icon-button color="warn" [disabled]="loading" (click)="onRemove(trabajador)">
           <mat-icon>remove</mat-icon>
         </button>
       </li>
     </ul>
   </div>
 
+  <div *ngIf="error" class="error">{{ error }}</div>
   <div class="button-container">
-    <button mat-raised-button color="primary" (click)="onConfirm()">Asignar</button>
-    <button mat-button (click)="onCancel()">Cancelar</button>
+    <button mat-raised-button color="primary" [disabled]="loading" (click)="onConfirm()">Asignar</button>
+    <button mat-button [disabled]="loading" (click)="onCancel()">Cancelar</button>
+    <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
   </div>
 </div>
