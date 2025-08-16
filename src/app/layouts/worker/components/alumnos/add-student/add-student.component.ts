@@ -19,6 +19,7 @@ import {
   MAT_DIALOG_DATA,
   MatDialogRef,
   MatDialogModule,
+  MatDialog,
 } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -42,6 +43,8 @@ import { UserService } from '../../../../../services/UserData';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subject, takeUntil } from 'rxjs';
 
 export const MY_DATE_FORMATS = {
@@ -69,6 +72,8 @@ interface Apoderado {
   nombre: string;
 }
 
+
+
 @Component({
   selector: 'app-student-add',
   standalone: true,
@@ -86,6 +91,8 @@ interface Apoderado {
     MatSnackBarModule,
     MatAutocompleteModule,
     MatIconModule,
+    MatCardModule,
+    MatProgressSpinnerModule,
   ],
   providers: [
     { provide: DateAdapter, useClass: NativeDateAdapter },
@@ -96,6 +103,7 @@ interface Apoderado {
 })
 export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
   addForm: FormGroup;
+  apoderadoForm: FormGroup;
   genders = ['Masculino', 'Femenino', 'Otro'];
   states = ['Activo', 'Inactivo'];
 
@@ -114,14 +122,20 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
   // Subject para manejar la limpieza de subscripciones
   private _onDestroy = new Subject<void>();
 
+  // Estados de carga
   loadingSalones = false;
   loadingApoderados = false;
+  loadingApoderado = false;
+
+  // Estados del formulario de apoderado
+  showApoderadoForm = false;
+  apoderadoError: string | null = null;
+  apoderadoSuccess: string | null = null;
 
   private apiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno';
-  private salonesApiUrl =
-    'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista';
-  private apoderadosApiUrl =
-    'https://proy-back-dnivel-44j5.onrender.com/api/apoderado/colegio/lista';
+  private salonesApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista';
+  private apoderadosApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/apoderado/colegio/lista';
+  private apoderadoCreateApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/apoderado';
   private staticToken = '732612882';
 
   @ViewChild('picker') datepicker: MatDatepicker<Date> | undefined;
@@ -133,9 +147,10 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     private http: HttpClient,
     private userService: UserService,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {
-    // VALIDACIONES SIMPLIFICADAS - Solo DNI obligatorio
+    // Formulario principal del estudiante
     this.addForm = this.fb.group({
       numeroDocumento: [
         '',
@@ -165,14 +180,34 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
       idSalon: [''],
       idColegio: [this.data?.colegioId || ''],
     });
+
+    // Formulario para agregar apoderado
+    this.apoderadoForm = this.fb.group({
+      nombre: ['', Validators.required],
+      apellido: ['', Validators.required],
+      dni: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern('^[0-9]{8}$'),
+          Validators.minLength(8),
+          Validators.maxLength(8),
+        ],
+      ],
+      telefono: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern('^[0-9]{9}$'),
+        ],
+      ],
+      correo: ['', [Validators.required, Validators.email]],
+    });
   }
 
   ngOnInit(): void {
-    // Cargar salones y apoderados cuando se inicializa el componente
     this.loadSalones();
     this.loadApoderados();
-
-    // Configurar filtros de búsqueda
     this.setupSearchFilters();
   }
 
@@ -185,6 +220,88 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     if (isPlatformBrowser(this.platformId) && !this.datepicker) {
       console.warn('Datepicker no inicializado en ngAfterViewInit');
     }
+  }
+
+  // Métodos para el formulario de apoderado
+  toggleApoderadoForm(): void {
+    this.showApoderadoForm = !this.showApoderadoForm;
+    if (this.showApoderadoForm) {
+      this.clearApoderadoMessages();
+    }
+  }
+
+  clearApoderadoForm(): void {
+    this.apoderadoForm.reset();
+    this.clearApoderadoMessages();
+  }
+
+  clearApoderadoMessages(): void {
+    this.apoderadoError = null;
+    this.apoderadoSuccess = null;
+  }
+
+  saveApoderado(): void {
+    if (this.apoderadoForm.invalid) {
+      this.apoderadoError = 'Por favor, complete todos los campos correctamente.';
+      return;
+    }
+
+    this.loadingApoderado = true;
+    this.clearApoderadoMessages();
+
+    const colegioId = this.data?.colegioId || this.userService.getUserData()?.colegio;
+    const apoderadoData = {
+      ...this.apoderadoForm.value,
+      idColegio: colegioId
+    };
+
+    const headers = this.getHeaders();
+
+    this.http.post<any>(this.apoderadoCreateApiUrl, apoderadoData, { headers }).subscribe({
+      next: (response) => {
+        this.apoderadoSuccess = 'Apoderado creado exitosamente!';
+        this.loadingApoderado = false;
+        
+        // Recargar la lista de apoderados
+        this.loadApoderados();
+        
+        // Seleccionar automáticamente el apoderado recién creado
+        setTimeout(() => {
+          if (response && response.id) {
+            this.addForm.patchValue({ idApoderado: response.id });
+            this.apoderadoSearchCtrl.setValue({
+              id: response.id,
+              nombre: `${apoderadoData.nombre} ${apoderadoData.apellido}`
+            });
+          }
+          
+          // Limpiar el formulario después de un breve delay
+          setTimeout(() => {
+            this.clearApoderadoForm();
+            this.showApoderadoForm = false;
+          }, 2000);
+        }, 500);
+      },
+      error: (error) => {
+        console.error('Error al crear apoderado:', error);
+        this.loadingApoderado = false;
+        
+        if (error.status === 400) {
+          const errorMessage = error.error?.message || error.error || 'Error desconocido';
+          if (errorMessage.includes('DNI ya existe') || errorMessage.includes('dni')) {
+            this.apoderadoError = 'El DNI ya está registrado. Por favor, use otro.';
+          } else if (errorMessage.includes('correo')) {
+            this.apoderadoError = 'El correo ya está registrado. Por favor, use otro.';
+          } else {
+            this.apoderadoError = 'Error al crear apoderado: ' + errorMessage;
+          }
+        } else if (error.status === 401) {
+          this.apoderadoError = 'Token no válido. Inicia sesión nuevamente.';
+        } else {
+          this.apoderadoError = 'Error inesperado al crear el apoderado.';
+        }
+      },
+    });
   }
 
   private setupSearchFilters(): void {
@@ -298,7 +415,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
         }
 
         this.salones = salonesData || [];
-        this.filteredSalones = this.salones.slice(); // Inicializar filteredSalones
+        this.filteredSalones = this.salones.slice();
         this.loadingSalones = false;
       },
       error: (error) => {
@@ -338,7 +455,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
         }
 
         this.apoderados = apoderadosData || [];
-        this.filteredApoderados = this.apoderados.slice(); // Inicializar filteredApoderados
+        this.filteredApoderados = this.apoderados.slice();
         this.loadingApoderados = false;
 
         if (this.apoderados.length === 0) {
@@ -485,7 +602,6 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
   openCalendar(): void {
     if (isPlatformBrowser(this.platformId) && this.datepicker) {
       this.datepicker.open();
-      ('Calendario abierto manualmente');
     } else {
       console.error('Datepicker no encontrado');
     }

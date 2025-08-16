@@ -17,10 +17,24 @@
   background-color: #f8f9fa;
   border-bottom: 1px solid #e9ecef;
   border-radius: 8px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.search-filters {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .search-field {
   width: 300px;
+  max-width: 100%;
+}
+
+.salon-filter {
+  width: 200px;
   max-width: 100%;
 }
 
@@ -51,7 +65,7 @@
 
 .table-header {
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr 1.5fr 1fr;
+  grid-template-columns: 1fr 2fr 1.5fr 1fr 1fr 1fr 1fr;
   padding: 15px;
   background-color: #f1f3f5;
   border-bottom: 2px solid #e9ecef;
@@ -101,7 +115,7 @@
   font-weight: 500;
   text-transform: uppercase;
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr 1.5fr 1fr;
+  grid-template-columns: 1fr 2fr 1.5fr 1fr 1fr 1fr 1fr;
   padding: 15px;
   border-bottom: 1px solid #e9ecef;
   text-align: center;
@@ -123,10 +137,43 @@
   word-break: break-word;
 }
 
+.apoderado-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.apoderado-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.parent-icon {
+  color: #334c64;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.phone-icon {
+  color: #4CAF50;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.apoderado-name {
+  flex: 1;
+  min-width: 120px;
+}
+
 .actions {
   display: flex;
   justify-content: center;
   gap: 10px;
+  align-items: center;
 }
 
 .actions mat-icon {
@@ -136,8 +183,22 @@
   border-radius: 4px;
 }
 
-.actions mat-icon:hover {
+/* Estilos específicos para los iconos de acciones */
+.edit-icon {
+  color: #ffcc00 !important;
+}
+
+.edit-icon:hover {
   background-color: rgba(255, 204, 0, 0.1);
+  transform: scale(1.1);
+}
+
+.delete-icon {
+  color: #dc3545 !important;
+}
+
+.delete-icon:hover {
+  background-color: rgba(220, 53, 69, 0.1);
   transform: scale(1.1);
 }
 
@@ -203,6 +264,50 @@
   background-color: #f8f9fa;
 }
 
+.nav-button {
+  padding: 8px 12px;
+  background-color: #fff;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #333;
+  transition: all 0.2s ease;
+}
+
+.nav-button:hover:not(:disabled) {
+  background-color: #f8f9fa;
+  border-color: #ced4da;
+}
+
+.nav-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ellipsis {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  color: #666;
+}
+
+.pagination-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 /* RESPONSIVE DESIGN - TABLET */
 @media (max-width: 1024px) {
   .student-container {
@@ -210,8 +315,18 @@
     padding: 15px;
   }
   
+  .search-filters {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
   .search-field {
     width: 250px;
+  }
+  
+  .salon-filter {
+    width: 180px;
   }
   
   .pagination-buttons {
@@ -240,7 +355,14 @@
     align-items: stretch;
   }
 
-  .search-field {
+  .search-filters {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .search-field,
+  .salon-filter {
     width: 100%;
     margin-bottom: 0;
   }
@@ -258,7 +380,7 @@
   }
 
   .table-header {
-    display: none; /* Ocultar header en móvil */
+    display: none;
   }
 
   .student-row {
@@ -291,6 +413,16 @@
     min-width: 100px;
     text-transform: uppercase;
     font-size: 0.85rem;
+  }
+
+  .apoderado-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .parent-icon, .phone-icon {
+    margin-right: 5px;
   }
 
   .actions {
@@ -331,15 +463,6 @@
     height: 32px;
     font-size: 0.8rem;
     flex-shrink: 0;
-  }
-
-  /* Mostrar solo algunas páginas en móvil */
-  .pagination-buttons-mobile {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    justify-content: center;
-    max-width: 100%;
   }
 }
 
@@ -398,44 +521,6 @@
     margin-left: 70vw;
     max-width: 30vw;
   }
-}
-
-/* Mejoras adicionales para la paginación */
-.pagination-info {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  margin-bottom: 10px;
-}
-
-.pagination-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.nav-button {
-  padding: 8px 12px;
-  background-color: #fff;
-  border: 2px solid #e9ecef;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  color: #333;
-  transition: all 0.2s ease;
-}
-
-.nav-button:hover:not(:disabled) {
-  background-color: #f8f9fa;
-  border-color: #ced4da;
-}
-
-.nav-button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 /* Scroll horizontal suave para la paginación */

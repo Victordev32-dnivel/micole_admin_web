@@ -70,7 +70,7 @@
           </mat-select>
         </mat-form-field>
         
-        <!-- NUEVO: Lista de Apoderados con búsqueda -->
+        <!-- Lista de Apoderados con búsqueda -->
         <mat-form-field appearance="outline">
           <mat-label>Apoderado</mat-label>
           <input matInput 
@@ -103,6 +103,103 @@
             Apoderados disponibles: {{ apoderados.length }}
           </mat-hint>
         </mat-form-field>
+
+        <!-- NUEVA SECCIÓN: Agregar Apoderado -->
+        <div class="apoderado-form-section">
+          <div class="section-header" (click)="toggleApoderadoForm()">
+            <h4>
+              <mat-icon>person_add</mat-icon>
+              Agregar Nuevo Apoderado
+            </h4>
+            <button mat-icon-button 
+                    type="button"
+                    [attr.aria-label]="showApoderadoForm ? 'Ocultar formulario' : 'Mostrar formulario'">
+              <mat-icon>{{ showApoderadoForm ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+          </div>
+          
+          <div class="apoderado-form" [class.show]="showApoderadoForm">
+            <form [formGroup]="apoderadoForm" class="inline-form">
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Nombre *</mat-label>
+                  <input matInput formControlName="nombre" placeholder="Ingrese nombre del apoderado">
+                  <mat-error *ngIf="apoderadoForm.get('nombre')?.hasError('required')">
+                    El nombre es obligatorio
+                  </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Apellido *</mat-label>
+                  <input matInput formControlName="apellido" placeholder="Ingrese apellido del apoderado">
+                  <mat-error *ngIf="apoderadoForm.get('apellido')?.hasError('required')">
+                    El apellido es obligatorio
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>DNI *</mat-label>
+                  <input matInput formControlName="dni" placeholder="Ingrese DNI (8 dígitos)" maxlength="8">
+                  <mat-error *ngIf="apoderadoForm.get('dni')?.hasError('required')">
+                    El DNI es obligatorio
+                  </mat-error>
+                  <mat-error *ngIf="apoderadoForm.get('dni')?.hasError('pattern') || apoderadoForm.get('dni')?.hasError('minlength') || apoderadoForm.get('dni')?.hasError('maxlength')">
+                    El DNI debe tener exactamente 8 dígitos
+                  </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Teléfono *</mat-label>
+                  <input matInput formControlName="telefono" placeholder="Ingrese teléfono (9 dígitos)" maxlength="9">
+                  <mat-error *ngIf="apoderadoForm.get('telefono')?.hasError('required')">
+                    El teléfono es obligatorio
+                  </mat-error>
+                  <mat-error *ngIf="apoderadoForm.get('telefono')?.hasError('pattern')">
+                    El teléfono debe tener 9 dígitos
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Correo *</mat-label>
+                <input matInput formControlName="correo" placeholder="Ingrese correo electrónico" type="email">
+                <mat-error *ngIf="apoderadoForm.get('correo')?.hasError('required')">
+                  El correo es obligatorio
+                </mat-error>
+                <mat-error *ngIf="apoderadoForm.get('correo')?.hasError('email')">
+                  Ingrese un correo válido
+                </mat-error>
+              </mat-form-field>
+
+              <div class="form-actions">
+                <button mat-raised-button 
+                        type="button"
+                        color="primary" 
+                        (click)="saveApoderado()" 
+                        [disabled]="loadingApoderado || apoderadoForm.invalid">
+                  <mat-spinner *ngIf="loadingApoderado" diameter="20"></mat-spinner>
+                  <mat-icon *ngIf="!loadingApoderado">save</mat-icon>
+                  {{ loadingApoderado ? 'Guardando...' : 'Guardar Apoderado' }}
+                </button>
+                <button mat-button type="button" (click)="clearApoderadoForm()">
+                  <mat-icon>clear</mat-icon>
+                  Limpiar
+                </button>
+              </div>
+
+              <div *ngIf="apoderadoError" class="error-message">
+                <mat-icon>error</mat-icon>
+                {{ apoderadoError }}
+              </div>
+              <div *ngIf="apoderadoSuccess" class="success-message">
+                <mat-icon>check_circle</mat-icon>
+                {{ apoderadoSuccess }}
+              </div>
+            </form>
+          </div>
+        </div>
         
         <!-- Campo de Salón con búsqueda -->
         <mat-form-field appearance="outline">
@@ -152,7 +249,7 @@
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">Cancelar</button>
-  <button mat-button (click)="onSave()" [disabled]="loadingApoderados || loadingSalones" color="primary">
+  <button mat-button (click)="onSave()" [disabled]="loadingApoderados || loadingSalones || loadingApoderado" color="primary">
     Guardar
   </button>
 </mat-dialog-actions>

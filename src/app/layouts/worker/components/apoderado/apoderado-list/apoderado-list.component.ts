@@ -57,7 +57,7 @@ export class ApoderadoListComponent implements OnInit {
   loadApoderados() {
     this.loading = true;
     this.http
-      .get<any>('https://proy-back-dnivel-44j5.onrender.com/api/apoderado', {
+      .get<any>('https://proy-back-dnivel-44j5.onrender.com/api/apoderado/colegio/lista/1', {
         headers: this.getHeaders(),
       })
       .subscribe({
