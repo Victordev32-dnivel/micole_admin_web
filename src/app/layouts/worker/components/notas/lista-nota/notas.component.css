@@ -1,0 +1,72 @@
+.main-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.content-container {
+  flex: 1;
+  margin-left: 300px; /* Igual al ancho del menú */
+  transition: margin-left 0.3s;
+}
+
+.menu-collapsed .content-container {
+  margin-left: 80px; /* Ancho del menú colapsado */
+}
+
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.container {
+  padding: 20px;
+}
+
+.notas-card {
+  margin: 20px;
+  border-radius: 8px;
+}
+
+.notas-table {
+  width: 100%;
+}
+
+.action-button {
+  margin: 0 4px;
+}
+
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.empty-icon {
+  font-size: 60px;
+  width: 60px;
+  height: 60px;
+  color: #3f51b5;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .content-container {
+    margin-left: 80px;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-container {
+    margin-left: 0;
+  }
+  
+  .container {
+    padding: 10px;
+  }
+  
+  .notas-card {
+    margin: 10px 0;
+  }
+}

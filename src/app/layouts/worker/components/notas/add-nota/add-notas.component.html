@@ -1,0 +1,131 @@
+<h2 mat-dialog-title>Agregar Nota</h2>
+<mat-dialog-content class="dialog-content">
+  <form [formGroup]="noteForm" class="note-form">
+    <div class="form-sections">
+      <!-- Sección principal -->
+      <div class="section">
+        <h3>Información de la Nota</h3>
+        
+        <!-- Salón -->
+        <mat-form-field appearance="outline">
+          <mat-label>Salón *</mat-label>
+          <mat-select formControlName="idSalon" (selectionChange)="onSalonChange()" required>
+            <mat-option *ngFor="let salon of salones" [value]="salon.id">
+              {{ salon.nombre }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="noteForm.get('idSalon')?.hasError('required')">
+            El salón es obligatorio.
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Loading de salones -->
+        <div *ngIf="loadingSalones" class="loading-indicator">
+          <mat-icon>hourglass_empty</mat-icon>
+          Cargando salones...
+        </div>
+        
+        <!-- Alumno -->
+        <mat-form-field appearance="outline">
+          <mat-label>Alumno *</mat-label>
+          <mat-select formControlName="idAlumno" 
+                     [disabled]="!noteForm.get('idSalon')?.value || loadingAlumnos" 
+                     required>
+            <mat-option *ngFor="let alumno of alumnos" [value]="alumno.id">
+              {{ alumno.nombre }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="noteForm.get('idAlumno')?.hasError('required')">
+            El alumno es obligatorio.
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Loading de alumnos -->
+        <div *ngIf="loadingAlumnos" class="loading-indicator">
+          <mat-icon>hourglass_empty</mat-icon>
+          Cargando alumnos...
+        </div>
+
+        <!-- Mensaje si no hay alumnos -->
+        <div *ngIf="noteForm.get('idSalon')?.value && alumnos.length === 0 && !loadingAlumnos" 
+             class="warning-message">
+          <mat-icon>warning</mat-icon>
+          No hay alumnos en este salón
+        </div>
+        
+        <!-- Descripción -->
+        <mat-form-field appearance="outline">
+          <mat-label>Descripción de la nota *</mat-label>
+          <input matInput formControlName="nombre" 
+                 placeholder="Ej: Notas del primer trimestre" 
+                 required>
+          <mat-error *ngIf="noteForm.get('nombre')?.hasError('required')">
+            La descripción es obligatoria.
+          </mat-error>
+        </mat-form-field>
+        
+        <!-- Upload de PDF -->
+        <div class="pdf-upload-section">
+          <input #fileInput 
+                 type="file" 
+                 (change)="onPdfUpload($event)" 
+                 class="file-input" 
+                 accept="application/pdf"
+                 hidden>
+          
+          <button mat-raised-button 
+                  color="primary" 
+                  (click)="triggerFileInput()" 
+                  [disabled]="!noteForm.get('idAlumno')?.value || uploading"
+                  type="button">
+            <mat-icon>upload_file</mat-icon>
+            Seleccionar PDF *
+          </button>
+          
+          <!-- Preview del archivo seleccionado -->
+          <div class="pdf-preview" *ngIf="pdfFile">
+            <mat-icon>picture_as_pdf</mat-icon>
+            <span>{{ pdfName }}</span>
+            <button mat-icon-button 
+                    (click)="pdfFile = null; pdfName = ''; uploadProgress = 0"
+                    type="button">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+          
+          <!-- Progress bar -->
+          <div class="upload-progress" *ngIf="uploadProgress > 0 && uploadProgress < 100">
+            <mat-progress-bar mode="determinate" [value]="uploadProgress"></mat-progress-bar>
+            <span class="progress-text">Subiendo: {{ uploadProgress }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Información sobre campos obligatorios -->
+    <div class="info-section">
+      <small style="color: #666; font-style: italic;">
+        * Todos los campos son obligatorios, incluyendo el archivo PDF.
+      </small>
+    </div>
+    
+    <!-- Mensaje de error -->
+    <div *ngIf="error" class="error-message">
+      <mat-icon>error</mat-icon>
+      {{ error }}
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" type="button">Cancelar</button>
+  <button mat-button 
+          (click)="onSave()" 
+          [disabled]="!noteForm.valid || !pdfFile || uploading || loadingSalones || loadingAlumnos" 
+          color="primary"
+          type="button">
+    <mat-spinner *ngIf="uploading" diameter="20"></mat-spinner>
+    <span *ngIf="!uploading">Guardar</span>
+    <span *ngIf="uploading">Guardando...</span>
+  </button>
+</mat-dialog-actions>

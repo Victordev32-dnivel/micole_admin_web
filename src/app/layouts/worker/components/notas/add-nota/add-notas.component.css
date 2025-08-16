@@ -1,0 +1,91 @@
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.add-button {
+  margin-right: 16px;
+}
+
+.back-button {
+  margin-left: 8px;
+}
+
+.container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+}
+
+.loading-container p {
+  margin-top: 16px;
+  font-size: 16px;
+  color: #666;
+}
+
+.error-container {
+  padding: 20px;
+}
+
+.error-card {
+  background-color: #ffebee;
+}
+
+.error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+
+.error-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: #f44336;
+  margin-bottom: 16px;
+}
+
+.error-content p {
+  margin: 16px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.notas-card {
+  margin-top: 20px;
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.notas-table {
+  width: 100%;
+  min-width: 600px;
+}
+
+.notas-table th {
+  font-weight: 600;
+  color: #333;
+}
+
+.notas-table td {
+  padding: 12px 8px;
+}
+

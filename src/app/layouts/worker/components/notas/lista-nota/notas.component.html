@@ -1,0 +1,177 @@
+<div class="main-container">
+  <!-- Menú Lateral (debe estar en tu layout principal) -->
+
+  <!-- Contenido Principal -->
+  <div class="content-container">
+    <mat-toolbar color="primary" class="toolbar">
+      <button mat-icon-button class="menu-toggle" (click)="toggleMenu()">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span>Gestión de Notas</span>
+      <span class="spacer"></span>
+      <button
+        mat-raised-button
+        color="accent"
+        (click)="openAddNotaDialog()"
+        class="add-button"
+      >
+        <mat-icon>add</mat-icon>
+        Agregar Nota
+      </button>
+      <button mat-icon-button (click)="onBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+    </mat-toolbar>
+
+    <div class="container">
+      <!-- Loading spinner -->
+      <div *ngIf="loadingNotas" class="loading-container">
+        <mat-progress-spinner
+          mode="indeterminate"
+          diameter="50"
+        ></mat-progress-spinner>
+        <p>Cargando notas...</p>
+      </div>
+
+      <!-- Error message -->
+      <div *ngIf="error && !loadingNotas" class="error-container">
+        <mat-card class="error-card">
+          <mat-card-content>
+            <div class="error-content">
+              <mat-icon class="error-icon">error</mat-icon>
+              <p>{{ error }}</p>
+              <button mat-raised-button color="primary" (click)="loadNotas()">
+                Reintentar
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Lista de notas -->
+      <mat-card *ngIf="!loadingNotas && !error" class="notas-card">
+        <mat-card-header>
+          <mat-card-title>Lista de Notas</mat-card-title>
+          <mat-card-subtitle
+            >Total de notas: {{ notas.length }}</mat-card-subtitle
+          >
+        </mat-card-header>
+
+        <mat-card-content>
+          <!-- Tabla de notas -->
+          <div class="table-container" *ngIf="notas.length > 0">
+            <table
+              mat-table
+              [dataSource]="notas"
+              class="notas-table mat-elevation-z8"
+            >
+              <!-- Columna Nombre -->
+              <ng-container matColumnDef="nombre">
+                <th mat-header-cell *matHeaderCellDef>Nombre de la Nota</th>
+                <td mat-cell *matCellDef="let nota">{{ nota.nombre }}</td>
+              </ng-container>
+
+              <!-- Columna Alumno -->
+              <ng-container matColumnDef="alumno">
+                <th mat-header-cell *matHeaderCellDef>Alumno</th>
+                <td mat-cell *matCellDef="let nota">
+                  {{ nota.alumnoNombre || "Alumno desconocido" }}
+                </td>
+              </ng-container>
+
+              <!-- Columna Salón -->
+              <ng-container matColumnDef="salon">
+                <th mat-header-cell *matHeaderCellDef>Salón</th>
+                <td mat-cell *matCellDef="let nota">
+                  {{ nota.salonNombre || "Salón desconocido" }}
+                </td>
+              </ng-container>
+
+             
+
+              <!-- Columna Acciones -->
+              <ng-container matColumnDef="acciones">
+                <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                <td mat-cell *matCellDef="let nota">
+                  <button
+                    mat-icon-button
+                    (click)="onViewPdf(nota.pdf)"
+                    matTooltip="Ver PDF"
+                    class="action-button"
+                  >
+                    <mat-icon>picture_as_pdf</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    (click)="confirmDelete(nota)"
+                    matTooltip="Eliminar"
+                    color="warn"
+                    class="action-button"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            </table>
+
+            <!-- Paginador -->
+            <mat-paginator
+              [length]="totalNotas"
+              [pageSize]="pageSize"
+              [pageSizeOptions]="[5, 10, 20]"
+              showFirstLastButtons
+            ></mat-paginator>
+          </div>
+
+          <!-- Mensaje cuando no hay notas -->
+          <div *ngIf="notas.length === 0" class="empty-state mat-elevation-z2">
+            <mat-icon class="empty-icon">note</mat-icon>
+            <h3>No hay notas disponibles</h3>
+            <p>
+              Comienza agregando tu primera nota haciendo clic en "Agregar Nota"
+            </p>
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="openAddNotaDialog()"
+              class="empty-action-button"
+            >
+              <mat-icon>add</mat-icon>
+              Agregar Primera Nota
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>
+
+<!-- Diálogo para agregar nota -->
+<ng-template #addNotaDialog>
+  <div class="dialog-container">
+    <h2 mat-dialog-title>Agregar Nueva Nota</h2>
+
+    <mat-toolbar color="primary" class="toolbar">
+      <button mat-icon-button class="menu-toggle" (click)="toggleMenu()">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span>Gestión de Notas</span>
+      <span class="spacer"></span>
+      <button
+        mat-raised-button
+        color="accent"
+        (click)="openAddNotaDialog()"
+        class="add-button"
+      >
+        <mat-icon>add</mat-icon>
+        Agregar Nota
+      </button>
+      <button mat-icon-button (click)="onBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+    </mat-toolbar>
+  </div>
+</ng-template>

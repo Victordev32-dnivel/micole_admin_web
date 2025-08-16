@@ -1,10 +1,11 @@
 import {
   Component,
+  Inject,
   OnInit,
-  ChangeDetectorRef,
-  NgZone,
   ViewChild,
   ElementRef,
+  ChangeDetectorRef,
+  NgZone,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -13,22 +14,26 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import {
-  HttpClient,
-  HttpHeaders,
-  HttpErrorResponse,
-} from '@angular/common/http';
-import { S3 } from 'aws-sdk';
-import { Buffer } from 'buffer';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+  MAT_DIALOG_DATA,
+  MatDialogRef,
+  MatDialogModule,
+} from '@angular/material/dialog';
+import { CommonModule } from '@angular/common';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatCardModule } from '@angular/material/card';
-import { MatSelectModule } from '@angular/material/select';
-import { CommonModule } from '@angular/common';
-import { UserData, UserService } from '../../../../services/UserData';
+import {
+  HttpClient,
+  HttpHeaders,
+} from '@angular/common/http';
+import { UserService } from '../../../../../services/UserData';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { S3 } from 'aws-sdk';
+import { Buffer } from 'buffer';
 
 if (typeof Buffer === 'undefined') {
   (window as any).Buffer = Buffer;
@@ -37,53 +42,55 @@ if (typeof Buffer === 'undefined') {
 const BUCKET_NAME = 'bckpdfs';
 
 @Component({
-  selector: 'app-notas',
-  templateUrl: './notas.component.html',
-  styleUrls: ['./notas.component.css'],
+  selector: 'app-add-nota',
   standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatToolbarModule,
-    MatButtonModule,
-    MatIconModule,
+    MatDialogModule,
+    MatFormFieldModule,
     MatInputModule,
+    MatButtonModule,
+    MatSelectModule,
+    MatIconModule,
     MatProgressBarModule,
     MatProgressSpinnerModule,
-    MatCardModule,
-    MatSelectModule,
   ],
+  templateUrl: './add-notas.component.html',
+  styleUrls: ['./add-notas.component.css'],
 })
-export class NotasComponent implements OnInit {
+export class AddNotaComponent implements OnInit {
   noteForm: FormGroup;
   salones: { id: number; nombre: string }[] = [];
   alumnos: { id: number; nombre: string }[] = [];
   loadingSalones: boolean = true;
   loadingAlumnos: boolean = false;
-  colegioId: number | null = null;
   pdfFile: File | null = null;
   pdfName: string = '';
   uploadProgress: number = 0;
   uploading: boolean = false;
   error: string | null = null;
-  successMessage: string | null = null;
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   private s3: S3;
 
   constructor(
+    @Inject(MatDialogRef) public dialogRef: MatDialogRef<AddNotaComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any,
     private fb: FormBuilder,
     private http: HttpClient,
+    private userService: UserService,
+    private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef,
-    private ngZone: NgZone,
-    private userService: UserService
+    private ngZone: NgZone
   ) {
     this.noteForm = this.fb.group({
       idSalon: ['', Validators.required],
       idAlumno: ['', Validators.required],
       nombre: ['', Validators.required],
     });
+
     this.s3 = new S3({
       accessKeyId: 'AKIASYIUVPYK5L3ET47F',
       secretAccessKey: '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',
@@ -92,22 +99,8 @@ export class NotasComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
-    this.loadUserData();
+  ngOnInit(): void {
     this.loadSalones();
-  }
-
-  private loadUserData(): void {
-    const userData = this.userService.getUserData();
-    if (userData) {
-      this.colegioId = userData.colegio;
-    }
-    this.userService.userData$.subscribe((userData: UserData | null) => {
-      if (userData) {
-        this.colegioId = userData.colegio;
-        this.loadSalones();
-      }
-    });
   }
 
   private getHeaders(): HttpHeaders {
@@ -119,35 +112,30 @@ export class NotasComponent implements OnInit {
     });
   }
 
-  loadSalones() {
-    if (!this.colegioId) {
-      console.error('ID del colegio no disponible');
-      this.error =
-        'No se pudo cargar los salones: ID del colegio no disponible';
+  loadSalones(): void {
+    const colegioId = this.data?.colegioId;
+    if (!colegioId) {
+      this.error = 'No se pudo cargar los salones: ID del colegio no disponible';
       this.loadingSalones = false;
-      this.cdr.detectChanges();
       return;
     }
 
     this.loadingSalones = true;
     this.error = null;
-    this.successMessage = null;
+
     this.http
       .get<any>(
-        `https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista/${this.colegioId}`,
+        `https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista/${colegioId}`,
         { headers: this.getHeaders() }
       )
       .subscribe({
         next: (response) => {
-          this.ngZone.run(() => {
-            this.salones = response.data || [];
-
-            this.loadingSalones = false;
-            if (this.salones.length === 0) {
-              this.error = 'No se encontraron salones para este colegio';
-            }
-            this.cdr.detectChanges();
-          });
+          this.salones = response.data || [];
+          this.loadingSalones = false;
+          if (this.salones.length === 0) {
+            this.error = 'No se encontraron salones para este colegio';
+          }
+          this.cdr.detectChanges();
         },
         error: (error) => {
           console.error('Error al cargar salones:', error);
@@ -158,7 +146,7 @@ export class NotasComponent implements OnInit {
       });
   }
 
-  onSalonChange() {
+  onSalonChange(): void {
     const salonId = this.noteForm.get('idSalon')?.value;
     if (salonId) {
       this.loadAlumnos(salonId);
@@ -167,15 +155,14 @@ export class NotasComponent implements OnInit {
       this.alumnos = [];
       this.noteForm.get('idAlumno')?.reset();
       this.error = null;
-      this.cdr.detectChanges();
     }
   }
 
-  loadAlumnos(salonId: number) {
+  loadAlumnos(salonId: number): void {
     this.loadingAlumnos = true;
     this.error = null;
-    this.successMessage = null;
     this.alumnos = [];
+
     this.http
       .get<any>(
         `https://proy-back-dnivel-44j5.onrender.com/api/alumno/salon/${salonId}`,
@@ -183,18 +170,16 @@ export class NotasComponent implements OnInit {
       )
       .subscribe({
         next: (response) => {
-          this.ngZone.run(() => {
-            this.alumnos = response.map((item: any) => ({
-              id: item.idAlumno,
-              nombre: item.alumno || 'Alumno sin nombre',
-            }));
+          this.alumnos = response.map((item: any) => ({
+            id: item.idAlumno,
+            nombre: item.alumno || 'Alumno sin nombre',
+          }));
 
-            this.loadingAlumnos = false;
-            if (this.alumnos.length === 0) {
-              this.error = 'No se encontraron alumnos en este salón';
-            }
-            this.cdr.detectChanges();
-          });
+          this.loadingAlumnos = false;
+          if (this.alumnos.length === 0) {
+            this.error = 'No se encontraron alumnos en este salón';
+          }
+          this.cdr.detectChanges();
         },
         error: (error) => {
           console.error('Error al cargar alumnos:', error);
@@ -205,9 +190,22 @@ export class NotasComponent implements OnInit {
       });
   }
 
+  onPdfUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      this.pdfFile = file;
+      this.pdfName = file.name;
+      this.cdr.detectChanges();
+    }
+  }
+
+  triggerFileInput(): void {
+    this.fileInput.nativeElement.click();
+  }
+
   async uploadPdfToS3(file: File): Promise<string> {
     try {
-
       this.uploadProgress = 0;
 
       if (!file) throw new Error('El archivo no existe');
@@ -226,16 +224,12 @@ export class NotasComponent implements OnInit {
       const randomId = Math.random().toString(36).substring(2);
       const fileName = `notes/${timestamp}_${randomId}.pdf`;
 
-
-
       const params = {
         Bucket: BUCKET_NAME,
         Key: fileName,
         Body: buffer,
         ContentType: 'application/pdf',
       };
-
-      ('⚙️ Parámetros de subida configurados (archivo privado)');
 
       const upload = this.s3.upload(params);
 
@@ -248,15 +242,12 @@ export class NotasComponent implements OnInit {
       });
 
       await upload.promise();
-      ('✅ Archivo de notas subido exitosamente');
 
       const signedUrl = this.s3.getSignedUrl('getObject', {
         Bucket: BUCKET_NAME,
         Key: fileName,
         Expires: 7 * 24 * 60 * 60,
       });
-
-
 
       return signedUrl;
     } catch (error: unknown) {
@@ -267,23 +258,9 @@ export class NotasComponent implements OnInit {
     }
   }
 
-  onPdfUpload(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-      this.pdfFile = file;
-      this.pdfName = file.name;
-      this.cdr.detectChanges();
-    }
-  }
-
-  triggerFileInput(): void {
-    this.fileInput.nativeElement.click();
-  }
-
   async onSave(): Promise<void> {
     if (!this.noteForm.valid || !this.pdfFile) {
-      this.error = 'Por favor completa todos los campos';
+      this.error = 'Por favor completa todos los campos y selecciona un PDF';
       this.cdr.detectChanges();
       return;
     }
@@ -292,34 +269,28 @@ export class NotasComponent implements OnInit {
     this.error = null;
 
     try {
-      ('🔄 Iniciando proceso de guardado de notas...');
       const pdfUrl = await this.uploadPdfToS3(this.pdfFile);
-
 
       const payload = {
         IdAlumno: this.noteForm.get('idAlumno')?.value,
         Pdf: pdfUrl,
-        IdColegio: this.colegioId,
+        IdColegio: this.data?.colegioId,
         Nombre: this.noteForm.get('nombre')?.value.trim(),
       };
 
-      (
-
-        JSON.stringify(payload, null, 2)
-      );
-
-      const response = await this.http
+      await this.http
         .post('https://proy-back-dnivel-44j5.onrender.com/api/nota', payload, {
           headers: this.getHeaders(),
         })
         .toPromise();
-      ('✅ Nota guardada exitosamente');
 
-      this.successMessage = 'Nota subida correctamente';
-      this.noteForm.reset();
-      this.pdfFile = null;
-      this.pdfName = '';
-      this.uploadProgress = 0;
+      this.snackBar.open('Nota agregada exitosamente!', 'Cerrar', {
+        duration: 5000,
+        verticalPosition: 'top',
+        horizontalPosition: 'center',
+      });
+
+      this.dialogRef.close(payload);
     } catch (error: any) {
       console.error('❌ Error completo:', error);
       this.error = error.error?.message || error.message || 'Error de conexión';
@@ -329,7 +300,7 @@ export class NotasComponent implements OnInit {
     }
   }
 
-  onBack(): void {
-    window.history.back();
+  onCancel(): void {
+    this.dialogRef.close();
   }
 }
