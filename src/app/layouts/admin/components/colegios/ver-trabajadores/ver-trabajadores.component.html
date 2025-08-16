@@ -1,9 +1,9 @@
 <div class="modal-content-container">
-  <mat-toolbar class="toolbar">
-    <span style="font-weight: bold;">TRABAJADORES ASIGNADOS</span>
+  <mat-toolbar>
+    <span>Trabajadores Asignados</span>
   </mat-toolbar>
 
-  <table mat-table [dataSource]="data.trabajadoresAsignados" class="mat-elevation-z8">
+  <table mat-table [dataSource]="trabajadoresAsignados" class="mat-elevation-z8">
     <ng-container matColumnDef="nombre">
       <th mat-header-cell *matHeaderCellDef>Nombre</th>
       <td mat-cell *matCellDef="let element">{{ element.nombre }}</td>
@@ -32,8 +32,8 @@
     <ng-container matColumnDef="actions">
       <th mat-header-cell *matHeaderCellDef>Desasignar</th>
       <td mat-cell *matCellDef="let element">
-        <button mat-icon-button class="btn-remove" (click)="onDesasignar(element)">
-          <mat-icon>remove_circle</mat-icon>
+        <button mat-icon-button color="warn" [disabled]="loading" (click)="onDesasignar(element)">
+          <mat-icon>remove</mat-icon>
         </button>
       </td>
     </ng-container>
@@ -47,15 +47,17 @@
     <ul>
       <li *ngFor="let trabajador of trabajadoresDesasignados">
         {{ trabajador.nombre }} {{ trabajador.apellidoPaterno }} {{ trabajador.apellidoMaterno }}
-        <button mat-icon-button color="warn" (click)="onRemove(trabajador)">
-          <mat-icon>remove</mat-icon>
+        <button mat-icon-button color="primary" [disabled]="loading" (click)="onRemove(trabajador)">
+          <mat-icon>delete</mat-icon>
         </button>
       </li>
     </ul>
   </div>
 
+  <div *ngIf="error" class="error">{{ error }}</div>
   <div class="button-container">
-    <button mat-raised-button color="primary" (click)="onConfirm()">Confirmar</button>
-    <button mat-raised-button (click)="onCancel()">Cancelar</button>
+    <button mat-raised-button color="warn" [disabled]="loading" (click)="onConfirm()">Desasignar</button>
+    <button mat-button [disabled]="loading" (click)="onCancel()">Cancelar</button>
+    <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
   </div>
 </div>

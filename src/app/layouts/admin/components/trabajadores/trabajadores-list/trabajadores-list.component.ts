@@ -9,7 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmationDeleteComponent } from '../confirmation-delete/confirmation-delete.component';
-import { AddTrabajadoresComponent } from '../add-trabajadores/add-trabajador.component';
+import { AddTrabajadoresComponent } from '../add-trabajadores/add-trabajadores.component';
 import { EditTrabajadoresComponent } from '../edit-trabajadores/edit-trabajadores.component';
 
 @Component({
@@ -71,7 +71,15 @@ export class TrabajadoresListComponent implements OnInit {
       })
       .subscribe({
         next: (response) => {
-          this.trabajadores = response.data || [];
+          this.trabajadores = response.map((t: any) => ({
+            id: t.idTrabajador,
+            nombre: t.nombre,
+            apellidoPaterno: t.apellidoPaterno,
+            apellidoMaterno: t.apellidoMaterno,
+            dni: t.dni,
+            telefono: t.telefono,
+            idColegio: t.idColegio,
+          }));
           this.filteredTrabajadores = [...this.trabajadores];
           this.loading = false;
           this.cdr.detectChanges();
@@ -137,12 +145,13 @@ export class TrabajadoresListComponent implements OnInit {
   }
 
   openEditDialog(id: number) {
+    const trabajador = this.trabajadores.find((t) => t.id === id);
     const dialogRef = this.dialog.open(EditTrabajadoresComponent, {
       width: '25vw',
       maxWidth: '50vw',
       height: '25vw',
       panelClass: 'custom-dialog',
-      data: { id, trabajadores: this.trabajadores },
+      data: { id, trabajador },
     });
 
     dialogRef.afterClosed().subscribe((result) => {

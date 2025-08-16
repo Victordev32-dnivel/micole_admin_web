@@ -14,10 +14,14 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { FormControl, FormGroupDirective, NgForm } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
-export class CustomErrorStateMatcher implements ErrorStateMatcher {
-  isErrorState(control: FormControl | null): boolean {
-    const isSubmitted = false;
+export class InstantErrorStateMatcher implements ErrorStateMatcher {
+  isErrorState(
+    control: FormControl | null,
+    form: FormGroupDirective | NgForm | null
+  ): boolean {
+    const isSubmitted = form && form.submitted;
     return !!(
       control &&
       control.invalid &&
@@ -27,7 +31,7 @@ export class CustomErrorStateMatcher implements ErrorStateMatcher {
 }
 
 @Component({
-  selector: 'app-add-trabajador',
+  selector: 'app-add-trabajadores',
   standalone: true,
   imports: [
     CommonModule,
@@ -36,16 +40,19 @@ export class CustomErrorStateMatcher implements ErrorStateMatcher {
     MatInputModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    MatFormFieldModule,
   ],
-  templateUrl: './add-trabajador.component.html',
-  styleUrls: ['./add-trabajador.component.css'],
+  templateUrl: './add-trabajadores.component.html',
+  styleUrls: ['./add-trabajadores.component.css'],
 })
 export class AddTrabajadoresComponent implements OnInit {
   trabajadorForm: FormGroup;
   loading: boolean = false;
   error: string | null = null;
   successMessage: string | null = null;
-  customErrorStateMatcher = new CustomErrorStateMatcher();
+
+  // ✅ Se define el matcher
+  customErrorStateMatcher = new InstantErrorStateMatcher();
 
   constructor(
     private fb: FormBuilder,
@@ -59,6 +66,7 @@ export class AddTrabajadoresComponent implements OnInit {
       apellidoMaterno: ['', Validators.required],
       dni: ['', [Validators.required, Validators.pattern('^[0-9]{8}$')]],
       telefono: ['', [Validators.required, Validators.pattern('^[0-9]{9}$')]],
+      idColegio: [1, Validators.required], // valor por defecto
     });
   }
 
@@ -76,20 +84,24 @@ export class AddTrabajadoresComponent implements OnInit {
       this.loading = true;
       this.error = null;
       const formData = this.trabajadorForm.value;
+
       this.http
         .post(
-          'https://proy-back-dnivel-44j5.onrender.com/api/trabajador',
+          'https://proy-back-dnivel-44j5.onrender.com/api/Trabajador',
           formData,
           {
             headers: this.getHeaders(),
           }
         )
         .subscribe({
-          next: () => {
+          next: (response: any) => {
             this.successMessage = 'Trabajador agregado exitosamente';
             this.loading = false;
             this.cdr.detectChanges();
-            setTimeout(() => this.dialogRef.close(true), 1000);
+            setTimeout(
+              () => this.dialogRef.close({ action: 'save', data: response }),
+              1000
+            );
           },
           error: (error) => {
             console.error('Error al agregar trabajador:', error);

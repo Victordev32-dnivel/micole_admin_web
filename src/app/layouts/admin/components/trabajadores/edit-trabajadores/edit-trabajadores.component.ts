@@ -56,7 +56,7 @@ export class EditTrabajadoresComponent implements OnInit {
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
     public dialogRef: MatDialogRef<EditTrabajadoresComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { id: number; trabajadores: any[] }
+    @Inject(MAT_DIALOG_DATA) public data: { id: number; trabajador: any }
   ) {
     this.trabajadorId = data.id;
     this.trabajadorForm = this.fb.group({
@@ -65,12 +65,20 @@ export class EditTrabajadoresComponent implements OnInit {
       apellidoMaterno: ['', Validators.required],
       dni: ['', [Validators.required, Validators.pattern('^[0-9]{8}$')]],
       telefono: ['', [Validators.required, Validators.pattern('^[0-9]{9}$')]],
+      idColegio: [data.trabajador?.idColegio || 1, Validators.required], // Valor del trabajador o por defecto
     });
+    if (data.trabajador) {
+      this.trabajadorForm.patchValue({
+        nombre: data.trabajador.nombre,
+        apellidoPaterno: data.trabajador.apellidoPaterno,
+        apellidoMaterno: data.trabajador.apellidoMaterno,
+        dni: data.trabajador.dni,
+        telefono: data.trabajador.telefono,
+      });
+    }
   }
 
-  ngOnInit() {
-    this.loadTrabajador();
-  }
+  ngOnInit() {}
 
   private getHeaders(): HttpHeaders {
     return new HttpHeaders({
@@ -79,46 +87,29 @@ export class EditTrabajadoresComponent implements OnInit {
     });
   }
 
-  loadTrabajador() {
-    this.loading = true;
-    this.error = null;
-
-    const trabajador = this.data.trabajadores.find(
-      (t) => t.id === this.trabajadorId
-    );
-    if (trabajador) {
-      this.trabajadorForm.patchValue({
-        nombre: trabajador.nombre,
-        apellidoPaterno: trabajador.apellidoPaterno,
-        apellidoMaterno: trabajador.apellidoMaterno,
-        dni: trabajador.dni,
-        telefono: trabajador.telefono,
-      });
-    } else {
-      this.error = 'No se encontró el trabajador con el ID especificado';
-    }
-
-    this.loading = false;
-    this.cdr.detectChanges();
-  }
-
   onSubmit() {
     if (this.trabajadorForm.valid) {
       this.loading = true;
       this.error = null;
       const formData = this.trabajadorForm.value;
+
       this.http
         .put(
-          `https://proy-back-dnivel-44j5.onrender.com/api/trabajador/${this.trabajadorId}`,
+          `https://proy-back-dnivel-44j5.onrender.com/api/Trabajador/${this.trabajadorId}`,
           formData,
-          { headers: this.getHeaders() }
+          {
+            headers: this.getHeaders(),
+          }
         )
         .subscribe({
-          next: () => {
+          next: (response: any) => {
             this.successMessage = 'Trabajador actualizado exitosamente';
             this.loading = false;
             this.cdr.detectChanges();
-            setTimeout(() => this.dialogRef.close(true), 1000);
+            setTimeout(
+              () => this.dialogRef.close({ action: 'save', data: response }),
+              1000
+            );
           },
           error: (error) => {
             console.error('Error al actualizar trabajador:', error);

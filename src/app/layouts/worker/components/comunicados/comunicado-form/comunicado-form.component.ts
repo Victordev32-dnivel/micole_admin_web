@@ -35,7 +35,7 @@ import { S3 } from 'aws-sdk';
 import { Buffer } from 'buffer';
 import { ManagedUpload } from 'aws-sdk/clients/s3';
 import { UserData, UserService } from '../../../../../services/UserData';
-import { environment  } from '../../../../../environments/environments';
+import { environment } from '../../../../../environment/environment';
 
 // Polyfill para Buffer
 if (typeof Buffer === 'undefined') {
