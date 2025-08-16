@@ -21,6 +21,7 @@ export const WORKER_ROUTES: Routes = [
       { path: 'notas', component: NotasComponent },
       { path: 'apoderado', component: ApoderadoListComponent },
       { path: 'socio', component: ApoderadoListComponent },
+    
     ],
   },
 ];

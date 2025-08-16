@@ -14,7 +14,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { MatSelectModule } from '@angular/material/select'; // Add this import
+import { MatSelectModule } from '@angular/material/select';
 import {
   FormBuilder,
   FormGroup,
@@ -72,9 +72,12 @@ export class StudentListComponent implements OnInit {
   maxVisiblePages: number = 5;
 
   private apiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno';
-  private colegioApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno/colegio';
-  private salonApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno/salon';
-  private salonesListUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio';
+  private colegioApiUrl =
+    'https://proy-back-dnivel-44j5.onrender.com/api/alumno/colegio';
+  private salonApiUrl =
+    'https://proy-back-dnivel-44j5.onrender.com/api/alumno/salon';
+  private salonesListUrl =
+    'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista';
   private staticToken = '732612882';
 
   constructor(
@@ -200,46 +203,58 @@ export class StudentListComponent implements OnInit {
 
     this.loadingSalones = true;
     const headers = this.getHeaders();
+    const salonesUrl = `${this.salonesListUrl}/${this.colegioId}`;
 
-    // Usar la nueva URL con el ID del colegio
-    this.http
-      .get<any>(`${this.salonesListUrl}/${this.colegioId}`, { headers })
-      .subscribe({
-        next: (response) => {
-          console.log('Respuesta de salones:', response);
-          
-          // Manejar diferentes estructuras de respuesta
-          if (Array.isArray(response)) {
-            this.availableSalones = response;
-          } else if (response.data && Array.isArray(response.data)) {
-            this.availableSalones = response.data;
-          } else if (response.salones && Array.isArray(response.salones)) {
-            this.availableSalones = response.salones;
-          } else if (response.salon && Array.isArray(response.salon)) {
-            this.availableSalones = response.salon;
-          } else {
-            this.availableSalones = [];
+    this.http.get<any>(salonesUrl, { headers }).subscribe({
+      next: (response) => {
+        this.availableSalones = [];
+
+        if (Array.isArray(response)) {
+          this.availableSalones = response;
+        } else if (response && typeof response === 'object') {
+          const possibleArrays = [
+            response.data,
+            response.salones,
+            response.salon,
+            response.lista,
+            response.result,
+            response.items,
+          ];
+
+          for (const arr of possibleArrays) {
+            if (Array.isArray(arr)) {
+              this.availableSalones = arr;
+              break;
+            }
           }
+        }
 
-          console.log('Salones cargados:', this.availableSalones);
-          this.loadingSalones = false;
-          this.cdr.detectChanges();
-        },
-        error: (error) => {
-          console.error('Error al cargar salones:', error);
-          this.availableSalones = [];
-          this.loadingSalones = false;
-          this.cdr.detectChanges();
-        },
-      });
+        this.loadingSalones = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al cargar salones:', error);
+        this.availableSalones = [];
+        this.loadingSalones = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   onSalonFilterChange(): void {
     const salonId = this.salonFilterControl.value;
-    this.selectedSalonId = salonId || null;
-    console.log('Filtro de salón cambiado:', this.selectedSalonId);
-    
-    // Resetear a la página 1 cuando se cambie el filtro
+
+    if (
+      salonId === null ||
+      salonId === undefined ||
+      salonId === '' ||
+      salonId === 'null'
+    ) {
+      this.selectedSalonId = null;
+    } else {
+      this.selectedSalonId = Number(salonId);
+    }
+
     this.currentPage = 1;
     this.loadStudents(1);
   }
@@ -254,74 +269,64 @@ export class StudentListComponent implements OnInit {
     this.loading = true;
     const headers = this.getHeaders();
 
-    // Determinar qué endpoint usar según el filtro de salón
     let apiUrl: string;
     if (this.selectedSalonId) {
-      // Usar la URL correcta para filtrar por salón específico
       apiUrl = `${this.salonApiUrl}/${this.selectedSalonId}`;
-      console.log(`Cargando estudiantes por salón: ${this.selectedSalonId}`);
     } else {
-      // Cargar todos los estudiantes del colegio con paginación
       apiUrl = `${this.colegioApiUrl}/${this.colegioId}?page=${page}&limit=${this.pageSize}`;
-      console.log(`Cargando página: ${page}, pageSize: ${this.pageSize}, colegioId: ${this.colegioId}`);
     }
 
-    this.http
-      .get<any>(apiUrl, { headers })
-      .subscribe({
-        next: (response) => {
-          console.log('Respuesta de estudiantes:', response);
-          
-          this.ngZone.run(() => {
-            // Manejar respuesta para filtro por salón (sin paginación)
-            if (this.selectedSalonId) {
-              // Para el endpoint de salón, la respuesta puede ser directamente un array o un objeto con data
-              let studentsData = [];
-              if (Array.isArray(response)) {
-                studentsData = response;
-              } else if (response.data && Array.isArray(response.data)) {
-                studentsData = response.data;
-              } else if (response.students && Array.isArray(response.students)) {
-                studentsData = response.students;
-              } else if (response.alumnos && Array.isArray(response.alumnos)) {
-                studentsData = response.alumnos;
-              }
-
-              this.students = studentsData;
-              this.filteredStudents = [...this.students];
-              this.totalAlumnos = studentsData.length;
-              this.totalPages = 1; // Sin paginación para filtro por salón
-              this.currentPage = 1;
-
-              console.log(`Estudiantes del salón ${this.selectedSalonId}:`, studentsData.length);
-            } else {
-              // Manejo normal para carga por colegio con paginación
-              this.students = response.data || response.alumnos || [];
-              this.filteredStudents = [...this.students];
-              this.currentPage = page;
-              this.totalAlumnos = response.totalAlumnos || response.total || 0;
-              this.totalPages = response.totalPages || response.totalPaginas || Math.ceil(this.totalAlumnos / this.pageSize);
-
-              console.log(`Página actual: ${page}, Total páginas: ${this.totalPages}, Total alumnos: ${this.totalAlumnos}`);
+    this.http.get<any>(apiUrl, { headers }).subscribe({
+      next: (response) => {
+        this.ngZone.run(() => {
+          if (this.selectedSalonId) {
+            let studentsData = [];
+            if (Array.isArray(response)) {
+              studentsData = response;
+            } else if (response.data && Array.isArray(response.data)) {
+              studentsData = response.data;
+            } else if (response.students && Array.isArray(response.students)) {
+              studentsData = response.students;
+            } else if (response.alumnos && Array.isArray(response.alumnos)) {
+              studentsData = response.alumnos;
             }
 
-            if (this.totalPages < 1) {
-              this.totalPages = 1;
-            }
+            // Invertir el orden del array
+            this.students = studentsData.reverse();
+            this.filteredStudents = [...this.students];
+            this.totalAlumnos = studentsData.length;
+            this.totalPages = 1;
+            this.currentPage = 1;
+          } else {
+            const rawStudents = response.data || response.alumnos || [];
+            // Invertir el orden del array
+            this.students = rawStudents.reverse();
+            this.filteredStudents = [...this.students];
+            this.currentPage = page;
+            this.totalAlumnos = response.totalAlumnos || response.total || 0;
+            this.totalPages =
+              response.totalPages ||
+              response.totalPaginas ||
+              Math.ceil(this.totalAlumnos / this.pageSize);
+          }
 
-            this.updateVisiblePages();
-            this.loading = false;
-            this.cdr.detectChanges();
-          });
-        },
-        error: (error) => {
-          console.error('Error al cargar estudiantes:', error);
-          this.ngZone.run(() => {
-            this.loading = false;
-            this.cdr.detectChanges();
-          });
-        },
-      });
+          if (this.totalPages < 1) {
+            this.totalPages = 1;
+          }
+
+          this.updateVisiblePages();
+          this.loading = false;
+          this.cdr.detectChanges();
+        });
+      },
+      error: (error) => {
+        console.error('Error al cargar estudiantes:', error);
+        this.ngZone.run(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        });
+      },
+    });
   }
 
   filterStudents(term: string) {
@@ -352,7 +357,6 @@ export class StudentListComponent implements OnInit {
             return matchesName || matchesDNI || matchesApoderado;
           });
         }
-        console.log(`Estudiantes filtrados: ${this.filteredStudents.length} de ${this.students.length} total`);
 
         this.loading = false;
         this.cdr.detectChanges();
@@ -372,6 +376,9 @@ export class StudentListComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.loadStudents(1);
+        // Forzar el orden inverso
+        this.students.reverse();
+        this.filteredStudents = [...this.students];
       }
     });
   }
@@ -392,6 +399,9 @@ export class StudentListComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.loadStudents(this.currentPage);
+        // Forzar el orden inverso
+        this.students.reverse();
+        this.filteredStudents = [...this.students];
       }
     });
   }
@@ -399,11 +409,11 @@ export class StudentListComponent implements OnInit {
   confirmDelete(id: number): void {
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: this.isMobile ? '90vw' : '400px',
-      data: { 
+      data: {
         message: '¿Estás seguro de que deseas eliminar este alumno?',
         title: 'Confirmar eliminación',
         confirmText: 'Eliminar',
-        cancelText: 'Cancelar'
+        cancelText: 'Cancelar',
       },
     });
 
@@ -422,42 +432,39 @@ export class StudentListComponent implements OnInit {
 
     this.loading = true;
     const headers = this.getHeaders();
-    
-    console.log(`Eliminando alumno con ID: ${id}`);
+    const deleteUrl = `${this.apiUrl}/${id}`;
 
     this.http
-      .delete(`${this.apiUrl}/${id}`, { headers })
+      .delete(deleteUrl, { headers, responseType: 'text' as 'json' })
       .subscribe({
         next: (response) => {
-          console.log('Alumno eliminado exitosamente:', response);
-          
-          // Mostrar mensaje de éxito (opcional)
-          // this.showSuccessMessage('Alumno eliminado exitosamente');
-          
-          // Recargar la página actual después de eliminar
-          this.loadStudents(this.currentPage);
+          this.ngZone.run(() => {
+            if (this.filteredStudents.length === 1 && this.currentPage > 1) {
+              this.changePage(this.currentPage - 1);
+            } else {
+              this.loadStudents(this.currentPage);
+              // Forzar el orden inverso
+              this.students.reverse();
+              this.filteredStudents = [...this.students];
+            }
+          });
         },
         error: (error) => {
           console.error('Error al eliminar alumno:', error);
-          this.loading = false;
-          
-          // Mostrar mensaje de error (opcional)
-          // this.showErrorMessage('Error al eliminar el alumno. Intente nuevamente.');
-          
-          this.cdr.detectChanges();
+          this.ngZone.run(() => {
+            this.loading = false;
+            this.cdr.detectChanges();
+          });
         },
       });
   }
 
   changePage(page: number) {
-    // Solo permitir cambio de página si no hay filtro de salón activo
     if (this.selectedSalonId) {
-      console.log('Paginación deshabilitada cuando se filtra por salón');
       return;
     }
-    
+
     if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
-      console.log(`Cambiando a página: ${page}`);
       this.loadStudents(page);
     }
   }
@@ -523,12 +530,18 @@ export class StudentListComponent implements OnInit {
 
   getSelectedSalonName(): string {
     if (!this.selectedSalonId) return '';
-    const salon = this.availableSalones.find(s => s.id === this.selectedSalonId);
+    const salon = this.availableSalones.find(
+      (s) => s.id === this.selectedSalonId
+    );
     return salon ? salon.nombre : `Salón ${this.selectedSalonId}`;
   }
 
   trackByStudentId(index: number, student: any): any {
     return student.id || student.numero_documento || index;
+  }
+
+  trackBySalonId(index: number, salon: any): any {
+    return salon.id || salon.salonId || index;
   }
 
   logout() {

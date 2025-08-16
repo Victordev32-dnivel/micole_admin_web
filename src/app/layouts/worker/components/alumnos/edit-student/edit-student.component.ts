@@ -41,7 +41,10 @@ import {
   HttpHeaders,
 } from '@angular/common/http';
 import { UserService } from '../../../../../services/UserData';
-import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import {
+  MatAutocompleteModule,
+  MatAutocompleteSelectedEvent,
+} from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -140,7 +143,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
 
     this.editForm = this.fb.group({
       numeroDocumento: [
-        { value: '', disabled: true },
+        '', // Elimina el { value: '', disabled: true }
         [
           Validators.required,
           Validators.pattern('^[0-9]{8}$'),
@@ -445,7 +448,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
   private checkFormChanges() {
     const currentValues = this.editForm.value;
     const initialValues = {
-      numeroDocumento: this.studentData?.numeroDocumento || '',
+       numeroDocumento: this.studentData?.numeroDocumento || '',
       nombres: this.studentData?.nombres || '',
       apellidoPaterno: this.studentData?.apellidoPaterno || '',
       apellidoMaterno: this.studentData?.apellidoMaterno || '',
@@ -500,9 +503,8 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
       this.error = null;
 
       const formValues = this.editForm.value;
-
       const editData = {
-        numeroDocumento: this.initialNumeroDocumento,
+        numeroDocumento: formValues.numeroDocumento, // Usa el nuevo valor en lugar de this.initialNumeroDocumento
         nombres: formValues.nombres || '',
         apellidoPaterno: formValues.apellidoPaterno || '',
         apellidoMaterno: formValues.apellidoMaterno || '',

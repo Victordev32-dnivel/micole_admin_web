@@ -9,7 +9,7 @@
         <!-- DNI - OBLIGATORIO -->
         <mat-form-field appearance="outline">
           <mat-label>DNI *</mat-label>
-          <input matInput formControlName="numeroDocumento" placeholder="Ingrese DNI (8 dígitos)" readonly [maxlength]="8">
+          <input matInput formControlName="numeroDocumento" placeholder="Ingrese DNI (8 dígitos)" [maxlength]="8">
           <mat-error *ngIf="editForm.get('numeroDocumento')?.hasError('required')">
             El DNI es obligatorio.
           </mat-error>

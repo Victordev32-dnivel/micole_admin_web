@@ -41,7 +41,10 @@ import {
 } from '@angular/common/http';
 import { UserService } from '../../../../../services/UserData';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import {
+  MatAutocompleteModule,
+  MatAutocompleteSelectedEvent,
+} from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -71,8 +74,6 @@ interface Apoderado {
   id: number;
   nombre: string;
 }
-
-
 
 @Component({
   selector: 'app-student-add',
@@ -114,7 +115,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
   // Datos filtrados para mostrar en los selects
   filteredSalones: Salon[] = [];
   filteredApoderados: Apoderado[] = [];
-
+  hidePassword = true;
   // FormControls para la búsqueda
   salonSearchCtrl: FormControl = new FormControl('');
   apoderadoSearchCtrl: FormControl = new FormControl('');
@@ -133,9 +134,12 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
   apoderadoSuccess: string | null = null;
 
   private apiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno';
-  private salonesApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista';
-  private apoderadosApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/apoderado/colegio/lista';
-  private apoderadoCreateApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/apoderado';
+  private salonesApiUrl =
+    'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista';
+  private apoderadosApiUrl =
+    'https://proy-back-dnivel-44j5.onrender.com/api/apoderado/colegio/lista';
+  private apoderadoCreateApiUrl =
+    'https://proy-back-dnivel-44j5.onrender.com/api/apoderado';
   private staticToken = '732612882';
 
   @ViewChild('picker') datepicker: MatDatepicker<Date> | undefined;
@@ -161,31 +165,33 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
           Validators.maxLength(8),
         ],
       ],
-      nombres: [''],
-      apellidoPaterno: [''],
-      apellidoMaterno: [''],
-      genero: [''],
+      nombres: [''], // Opcional
+      apellidoPaterno: [''], // Opcional
+      apellidoMaterno: [''], // Opcional
+      genero: [''], // Opcional - sin valor por defecto
       telefono: [
         '',
         [
+          // Solo validar si se proporciona un valor
           Validators.pattern('^[0-9]{9}$'),
           Validators.minLength(9),
           Validators.maxLength(9),
         ],
       ],
-      fechaNacimiento: [''],
-      direccion: [''],
-      estado: ['Activo'],
-      idApoderado: [''],
-      idSalon: [''],
+      fechaNacimiento: [''], // Opcional
+      direccion: [''], // Opcional
+      estado: ['Activo'], // Valor por defecto
+      idApoderado: [''], // Opcional
+      idSalon: [''], // Opcional
       idColegio: [this.data?.colegioId || ''],
     });
-
     // Formulario para agregar apoderado
+    // En el constructor del componente, modificar el formulario de apoderado:
     this.apoderadoForm = this.fb.group({
-      nombre: ['', Validators.required],
-      apellido: ['', Validators.required],
-      dni: [
+      nombres: ['', Validators.required],
+      apellidoPaterno: ['', Validators.required],
+      apellidoMaterno: [''],
+      numeroDocumento: [
         '',
         [
           Validators.required,
@@ -194,14 +200,12 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
           Validators.maxLength(8),
         ],
       ],
-      telefono: [
-        '',
-        [
-          Validators.required,
-          Validators.pattern('^[0-9]{9}$'),
-        ],
-      ],
-      correo: ['', [Validators.required, Validators.email]],
+      genero: ['', Validators.required],
+      telefono: ['', [Validators.required, Validators.pattern('^[0-9]{9}$')]],
+      parentesco: ['', Validators.required],
+      // Nuevos campos
+      contrasena: ['', [Validators.required, Validators.minLength(6)]],
+      tipoUsuario: ['trabajador'], // Valor fijo
     });
   }
 
@@ -242,66 +246,70 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
 
   saveApoderado(): void {
     if (this.apoderadoForm.invalid) {
-      this.apoderadoError = 'Por favor, complete todos los campos correctamente.';
+      this.apoderadoError =
+        'Por favor, complete todos los campos correctamente.';
       return;
     }
 
     this.loadingApoderado = true;
     this.clearApoderadoMessages();
 
-    const colegioId = this.data?.colegioId || this.userService.getUserData()?.colegio;
+    const colegioId =
+      this.data?.colegioId || this.userService.getUserData()?.colegio;
     const apoderadoData = {
       ...this.apoderadoForm.value,
-      idColegio: colegioId
+      idColegio: colegioId,
+      tipoUsuario: 'trabajador', // Asegurarnos que siempre sea trabajador
     };
 
     const headers = this.getHeaders();
 
-    this.http.post<any>(this.apoderadoCreateApiUrl, apoderadoData, { headers }).subscribe({
-      next: (response) => {
-        this.apoderadoSuccess = 'Apoderado creado exitosamente!';
-        this.loadingApoderado = false;
-        
-        // Recargar la lista de apoderados
-        this.loadApoderados();
-        
-        // Seleccionar automáticamente el apoderado recién creado
-        setTimeout(() => {
-          if (response && response.id) {
-            this.addForm.patchValue({ idApoderado: response.id });
-            this.apoderadoSearchCtrl.setValue({
-              id: response.id,
-              nombre: `${apoderadoData.nombre} ${apoderadoData.apellido}`
-            });
-          }
-          
-          // Limpiar el formulario después de un breve delay
+    this.http
+      .post<any>(this.apoderadoCreateApiUrl, apoderadoData, { headers })
+      .subscribe({
+        next: (response) => {
+          this.apoderadoSuccess = 'Apoderado creado exitosamente!';
+          this.loadingApoderado = false;
+          this.loadApoderados();
+
           setTimeout(() => {
-            this.clearApoderadoForm();
-            this.showApoderadoForm = false;
-          }, 2000);
-        }, 500);
-      },
-      error: (error) => {
-        console.error('Error al crear apoderado:', error);
-        this.loadingApoderado = false;
-        
-        if (error.status === 400) {
-          const errorMessage = error.error?.message || error.error || 'Error desconocido';
-          if (errorMessage.includes('DNI ya existe') || errorMessage.includes('dni')) {
-            this.apoderadoError = 'El DNI ya está registrado. Por favor, use otro.';
-          } else if (errorMessage.includes('correo')) {
-            this.apoderadoError = 'El correo ya está registrado. Por favor, use otro.';
+            if (response && response.id) {
+              this.addForm.patchValue({ idApoderado: response.id });
+              this.apoderadoSearchCtrl.setValue({
+                id: response.id,
+                nombre: `${apoderadoData.nombres} ${apoderadoData.apellidoPaterno}`,
+              });
+            }
+            setTimeout(() => {
+              this.clearApoderadoForm();
+              this.showApoderadoForm = false;
+            }, 2000);
+          }, 500);
+        },
+        error: (error) => {
+          console.error('Error al crear apoderado:', error);
+          this.loadingApoderado = false;
+
+          if (error.status === 400) {
+            const errorMessage =
+              error.error?.message || error.error || 'Error desconocido';
+            if (
+              errorMessage.includes('DNI ya existe') ||
+              errorMessage.includes('dni')
+            ) {
+              this.apoderadoError =
+                'El DNI ya está registrado. Por favor, use otro.';
+            } else if (errorMessage.includes('contrasena')) {
+              this.apoderadoError =
+                'La contraseña debe tener al menos 6 caracteres.';
+            } else {
+              this.apoderadoError = 'Error al crear apoderado: ' + errorMessage;
+            }
           } else {
-            this.apoderadoError = 'Error al crear apoderado: ' + errorMessage;
+            this.apoderadoError = 'Error inesperado al crear el apoderado.';
           }
-        } else if (error.status === 401) {
-          this.apoderadoError = 'Token no válido. Inicia sesión nuevamente.';
-        } else {
-          this.apoderadoError = 'Error inesperado al crear el apoderado.';
-        }
-      },
-    });
+        },
+      });
   }
 
   private setupSearchFilters(): void {

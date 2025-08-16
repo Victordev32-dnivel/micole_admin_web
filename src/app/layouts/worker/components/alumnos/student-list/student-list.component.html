@@ -10,8 +10,7 @@
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
 
-    <!-- Filtro por salón -->
-    <!-- Filtro por salón -->
+    <!-- Filtro por salón con DEBUG -->
     <mat-form-field appearance="outline" class="salon-filter">
       <mat-label>Filtrar por Salón</mat-label>
       <mat-select
@@ -19,8 +18,15 @@
         (selectionChange)="onSalonFilterChange()"
       >
         <mat-option [value]="null">Todos los salones</mat-option>
-        <mat-option *ngFor="let salon of availableSalones" [value]="salon.id">
-          {{ salon.grado }} {{ salon.seccion }}
+        <mat-option
+          *ngFor="let salon of availableSalones; trackBy: trackBySalonId"
+          [value]="salon.id"
+        >
+          {{
+            salon.nombre ||
+              salon.grado + " " + salon.seccion ||
+              "Salón " + salon.id
+          }}
         </mat-option>
       </mat-select>
       <mat-icon matSuffix>class</mat-icon>
@@ -307,28 +313,5 @@
         {{ page }}
       </button>
     </div>
-  </div>
-
-  <!-- Información cuando se filtra por salón -->
-  <div class="salon-filter-info" *ngIf="selectedSalonId">
-    <div class="filter-summary">
-      <mat-icon>info</mat-icon>
-      <span
-        >Mostrando {{ filteredStudents.length }} estudiantes del
-        {{ getSelectedSalonName() }}</span
-      >
-      <span
-        *ngIf="searchTermControl.value && searchTermControl.value.trim() !== ''"
-        class="search-summary"
-      >
-        ({{ filteredStudents.length }} coinciden con "{{
-          searchTermControl.value
-        }}")
-      </span>
-    </div>
-    <p class="filter-note">
-      <mat-icon>lightbulb</mat-icon>
-      La paginación está deshabilitada cuando se filtra por salón específico.
-    </p>
   </div>
 </div>

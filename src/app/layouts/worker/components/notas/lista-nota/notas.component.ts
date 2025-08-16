@@ -22,15 +22,20 @@ import { CommonModule } from '@angular/common';
 import { UserData, UserService } from '../../../../../services/UserData';
 import { AddNotaComponent } from '../add-nota/add-notas.component';
 
-interface Nota {
-  id: number;
+// Nueva interface que coincide con el formato requerido del endpoint
+interface NotaResponse {
   nombre: string;
-  pdf: string;
-  idAlumno: number;
-  idColegio: number;
-  alumnoNombre?: string;
-  salonNombre?: string;
-  fechaCreacion?: string;
+  link: string;
+  id?: number; // Agregamos ID para poder eliminar y modificar
+}
+
+// Interface para uso interno
+interface Nota {
+  nombre: string;
+  link: string;
+  id: number; // ID es requerido para eliminar y modificar
+  idAlumno?: number;
+  idColegio?: number;
 }
 
 @Component({
@@ -58,13 +63,14 @@ export class NotasComponent implements OnInit {
   pageSize: number = 10;
   pageSizeOptions: number[] = [5, 10, 20];
 
-  // Columnas para la tabla de notas
-  displayedColumns: string[] = ['nombre', 'alumno', 'salon', 'fecha', 'acciones'];
+  // Columnas actualizadas para el nuevo formato
+  displayedColumns: string[] = ['nombre', 'acciones'];
+  editingNota: Nota | null = null;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
-     private http: HttpClient,
+    private http: HttpClient,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
     private userService: UserService,
@@ -109,15 +115,29 @@ export class NotasComponent implements OnInit {
     this.loadingNotas = true;
     this.error = null;
 
+    // Usando el colegioId dinámico en lugar de hardcodeado
     this.http
-      .get<any>(
-        `https://proy-back-dnivel-44j5.onrender.com/api/nota/colegio/1`,
+      .get<NotaResponse[]>(
+        `https://proy-back-dnivel-44j5.onrender.com/api/nota/colegio/${this.colegioId}`,
         { headers: this.getHeaders() }
       )
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-            this.notas = Array.isArray(response) ? response : [];
+            console.log('Respuesta del servidor:', response);
+            
+            // El endpoint ahora devuelve directamente el formato [{"nombre": "...", "link": "..."}]
+            if (Array.isArray(response)) {
+              this.notas = response.map((nota, index) => ({
+                nombre: nota.nombre,
+                link: nota.link,
+                id: nota.id || index + 1 // Si no hay ID, usar índice como fallback
+              }));
+            } else {
+              console.warn('La respuesta no es un array:', response);
+              this.notas = [];
+            }
+            
             this.totalNotas = this.notas.length;
             this.loadingNotas = false;
             this.cdr.detectChanges();
@@ -141,31 +161,153 @@ export class NotasComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result === 'success') {
+      if (result) {
         this.snackBar.open('Nota agregada correctamente', 'Cerrar', {
           duration: 3000,
         });
-        this.loadNotas();
-      } else if (result === 'error') {
-        this.snackBar.open('Error al agregar la nota', 'Cerrar', {
-          duration: 3000,
-        });
+        this.loadNotas(); // Recargar la lista después de agregar
       }
     });
   }
 
-  onViewPdf(pdfUrl: string): void {
-    if (!pdfUrl) {
-      this.snackBar.open('El PDF no está disponible', 'Cerrar', {
-        duration: 3000,
+  onViewPdf(linkUrl: string): void {
+    if (!linkUrl || linkUrl.trim() === '' || linkUrl === 'qwqw' || linkUrl === 'null' || linkUrl === 'undefined') {
+      this.snackBar.open('❌ El PDF no está disponible o no existe', 'Cerrar', {
+        duration: 4000,
+        panelClass: ['error-snackbar'],
+        verticalPosition: 'top',
+        horizontalPosition: 'center'
       });
       return;
     }
-    window.open(pdfUrl, '_blank');
+    
+    // Validar si la URL es válida
+    try {
+      new URL(linkUrl);
+    } catch (error) {
+      this.snackBar.open('❌ La URL del PDF no es válida', 'Cerrar', {
+        duration: 4000,
+        panelClass: ['error-snackbar'],
+        verticalPosition: 'top',
+        horizontalPosition: 'center'
+      });
+      return;
+    }
+    
+    console.log('Abriendo PDF:', linkUrl);
+    
+    // Intentar abrir el PDF y manejar errores
+    const newWindow = window.open(linkUrl, '_blank');
+    
+    if (!newWindow) {
+      this.snackBar.open('❌ No se pudo abrir el PDF. Verifique su bloqueador de ventanas emergentes', 'Cerrar', {
+        duration: 5000,
+        panelClass: ['error-snackbar'],
+        verticalPosition: 'top',
+        horizontalPosition: 'center'
+      });
+      return;
+    }
+    
+    // Verificar si el PDF se carga correctamente (después de un tiempo)
+    setTimeout(() => {
+      try {
+        if (newWindow.closed) {
+          // La ventana se cerró, posiblemente por error de carga
+          this.snackBar.open('⚠️ El PDF podría no estar disponible', 'Cerrar', {
+            duration: 3000,
+            panelClass: ['warning-snackbar']
+          });
+        }
+      } catch (error) {
+        // Error de acceso por CORS, pero esto es normal
+        console.log('PDF abierto correctamente');
+      }
+    }, 2000);
   }
 
+  // Método para editar/modificar nota
+  editNota(nota: Nota): void {
+    const nuevoNombre = prompt(`Editar nombre de la nota:\n(Actual: "${nota.nombre}")`, nota.nombre);
+    
+    if (nuevoNombre === null) {
+      // Usuario canceló
+      return;
+    }
+    
+    if (nuevoNombre.trim() === '') {
+      this.snackBar.open('❌ El nombre de la nota no puede estar vacío', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+    
+    if (nuevoNombre === nota.nombre) {
+      this.snackBar.open('ℹ️ No se realizaron cambios', 'Cerrar', {
+        duration: 2000
+      });
+      return;
+    }
+    
+    this.updateNota(nota.id, nuevoNombre.trim());
+  }
+
+  private updateNota(notaId: number, nuevoNombre: string): void {
+    const payload = {
+      nombre: nuevoNombre
+    };
+
+    this.http
+      .put(
+        `https://proy-back-dnivel-44j5.onrender.com/api/nota/${notaId}`,
+        payload,
+        { headers: this.getHeaders() }
+      )
+      .subscribe({
+        next: (response) => {
+          console.log('Nota actualizada exitosamente:', response);
+          this.snackBar.open('✅ Nota actualizada correctamente', 'Cerrar', {
+            duration: 3000,
+            panelClass: ['success-snackbar'],
+            verticalPosition: 'top',
+            horizontalPosition: 'center'
+          });
+          this.loadNotas(); // Recargar la lista
+        },
+        error: (error) => {
+          console.error('Error al actualizar nota:', error);
+          let errorMessage = 'Error al actualizar la nota';
+          
+          if (error.status === 404) {
+            errorMessage = 'La nota no fue encontrada';
+          } else if (error.status === 403) {
+            errorMessage = 'No tiene permisos para modificar esta nota';
+          } else if (error.error?.message) {
+            errorMessage = error.error.message;
+          }
+          
+          this.snackBar.open(`❌ ${errorMessage}`, 'Cerrar', {
+            duration: 4000,
+            panelClass: ['error-snackbar'],
+            verticalPosition: 'top',
+            horizontalPosition: 'center'
+          });
+        },
+      });
+  }
+
+  // Método para eliminar nota usando el endpoint proporcionado
   confirmDelete(nota: Nota): void {
-    const confirmacion = confirm(`¿Está seguro de eliminar la nota "${nota.nombre}"?`);
+    if (!nota.id) {
+      this.snackBar.open('❌ No se puede eliminar: ID de nota no disponible', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+
+    const confirmacion = confirm(`¿Está seguro de eliminar la nota "${nota.nombre}"?\n\nEsta acción no se puede deshacer.`);
     if (confirmacion) {
       this.deleteNota(nota.id);
     }
@@ -178,22 +320,39 @@ export class NotasComponent implements OnInit {
         { headers: this.getHeaders() }
       )
       .subscribe({
-        next: () => {
-          this.snackBar.open('Nota eliminada correctamente', 'Cerrar', {
+        next: (response) => {
+          console.log('Nota eliminada exitosamente:', response);
+          this.snackBar.open('✅ Nota eliminada correctamente', 'Cerrar', {
             duration: 3000,
+            panelClass: ['success-snackbar'],
+            verticalPosition: 'top',
+            horizontalPosition: 'center'
           });
-          this.loadNotas();
+          this.loadNotas(); // Recargar la lista
         },
         error: (error) => {
           console.error('Error al eliminar nota:', error);
-          this.snackBar.open('Error al eliminar la nota', 'Cerrar', {
-            duration: 3000,
+          let errorMessage = 'Error al eliminar la nota';
+          
+          if (error.status === 404) {
+            errorMessage = 'La nota no fue encontrada';
+          } else if (error.status === 403) {
+            errorMessage = 'No tiene permisos para eliminar esta nota';
+          } else if (error.error?.message) {
+            errorMessage = error.error.message;
+          }
+          
+          this.snackBar.open(`❌ ${errorMessage}`, 'Cerrar', {
+            duration: 4000,
+            panelClass: ['error-snackbar'],
+            verticalPosition: 'top',
+            horizontalPosition: 'center'
           });
         },
       });
   }
+
   toggleMenu() {
-    // Implementa esta función si necesitas controlar el menú lateral
     console.log('Toggle menu clicked');
   }
 
