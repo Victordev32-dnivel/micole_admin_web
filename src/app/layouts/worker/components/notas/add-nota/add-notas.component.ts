@@ -18,6 +18,7 @@ import {
   MatDialogRef,
   MatDialogModule,
 } from '@angular/material/dialog';
+import { environment } from '../../../../../environment/environment';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -26,10 +27,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import {
-  HttpClient,
-  HttpHeaders,
-} from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { UserService } from '../../../../../services/UserData';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { S3 } from 'aws-sdk';
@@ -92,10 +90,12 @@ export class AddNotaComponent implements OnInit {
     });
 
     this.s3 = new S3({
-      accessKeyId: 'AKIASYIUVPYK5L3ET47F',
-      secretAccessKey: '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',
+      accessKeyId: environment.awsAccessKeyId,
+      secretAccessKey: environment.awsSecretKey,
       region: 'us-east-1',
       signatureVersion: 'v4',
+      s3ForcePathStyle: true,
+      correctClockSkew: true,
     });
   }
 
@@ -110,6 +110,13 @@ export class AddNotaComponent implements OnInit {
       'Content-Type': 'application/json',
       Accept: 'application/json',
     });
+  }
+
+  removePdf(): void {
+    this.pdfFile = null;
+    this.pdfName = '';
+    this.uploadProgress = 0;
+    this.cdr.detectChanges();
   }
 
   loadSalones(): void {
@@ -149,6 +156,7 @@ export class AddNotaComponent implements OnInit {
   onSalonChange(): void {
     const salonId = this.noteForm.get('idSalon')?.value;
     if (salonId) {
+      console.log('🔄 Cambio de salón detectado, ID:', salonId);
       this.loadAlumnos(salonId);
       this.noteForm.get('idAlumno')?.reset();
     } else {
@@ -158,7 +166,34 @@ export class AddNotaComponent implements OnInit {
     }
   }
 
+  // Método para hacer una petición de prueba y ver la estructura de datos
+  async debugApiResponse(salonId: number): Promise<void> {
+    console.log('🐛 DEBUG: Haciendo petición de prueba...');
+    try {
+      const response = await this.http.get(`https://proy-back-dnivel-44j5.onrender.com/api/alumno/salon/${salonId}`, {
+        headers: this.getHeaders()
+      }).toPromise();
+      
+      console.log('🐛 DEBUG: Respuesta cruda:', response);
+      console.log('🐛 DEBUG: Tipo de respuesta:', typeof response);
+      console.log('🐛 DEBUG: Es array?', Array.isArray(response));
+      console.log('🐛 DEBUG: Keys de la respuesta:', Object.keys(response || {}));
+      
+      if (Array.isArray(response) && response.length > 0) {
+        console.log('🐛 DEBUG: Primer elemento del array:', response[0]);
+        console.log('🐛 DEBUG: Keys del primer elemento:', Object.keys(response[0]));
+      }
+    } catch (error) {
+      console.error('🐛 DEBUG: Error en petición de prueba:', error);
+    }
+  }
+
   loadAlumnos(salonId: number): void {
+    console.log('🔍 Cargando alumnos para salón ID:', salonId);
+    
+    // Hacer petición de debug primero
+    this.debugApiResponse(salonId);
+    
     this.loadingAlumnos = true;
     this.error = null;
     this.alumnos = [];
@@ -170,10 +205,52 @@ export class AddNotaComponent implements OnInit {
       )
       .subscribe({
         next: (response) => {
-          this.alumnos = response.map((item: any) => ({
-            id: item.idAlumno,
-            nombre: item.alumno || 'Alumno sin nombre',
-          }));
+          console.log('📋 Respuesta completa de alumnos:', JSON.stringify(response, null, 2));
+          
+          // Verificar diferentes estructuras de respuesta posibles
+          let alumnosData = [];
+          
+          if (Array.isArray(response)) {
+            alumnosData = response;
+            console.log('✅ Respuesta es array directo');
+          } else if (response.data && Array.isArray(response.data)) {
+            alumnosData = response.data;
+            console.log('✅ Respuesta tiene propiedad data');
+          } else if (response.alumnos && Array.isArray(response.alumnos)) {
+            alumnosData = response.alumnos;
+            console.log('✅ Respuesta tiene propiedad alumnos');
+          } else if (response.result && Array.isArray(response.result)) {
+            alumnosData = response.result;
+            console.log('✅ Respuesta tiene propiedad result');
+          } else {
+            console.warn('⚠️ Estructura de respuesta no reconocida:', response);
+            // Si no es array, intentar con el objeto completo
+            if (typeof response === 'object' && response !== null) {
+              alumnosData = [response];
+            }
+          }
+
+          console.log('📊 Datos de alumnos extraídos:', alumnosData);
+
+          // Mapear los alumnos usando la estructura correcta de tu API
+          this.alumnos = alumnosData.map((item: any, index: number) => {
+            console.log(`👤 Procesando alumno ${index}:`, JSON.stringify(item, null, 2));
+            
+            // Tu API usa 'id' para el identificador del alumno
+            const id = item.id;
+            
+            // Tu API usa 'nombre_completo' para el nombre del alumno
+            const nombre = item.nombre_completo || `Alumno ID: ${id}`;
+
+            console.log(`✅ Alumno procesado - ID: ${id}, Nombre: ${nombre}`);
+
+            return {
+              id: id,
+              nombre: nombre
+            };
+          });
+
+          console.log('🎯 Alumnos procesados finalmente:', this.alumnos);
 
           this.loadingAlumnos = false;
           if (this.alumnos.length === 0) {
@@ -182,7 +259,10 @@ export class AddNotaComponent implements OnInit {
           this.cdr.detectChanges();
         },
         error: (error) => {
-          console.error('Error al cargar alumnos:', error);
+          console.error('❌ Error al cargar alumnos:', error);
+          console.error('📍 URL utilizada:', `https://proy-back-dnivel-44j5.onrender.com/api/alumno/salon/${salonId}`);
+          console.error('🔧 Headers enviados:', this.getHeaders());
+          
           this.error = 'Error al cargar los alumnos. Intente de nuevo';
           this.loadingAlumnos = false;
           this.cdr.detectChanges();
@@ -194,8 +274,25 @@ export class AddNotaComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
+      
+      // Validar que sea un PDF
+      if (file.type !== 'application/pdf') {
+        this.error = 'Por favor selecciona solo archivos PDF';
+        this.cdr.detectChanges();
+        return;
+      }
+      
+      // Validar tamaño (máximo 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        this.error = 'El archivo PDF no debe exceder los 10MB';
+        this.cdr.detectChanges();
+        return;
+      }
+      
       this.pdfFile = file;
       this.pdfName = file.name;
+      this.error = null; // Limpiar errores previos
       this.cdr.detectChanges();
     }
   }
@@ -278,6 +375,8 @@ export class AddNotaComponent implements OnInit {
         Nombre: this.noteForm.get('nombre')?.value.trim(),
       };
 
+      console.log('📤 Enviando payload:', payload);
+
       await this.http
         .post('https://proy-back-dnivel-44j5.onrender.com/api/nota', payload, {
           headers: this.getHeaders(),
@@ -288,6 +387,7 @@ export class AddNotaComponent implements OnInit {
         duration: 5000,
         verticalPosition: 'top',
         horizontalPosition: 'center',
+        panelClass: ['success-snackbar']
       });
 
       this.dialogRef.close(payload);
