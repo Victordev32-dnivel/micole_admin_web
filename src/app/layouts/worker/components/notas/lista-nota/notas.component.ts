@@ -21,6 +21,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
 import { UserData, UserService } from '../../../../../services/UserData';
 import { AddNotaComponent } from '../add-nota/add-notas.component';
+import { EditNotasComponent } from '../edit-nota/edit-nota.component'; // Importar el componente de edición
 
 // Nueva interface que coincide con el formato requerido del endpoint
 interface NotaResponse {
@@ -226,34 +227,33 @@ export class NotasComponent implements OnInit {
     }, 2000);
   }
 
-  // Método para editar/modificar nota
+  // Método actualizado para editar/modificar nota usando el modal
   editNota(nota: Nota): void {
-    const nuevoNombre = prompt(`Editar nombre de la nota:\n(Actual: "${nota.nombre}")`, nota.nombre);
-    
-    if (nuevoNombre === null) {
-      // Usuario canceló
-      return;
-    }
-    
-    if (nuevoNombre.trim() === '') {
-      this.snackBar.open('❌ El nombre de la nota no puede estar vacío', 'Cerrar', {
-        duration: 3000,
-        panelClass: ['error-snackbar']
-      });
-      return;
-    }
-    
-    if (nuevoNombre === nota.nombre) {
-      this.snackBar.open('ℹ️ No se realizaron cambios', 'Cerrar', {
-        duration: 2000
-      });
-      return;
-    }
-    
-    this.updateNota(nota.id, nuevoNombre.trim());
+    const dialogRef = this.dialog.open(EditNotasComponent, {
+      width: '600px',
+      maxHeight: '90vh',
+      disableClose: true,
+      data: { 
+        nota: nota, // Pasar la nota completa al modal
+        colegioId: this.colegioId 
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.snackBar.open('✅ Nota actualizada correctamente', 'Cerrar', {
+          duration: 3000,
+          panelClass: ['success-snackbar'],
+          verticalPosition: 'top',
+          horizontalPosition: 'center'
+        });
+        this.loadNotas(); // Recargar la lista después de editar
+      }
+    });
   }
 
-  private updateNota(notaId: number, nuevoNombre: string): void {
+  // Método auxiliar para actualizar nota (ahora se usará desde el modal)
+  updateNota(notaId: number, nuevoNombre: string): void {
     const payload = {
       nombre: nuevoNombre
     };
@@ -267,12 +267,6 @@ export class NotasComponent implements OnInit {
       .subscribe({
         next: (response) => {
           console.log('Nota actualizada exitosamente:', response);
-          this.snackBar.open('✅ Nota actualizada correctamente', 'Cerrar', {
-            duration: 3000,
-            panelClass: ['success-snackbar'],
-            verticalPosition: 'top',
-            horizontalPosition: 'center'
-          });
           this.loadNotas(); // Recargar la lista
         },
         error: (error) => {
@@ -287,12 +281,7 @@ export class NotasComponent implements OnInit {
             errorMessage = error.error.message;
           }
           
-          this.snackBar.open(`❌ ${errorMessage}`, 'Cerrar', {
-            duration: 4000,
-            panelClass: ['error-snackbar'],
-            verticalPosition: 'top',
-            horizontalPosition: 'center'
-          });
+          throw new Error(errorMessage);
         },
       });
   }

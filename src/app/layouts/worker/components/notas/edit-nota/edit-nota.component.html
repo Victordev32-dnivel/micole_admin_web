@@ -1,0 +1,28 @@
+<h2 mat-dialog-title>Editar Nota</h2>
+<mat-dialog-content>
+  <form [formGroup]="editForm" class="edit-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nombre de la nota</mat-label>
+      <input matInput formControlName="nombre" required>
+      <mat-error *ngIf="editForm.get('nombre')?.hasError('required')">
+        El nombre es obligatorio
+      </mat-error>
+      <mat-error *ngIf="editForm.get('nombre')?.hasError('maxlength')">
+        El nombre no puede exceder los 200 caracteres
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Puedes agregar más campos aquí si es necesario -->
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancelar</button>
+  <button mat-raised-button 
+          color="primary" 
+          (click)="onSave()"
+          [disabled]="editForm.invalid || loading">
+    <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+    <span *ngIf="!loading">Guardar Cambios</span>
+  </button>
+</mat-dialog-actions>

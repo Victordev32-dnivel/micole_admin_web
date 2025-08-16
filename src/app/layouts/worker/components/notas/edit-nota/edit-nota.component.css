@@ -1,0 +1,13 @@
+.edit-form {
+  min-width: 400px;
+  padding: 16px;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+mat-spinner {
+  margin-right: 8px;
+}
