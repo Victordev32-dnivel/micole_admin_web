@@ -60,10 +60,8 @@
                 </button>
               </div>
 
-             
-                <mat-icon>add</mat-icon>
-                <span class="button-text">Agregar Comunicado</span>
-             
+              <mat-icon>add</mat-icon>
+              <span class="button-text">Agregar Comunicado</span>
             </div>
           </div>
         </mat-card-header>
@@ -75,8 +73,51 @@
             <span>Mostrando: {{ tipoVista === 'general' ? 'Anuncios Generales' : 'Anuncios por Salón' }}</span>
           </div>
 
+          <!-- Selector de salones (solo visible cuando se selecciona vista por salón) -->
+          <div *ngIf="tipoVista === 'salon'" class="salon-selector-container" style="margin: 20px 0;">
+            <mat-form-field appearance="outline" style="width: 100%; max-width: 400px;">
+              <mat-label>
+                <mat-icon style="vertical-align: middle; margin-right: 8px;">school</mat-icon>
+                Seleccionar Salón
+              </mat-label>
+              <mat-select 
+                [(value)]="salonSeleccionado" 
+                (selectionChange)="onSalonSeleccionado($event.value)"
+                [disabled]="loadingSalones">
+                
+                <mat-option *ngFor="let salon of salones" [value]="salon.id">
+                  {{ salon.nombre }}
+                </mat-option>
+              </mat-select>
+              
+              <mat-hint *ngIf="loadingSalones">
+                <mat-spinner diameter="16" style="display: inline-block; margin-right: 8px; vertical-align: middle;"></mat-spinner>
+                Cargando salones...
+              </mat-hint>
+              
+              <mat-hint *ngIf="!loadingSalones && salones.length === 0">
+                No hay salones disponibles
+              </mat-hint>
+              
+              <mat-hint *ngIf="!loadingSalones && salones.length > 0 && !salonSeleccionado">
+                Selecciona un salón para ver sus anuncios
+              </mat-hint>
+            </mat-form-field>
+          </div>
+
+          <!-- Mensaje cuando no hay salón seleccionado en vista por salón -->
+          <div *ngIf="tipoVista === 'salon' && !salonSeleccionado && !loadingSalones" class="no-selection-message">
+            <div class="empty-state mat-elevation-z2">
+              <mat-icon class="empty-icon">school</mat-icon>
+              <h3>Selecciona un salón</h3>
+              <p>
+                Selecciona un salón de la lista desplegable para ver sus anuncios específicos.
+              </p>
+            </div>
+          </div>
+
           <!-- Tabla de comunicados -->
-          <div class="table-container" *ngIf="comunicados.length > 0">
+          <div class="table-container" *ngIf="comunicados.length > 0 && (tipoVista === 'general' || (tipoVista === 'salon' && salonSeleccionado))">
             <table
               mat-table
               [dataSource]="comunicados"
@@ -94,11 +135,28 @@
                 <td mat-cell *matCellDef="let comunicado">{{ comunicado.horario }}</td>
               </ng-container>
 
-              <!-- Columna Salón (solo para anuncios por salón) -->
+              <!-- Columna URL (solo para anuncios generales) -->
+              <ng-container matColumnDef="url" *ngIf="tipoVista === 'general'">
+                <th mat-header-cell *matHeaderCellDef>Enlace</th>
+                <td mat-cell *matCellDef="let comunicado">
+                  <div class="url-info" *ngIf="comunicado.url">
+                    <mat-icon style="vertical-align: middle; margin-right: 4px; font-size: 16px;">link</mat-icon>
+                    <a [href]="comunicado.url" target="_blank" rel="noopener noreferrer" 
+                       class="url-link" 
+                       matTooltip="Abrir enlace en nueva pestaña">
+                      Ver enlace
+                    </a>
+                  </div>
+                  <span *ngIf="!comunicado.url" class="no-url">Sin enlace</span>
+                </td>
+              </ng-container>
               <ng-container matColumnDef="salon" *ngIf="tipoVista === 'salon'">
                 <th mat-header-cell *matHeaderCellDef>Salón</th>
                 <td mat-cell *matCellDef="let comunicado">
-                  {{ comunicado.salon?.nombre || 'N/A' }}
+                  <div class="salon-info">
+                    <mat-icon style="vertical-align: middle; margin-right: 4px; font-size: 16px;">class</mat-icon>
+                    {{ comunicado.salon?.nombre || 'N/A' }}
+                  </div>
                 </td>
               </ng-container>
 
@@ -107,19 +165,7 @@
                 <th mat-header-cell *matHeaderCellDef>Acciones</th>
                 <td mat-cell *matCellDef="let comunicado">
                   <div class="actions-group">
-                    <!-- Botón para ver PDF/Imagen -->
-                    <button
-                      *ngIf="tipoVista === 'salon' && comunicado.pdf"
-                      mat-raised-button
-                      color="primary"
-                      (click)="onViewContent(comunicado.pdf, 'pdf')"
-                      matTooltip="Ver PDF"
-                      class="action-button"
-                    >
-                      <mat-icon>picture_as_pdf</mat-icon>
-                      <span class="action-label">Ver PDF</span>
-                    </button>
-
+                    <!-- Botón para ver imagen (anuncios generales) -->
                     <button
                       *ngIf="tipoVista === 'general' && comunicado.imagen"
                       mat-raised-button
@@ -130,6 +176,32 @@
                     >
                       <mat-icon>image</mat-icon>
                       <span class="action-label">Ver Imagen</span>
+                    </button>
+
+                    <!-- Botón para abrir URL (anuncios generales) -->
+                    <button
+                      *ngIf="tipoVista === 'general' && comunicado.url"
+                      mat-raised-button
+                      color="accent"
+                      (click)="openUrl(comunicado.url)"
+                      matTooltip="Abrir enlace"
+                      class="action-button"
+                    >
+                      <mat-icon>open_in_new</mat-icon>
+                      <span class="action-label">Abrir</span>
+                    </button>
+
+                    <!-- Botón para ver PDF (anuncios por salón) -->
+                    <button
+                      *ngIf="tipoVista === 'salon' && comunicado.pdf"
+                      mat-raised-button
+                      color="primary"
+                      (click)="onViewContent(comunicado.pdf, 'pdf')"
+                      matTooltip="Ver PDF"
+                      class="action-button"
+                    >
+                      <mat-icon>picture_as_pdf</mat-icon>
+                      <span class="action-label">Ver PDF</span>
                     </button>
                     
                     <button
@@ -169,26 +241,18 @@
           </div>
 
           <!-- Vista de cards como alternativa a la tabla -->
-          <div class="cards-container" *ngIf="comunicados.length > 0" style="display: none;">
+          <div class="cards-container" *ngIf="comunicados.length > 0 && (tipoVista === 'general' || (tipoVista === 'salon' && salonSeleccionado))" style="display: none;">
             <mat-card *ngFor="let comunicado of comunicados" class="comunicado-card">
               <mat-card-header>
                 <mat-card-title>{{ comunicado.nombre }}</mat-card-title>
                 <mat-card-subtitle>{{ comunicado.horario }}</mat-card-subtitle>
                 <mat-card-subtitle *ngIf="tipoVista === 'salon'">
+                  <mat-icon style="vertical-align: middle; margin-right: 4px; font-size: 16px;">class</mat-icon>
                   Salón: {{ comunicado.salon?.nombre || 'N/A' }}
                 </mat-card-subtitle>
               </mat-card-header>
               
               <mat-card-actions>
-                <button 
-                        *ngIf="tipoVista === 'salon' && comunicado.pdf"
-                        mat-raised-button 
-                        color="primary" 
-                        (click)="onViewContent(comunicado.pdf, 'pdf')">
-                  <mat-icon>picture_as_pdf</mat-icon>
-                  <span class="action-label">Ver PDF</span>
-                </button>
-                
                 <button 
                         *ngIf="tipoVista === 'general' && comunicado.imagen"
                         mat-raised-button 
@@ -196,6 +260,24 @@
                         (click)="onViewContent(comunicado.imagen, 'imagen')">
                   <mat-icon>image</mat-icon>
                   <span class="action-label">Ver Imagen</span>
+                </button>
+
+                <button 
+                        *ngIf="tipoVista === 'general' && comunicado.url"
+                        mat-raised-button 
+                        color="accent" 
+                        (click)="openUrl(comunicado.url)">
+                  <mat-icon>open_in_new</mat-icon>
+                  <span class="action-label">Abrir Enlace</span>
+                </button>
+                
+                <button 
+                        *ngIf="tipoVista === 'salon' && comunicado.pdf"
+                        mat-raised-button 
+                        color="primary" 
+                        (click)="onViewContent(comunicado.pdf, 'pdf')">
+                  <mat-icon>picture_as_pdf</mat-icon>
+                  <span class="action-label">Ver PDF</span>
                 </button>
                 
                 <button mat-icon-button 
@@ -214,15 +296,18 @@
             </mat-card>
           </div>
 
-          <!-- Mensaje cuando no hay comunicados -->
-          <div *ngIf="comunicados.length === 0" class="empty-state mat-elevation-z2">
+          <!-- Mensaje cuando no hay comunicados (pero hay selección válida) -->
+          <div *ngIf="comunicados.length === 0 && (tipoVista === 'general' || (tipoVista === 'salon' && salonSeleccionado)) && !loadingComunicados" class="empty-state mat-elevation-z2">
             <mat-icon class="empty-icon">{{ tipoVista === 'general' ? 'public' : 'meeting_room' }}</mat-icon>
-            <h3>No hay {{ tipoVista === 'general' ? 'anuncios generales' : 'anuncios por salón' }} disponibles</h3>
-            <p>
-              Comienza agregando tu primer comunicado haciendo clic en "Agregar Comunicado"
+            <h3>No hay {{ tipoVista === 'general' ? 'anuncios generales' : 'anuncios' }} disponibles</h3>
+            <p *ngIf="tipoVista === 'general'">
+              Comienza agregando tu primer anuncio general haciendo clic en "Agregar Comunicado"
             </p>
-          
+            <p *ngIf="tipoVista === 'salon'">
+              Este salón no tiene anuncios publicados aún. Puedes agregar el primer anuncio haciendo clic en "Agregar Comunicado"
+            </p>
           </div>
+
         </mat-card-content>
       </mat-card>
     </div>
