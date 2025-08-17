@@ -166,16 +166,22 @@ export class AsistenciasComponent implements OnInit {
     this.asistencias = [];
     this.asistenciaForm.get('idAlumno')?.reset();
     const headers = this.getHeaders();
+    
+    console.log(`Cargando alumnos para salon ID: ${salonId}`); // Debug log
+    
     this.http
       .get<any>(`${this.alumnoApiUrl}/${salonId}`, { headers })
       .subscribe({
         next: (response) => {
+          console.log('Respuesta de alumnos:', response); // Debug log
           this.ngZone.run(() => {
-            this.alumnos = response || [];
+            // CORRECCIÓN: La API devuelve un array directo, no un objeto con propiedad data
+            this.alumnos = Array.isArray(response) ? response : [];
             this.loading = false;
             if (this.alumnos.length === 0) {
               this.error = 'No se encontraron alumnos en este salón';
             }
+            console.log('Alumnos cargados:', this.alumnos); // Debug log
             this.cdr.detectChanges();
           });
         },
@@ -211,7 +217,7 @@ export class AsistenciasComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-            this.asistencias = response || [];
+            this.asistencias = Array.isArray(response) ? response : [];
             this.loading = false;
             if (this.asistencias.length === 0) {
               this.error = 'No se encontraron asistencias para este alumno';
