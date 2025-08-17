@@ -1,0 +1,176 @@
+<div class="lista-general-container">
+  <!-- Toolbar superior -->
+  <div class="toolbar">
+    <div class="segmented">
+      <button
+        class="seg"
+        [class.active]="tipoSeleccionado.value === 'niveles'"
+        (click)="tipoSeleccionado.setValue('niveles')"
+        aria-pressed="{{ tipoSeleccionado.value === 'niveles' }}"
+      >
+        <mat-icon>layers</mat-icon>
+        <span>Niveles</span>
+      </button>
+
+      <button
+        class="seg"
+        [class.active]="tipoSeleccionado.value === 'secciones'"
+        (click)="tipoSeleccionado.setValue('secciones')"
+        aria-pressed="{{ tipoSeleccionado.value === 'secciones' }}"
+      >
+        <mat-icon>view_agenda</mat-icon>
+        <span>Secciones</span>
+      </button>
+
+      <button
+        class="seg"
+        [class.active]="tipoSeleccionado.value === 'salones'"
+        (click)="tipoSeleccionado.setValue('salones')"
+        aria-pressed="{{ tipoSeleccionado.value === 'salones' }}"
+      >
+        <mat-icon>meeting_room</mat-icon>
+        <span>Salones</span>
+      </button>
+    </div>
+
+    <div class="right-info">
+      <span *ngIf="!loading">Total: <strong>{{ totalResults }}</strong></span>
+    </div>
+  </div>
+
+  <!-- Contenedor de tabla/lista -->
+  <div class="tabla-container">
+    <!-- Header de columnas (niveles / secciones) -->
+    <div class="table-header" *ngIf="tipoSeleccionado.value !== 'salones'">
+      <span data-label="ID">ID</span>
+      <span data-label="NOMBRE">NOMBRE</span>
+      <span data-label="ACCIONES" class="acciones">ACCIONES</span>
+    </div>
+
+    <!-- Header de columnas (salones) -->
+    <div class="table-header salones" *ngIf="tipoSeleccionado.value === 'salones'">
+      <span data-label="ID">ID</span>
+      <span data-label="NOMBRE">NOMBRE</span>
+      <span data-label="HORARIO">HORARIO</span>
+      <span data-label="TIPO">TIPO</span>
+      <span data-label="ACCIONES" class="acciones">ACCIONES</span>
+    </div>
+
+    <!-- Cargando -->
+    <div *ngIf="loading" class="loading-container">
+      <div class="loading">Cargando datos <span class="spinner"></span></div>
+    </div>
+
+    <!-- Cuerpo -->
+    <div class="table-body" *ngIf="!loading && !error">
+      <div
+        class="row"
+        *ngFor="let item of filteredData"
+        [ngClass]="{'row-salones': tipoSeleccionado.value === 'salones'}"
+      >
+        <!-- Niveles / Secciones -->
+        <ng-container *ngIf="tipoSeleccionado.value !== 'salones'; else salonesRow">
+          <span class="cell" data-label="ID">{{ item.id }}</span>
+          <span class="cell" data-label="NOMBRE">{{ item.nombre }}</span>
+          <span class="cell acciones" data-label="ACCIONES">
+            <mat-icon class="action edit" title="Editar">edit</mat-icon>
+            <mat-icon class="action delete" title="Eliminar">delete</mat-icon>
+            <mat-icon class="action view" title="Ver">visibility</mat-icon>
+          </span>
+        </ng-container>
+
+        <!-- Salones -->
+        <ng-template #salonesRow>
+          <span class="cell" data-label="ID">{{ item.id }}</span>
+          <span class="cell" data-label="NOMBRE">{{ item.nombre }}</span>
+          <span class="cell" data-label="HORARIO">{{ item.horario || '-' }}</span>
+          <span class="cell" data-label="TIPO">{{ item.tipo || '-' }}</span>
+          <span class="cell acciones" data-label="ACCIONES">
+            <mat-icon class="action edit" title="Editar">edit</mat-icon>
+            <mat-icon class="action delete" title="Eliminar">delete</mat-icon>
+            <mat-icon class="action view" title="Ver">visibility</mat-icon>
+          </span>
+        </ng-template>
+      </div>
+
+      <!-- Vacío -->
+      <div *ngIf="filteredData.length === 0" class="empty">
+        No hay elementos para mostrar
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error" class="error-message">{{ error }}</div>
+  </div>
+
+  <!-- FILTROS INFERIORES (solo SALONES) -->
+  <div *ngIf="tipoSeleccionado.value === 'salones' && !loading" class="salones-filters-bottom">
+    <div class="salones-filters-row">
+      <!-- Buscador de salones -->
+      <mat-form-field appearance="outline" class="salon-search" style="flex: 1; min-width: 220px; padding-top: 20px;">
+        <mat-label>Buscar salón</mat-label>
+        <input
+          matInput
+          [(ngModel)]="searchTerm"
+          (input)="applyFilters()"
+          placeholder="Escribe el nombre del salón..."
+          aria-label="Buscar salón"
+        />
+        <button mat-icon-button matSuffix aria-label="Limpiar búsqueda" (click)="searchTerm=''; applyFilters()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <!-- Selector tipo de horario -->
+      <mat-form-field appearance="outline" class="salon-horario" style="width: 220px; margin-left: 12px;">
+        <mat-label>Tipo de horario</mat-label>
+        <mat-select [(ngModel)]="tipoHorario" (selectionChange)="applyFilters()">
+          <mat-option value="">Todos</mat-option>
+          <mat-option value="entrada">Entrada</mat-option>
+          <mat-option value="salida">Salida</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Resumen / botones -->
+      <div class="salon-actions" style="display:flex; align-items:center; gap:12px; margin-left:12px;">
+        <div class="salon-stats" style="color:#37474f;">
+          <small><strong>{{ filteredData.length }}</strong> resultados</small>
+        </div>
+        <!-- Botón para reset rápido (inline, no requiere TS extra) -->
+        <button mat-stroked-button color="primary" (click)="searchTerm=''; tipoHorario=''; applyFilters()">
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer: paginación y pageSize (solo Salones) -->
+  <div class="footer">
+    <div class="pagination" *ngIf="!loading && totalPages > 1">
+      <button class="page-btn" [disabled]="currentPage === 1" (click)="changePage(1)">«</button>
+      <button class="page-btn" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">‹</button>
+      <button
+        class="page-btn"
+        *ngFor="let p of pages"
+        [class.active]="p === currentPage"
+        (click)="changePage(p)"
+      >
+        {{ p }}
+      </button>
+      <button class="page-btn" [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">›</button>
+      <button class="page-btn" [disabled]="currentPage === totalPages" (click)="changePage(totalPages)">»</button>
+    </div>
+
+    <div class="page-size" *ngIf="tipoSeleccionado.value === 'salones'">
+      <label for="pageSize">Resultados por página</label>
+      <input
+        id="pageSize"
+        type="number"
+        min="5"
+        max="100"
+        [(ngModel)]="pageSize"
+        (change)="onPageSizeChange()"
+      />
+    </div>
+  </div>
+</div>

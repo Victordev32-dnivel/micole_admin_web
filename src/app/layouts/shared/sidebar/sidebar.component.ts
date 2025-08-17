@@ -89,11 +89,7 @@ export class SidebarComponent implements OnInit {
   ];
   workerItems = [
     { path: '/worker/alumnos', label: 'Alumnos', icon: 'fas fa-users' },
-    {
-      path: '/worker/notas',
-      label: 'Notas',
-      icon: 'fas fa-file-alt',
-    },
+    { path: '/worker/notas', label: 'Notas', icon: 'fas fa-file-alt' },
     {
       path: '/worker/asistencias',
       label: 'Asistencias',
@@ -110,6 +106,7 @@ export class SidebarComponent implements OnInit {
       icon: 'fas fa-user-friends',
     },
     { path: '/worker/tarjetas', label: 'Tarjetas', icon: 'fas fa-id-card' },
+    { path: '/worker/salones', label: 'Salones', icon: 'fas fa-chalkboard' },
   ];
 
   constructor(
