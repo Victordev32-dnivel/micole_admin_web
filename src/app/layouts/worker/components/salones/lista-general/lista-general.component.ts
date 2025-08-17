@@ -1,12 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  FormsModule,
-  ReactiveFormsModule,
-  FormControl,
-  FormBuilder,
-  FormGroup,
-} from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -14,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { UserService } from '../../../../../services/UserData';
 import { FuncionAgregarComponent } from '../funcion-agregar/funcion-agregar.component';
+import { FuncionEditarComponent } from '../funcion-editar/funcion-editar.component';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatOptionModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
@@ -38,15 +33,10 @@ import { MatInputModule } from '@angular/material/input';
   styleUrls: ['./lista-general.component.css'],
 })
 export class ListaGeneralComponent implements OnInit {
-  // selector principal
   tipoSeleccionado = new FormControl<'niveles' | 'secciones' | 'salones'>(
     'niveles',
     { nonNullable: true }
   );
-
-  // formulario para filtro de horario
-  horarioForm: FormGroup;
-
   colegiosId: number = 0;
   data: any[] = [];
   filteredData: any[] = [];
@@ -59,7 +49,7 @@ export class ListaGeneralComponent implements OnInit {
   totalResults = 0;
   pages: number[] = [];
   searchTerm = '';
-  tipoHorario: '' | 'mañana' | 'tarde' | 'noche' = '';
+  tipoHorario: '' | 'entrada' | 'salida' = '';
 
   private apiBase = 'https://proy-back-dnivel-44j5.onrender.com/api';
 
@@ -67,13 +57,8 @@ export class ListaGeneralComponent implements OnInit {
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
     private userService: UserService,
-    private dialog: MatDialog,
-    private fb: FormBuilder
-  ) {
-    this.horarioForm = this.fb.group({
-      tipoHorario: [''], // valor inicial vacío
-    });
-  }
+    private dialog: MatDialog
+  ) {}
 
   ngOnInit() {
     const userData = this.userService.getUserData();
@@ -86,20 +71,11 @@ export class ListaGeneralComponent implements OnInit {
     }
 
     this.loadData();
-
-    // escucha de cambios en el tab
     this.tipoSeleccionado.valueChanges.subscribe(() => {
       this.currentPage = 1;
       this.searchTerm = '';
       this.tipoHorario = '';
-      this.horarioForm.reset();
       this.loadData();
-    });
-
-    // escucha de cambios en el select de horario
-    this.horarioForm.get('tipoHorario')?.valueChanges.subscribe((value) => {
-      this.tipoHorario = value || '';
-      this.applyFilters();
     });
   }
 
@@ -199,6 +175,23 @@ export class ListaGeneralComponent implements OnInit {
       maxWidth: '95vw',
       panelClass: 'custom-dialog',
       data: { tipo, idColegio: this.colegiosId },
+      disableClose: true,
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result && result.success) {
+        this.currentPage = 1;
+        this.loadData();
+      }
+    });
+  }
+
+  abrirModalEditar(id: number, tipo: string) {
+    const dialogRef = this.dialog.open(FuncionEditarComponent, {
+      width: tipo === 'salones' ? '820px' : '520px',
+      maxWidth: '95vw',
+      panelClass: 'custom-dialog',
+      data: { tipo, id, idColegio: this.colegiosId },
       disableClose: true,
     });
 

@@ -67,7 +67,7 @@
           <span class="cell">{{ item.id }}</span>
           <span class="cell">{{ item.nombre }}</span>
           <span class="cell acciones">
-            <mat-icon class="action edit" title="Editar">edit</mat-icon>
+            <mat-icon class="action edit" title="Editar" (click)="abrirModalEditar(item.id, tipoSeleccionado.value)">edit</mat-icon>
             <mat-icon class="action delete" title="Eliminar">delete</mat-icon>
             <mat-icon class="action view" title="Ver">visibility</mat-icon>
           </span>
@@ -78,7 +78,7 @@
           <span class="cell">{{ item.horario || '-' }}</span>
           <span class="cell">{{ item.tipo || '-' }}</span>
           <span class="cell acciones">
-            <mat-icon class="action edit" title="Editar">edit</mat-icon>
+            <mat-icon class="action edit" title="Editar" (click)="abrirModalEditar(item.id, tipoSeleccionado.value)">edit</mat-icon>
             <mat-icon class="action delete" title="Eliminar">delete</mat-icon>
             <mat-icon class="action view" title="Ver">visibility</mat-icon>
           </span>
