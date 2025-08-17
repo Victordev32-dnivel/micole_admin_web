@@ -18,7 +18,6 @@ import {
   MatDialogRef,
   MatDialogModule,
 } from '@angular/material/dialog';
-import { environment } from '../../../../../environment/environment';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -32,6 +31,7 @@ import { UserService } from '../../../../../services/UserData';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { S3 } from 'aws-sdk';
 import { Buffer } from 'buffer';
+import { environment } from '../../../../../environments/environment';
 
 if (typeof Buffer === 'undefined') {
   (window as any).Buffer = Buffer;
@@ -173,12 +173,12 @@ export class AddNotaComponent implements OnInit {
       const response = await this.http.get(`https://proy-back-dnivel-44j5.onrender.com/api/alumno/salon/${salonId}`, {
         headers: this.getHeaders()
       }).toPromise();
-      
+
       console.log('🐛 DEBUG: Respuesta cruda:', response);
       console.log('🐛 DEBUG: Tipo de respuesta:', typeof response);
       console.log('🐛 DEBUG: Es array?', Array.isArray(response));
       console.log('🐛 DEBUG: Keys de la respuesta:', Object.keys(response || {}));
-      
+
       if (Array.isArray(response) && response.length > 0) {
         console.log('🐛 DEBUG: Primer elemento del array:', response[0]);
         console.log('🐛 DEBUG: Keys del primer elemento:', Object.keys(response[0]));
@@ -190,10 +190,10 @@ export class AddNotaComponent implements OnInit {
 
   loadAlumnos(salonId: number): void {
     console.log('🔍 Cargando alumnos para salón ID:', salonId);
-    
+
     // Hacer petición de debug primero
     this.debugApiResponse(salonId);
-    
+
     this.loadingAlumnos = true;
     this.error = null;
     this.alumnos = [];
@@ -206,10 +206,10 @@ export class AddNotaComponent implements OnInit {
       .subscribe({
         next: (response) => {
           console.log('📋 Respuesta completa de alumnos:', JSON.stringify(response, null, 2));
-          
+
           // Verificar diferentes estructuras de respuesta posibles
           let alumnosData = [];
-          
+
           if (Array.isArray(response)) {
             alumnosData = response;
             console.log('✅ Respuesta es array directo');
@@ -235,10 +235,10 @@ export class AddNotaComponent implements OnInit {
           // Mapear los alumnos usando la estructura correcta de tu API
           this.alumnos = alumnosData.map((item: any, index: number) => {
             console.log(`👤 Procesando alumno ${index}:`, JSON.stringify(item, null, 2));
-            
+
             // Tu API usa 'id' para el identificador del alumno
             const id = item.id;
-            
+
             // Tu API usa 'nombre_completo' para el nombre del alumno
             const nombre = item.nombre_completo || `Alumno ID: ${id}`;
 
@@ -262,7 +262,7 @@ export class AddNotaComponent implements OnInit {
           console.error('❌ Error al cargar alumnos:', error);
           console.error('📍 URL utilizada:', `https://proy-back-dnivel-44j5.onrender.com/api/alumno/salon/${salonId}`);
           console.error('🔧 Headers enviados:', this.getHeaders());
-          
+
           this.error = 'Error al cargar los alumnos. Intente de nuevo';
           this.loadingAlumnos = false;
           this.cdr.detectChanges();
@@ -274,14 +274,14 @@ export class AddNotaComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      
+
       // Validar que sea un PDF
       if (file.type !== 'application/pdf') {
         this.error = 'Por favor selecciona solo archivos PDF';
         this.cdr.detectChanges();
         return;
       }
-      
+
       // Validar tamaño (máximo 10MB)
       const maxSize = 10 * 1024 * 1024; // 10MB
       if (file.size > maxSize) {
@@ -289,7 +289,7 @@ export class AddNotaComponent implements OnInit {
         this.cdr.detectChanges();
         return;
       }
-      
+
       this.pdfFile = file;
       this.pdfName = file.name;
       this.error = null; // Limpiar errores previos
