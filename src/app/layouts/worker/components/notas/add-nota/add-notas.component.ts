@@ -31,7 +31,7 @@ import { UserService } from '../../../../../services/UserData';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { S3 } from 'aws-sdk';
 import { Buffer } from 'buffer';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../../environment/environment';
 
 if (typeof Buffer === 'undefined') {
   (window as any).Buffer = Buffer;

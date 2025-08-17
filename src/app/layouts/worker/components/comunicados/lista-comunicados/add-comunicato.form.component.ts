@@ -21,7 +21,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { UserService } from '../../../../../services/UserData';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../../environment/environment';
 import { S3 } from 'aws-sdk';
 import { Buffer } from 'buffer';
 
@@ -351,13 +351,19 @@ export class ModalAnuncioGeneralComponent implements OnInit {
   }
 
   private getHeaders(): HttpHeaders {
-    const jwtToken = this.userService.getJwtToken() || '732612882';
-    return new HttpHeaders({
-      Authorization: `Bearer ${jwtToken}`,
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    });
+  const jwtToken = this.userService.getJwtToken();
+  if (!jwtToken) {
+    console.error('No se encontró token JWT');
+    this.error = 'No estás autenticado. Por favor inicia sesión nuevamente.';
+    throw new Error('No JWT token available');
   }
+  
+  return new HttpHeaders({
+    'Authorization': `Bearer ${jwtToken}`,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  });
+}
 
   triggerImageInput(): void {
     this.imageInput.nativeElement.click();
@@ -442,36 +448,61 @@ export class ModalAnuncioGeneralComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.generalForm.valid) {
-      this.loading = true;
-      this.error = null;
+  if (this.generalForm.valid) {
+    this.loading = true;
+    this.error = null;
 
-      const formData = {
-        titulo: this.generalForm.get('titulo')?.value.trim(),
-        horario: this.generalForm.get('horario')?.value.trim(),
-        url: this.generalForm.get('url')?.value.trim() || '',
-        imagen: this.generalForm.get('imagen')?.value || null,
-        idColegio: this.colegioId,
-      };
-
-      this.http
-        .post(
-          'https://proy-back-dnivel-44j5.onrender.com/api/anuncio/general',
-          formData,
-          {
-            headers: this.getHeaders(),
-          }
-        )
-        .subscribe({
-          next: (response) => {
-            this.loading = false;
-            this.dialogRef.close({ success: true, data: response });
-          },
-          error: (error) => {
-            this.loading = false;
-            this.error = error.error?.message || 'Error al publicar el anuncio';
-          },
-        });
+    // Obtener datos del usuario
+    const userData = this.userService.getUserData();
+    if (!userData) {
+      this.error = 'No se encontraron datos de usuario';
+      this.loading = false;
+      return;
     }
+
+    // Preparar datos según lo que espera el backend
+    const formData = {
+      nombre: this.generalForm.get('titulo')?.value.trim(), // Cambiado de 'titulo' a 'nombre'
+      horario: this.generalForm.get('horario')?.value.trim(),
+      imagen: this.generalForm.get('imagen')?.value || null,
+      idColegio: this.colegioId,
+      idUsuario: userData.id || 0, // Asegurar que se envía idUsuario
+      url: this.generalForm.get('url')?.value.trim() ? 1 : 0 // Convertir URL a número (0 o 1)
+    };
+
+    console.log('Datos a enviar:', formData); // Para depuración
+
+    this.http.post(
+      'https://proy-back-dnivel-44j5.onrender.com/api/anuncio/general',
+      formData,
+      {
+        headers: this.getHeaders(),
+        observe: 'response' // Para ver la respuesta completa
+      }
+    ).subscribe({
+      next: (response) => {
+        console.log('Respuesta exitosa:', response);
+        this.loading = false;
+        this.dialogRef.close({ success: true, data: response.body });
+      },
+      error: (error) => {
+        console.error('Error en la petición:', error);
+        this.loading = false;
+        
+        // Mejor manejo de errores
+        if (error.error) {
+          if (typeof error.error === 'string') {
+            this.error = error.error;
+          } else if (error.error.message) {
+            this.error = error.error.message;
+          } else {
+            this.error = 'Error al procesar la solicitud';
+          }
+        } else {
+          this.error = error.message || 'Error de conexión';
+        }
+      }
+    });
   }
+}
 }
