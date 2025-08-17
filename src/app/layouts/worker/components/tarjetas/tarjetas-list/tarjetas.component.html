@@ -1,21 +1,32 @@
-
 <div class="tarjetas-container">
   <mat-card class="tarjetas-card">
     <mat-card-header>
       <mat-card-title>
         <mat-icon>credit_card</mat-icon> Gestión de Tarjetas RFID
       </mat-card-title>
-      <mat-card-subtitle>Lista de todas las tarjetas disponibles en el colegio</mat-card-subtitle>
+      <mat-card-subtitle
+        >Lista de todas las tarjetas disponibles en el
+        colegio</mat-card-subtitle
+      >
     </mat-card-header>
-    
+
     <mat-card-content>
       <form [formGroup]="tarjetaForm" class="tarjetas-form">
         <!-- Campo de búsqueda -->
         <mat-form-field appearance="outline" class="form-field search-field">
           <mat-label>Buscar tarjeta</mat-label>
-          <input matInput formControlName="searchTerm" placeholder="Buscar por RFID, código o alumno">
+          <input
+            matInput
+            formControlName="searchTerm"
+            placeholder="Buscar por RFID, código o alumno"
+          />
           <mat-icon matPrefix>search</mat-icon>
-          <button matSuffix mat-icon-button (click)="clearSearch()" *ngIf="tarjetaForm.get('searchTerm')?.value">
+          <button
+            matSuffix
+            mat-icon-button
+            (click)="clearSearch()"
+            *ngIf="tarjetaForm.get('searchTerm')?.value"
+          >
             <mat-icon>close</mat-icon>
           </button>
         </mat-form-field>
@@ -23,61 +34,66 @@
 
       <!-- Información de resultados -->
       <div *ngIf="filteredTarjetas.length > 0" class="results-info">
-        <p>Mostrando {{ filteredTarjetas.length }} de {{ totalTarjetas }} tarjetas</p>
+        <p>
+          Mostrando {{ filteredTarjetas.length }} de
+          {{ totalTarjetas }} tarjetas
+        </p>
       </div>
 
       <!-- Tabla de tarjetas -->
       <div *ngIf="filteredTarjetas.length > 0" class="tarjetas-table-container">
         <div class="table-header">
-          <button 
-            mat-raised-button 
+          <button
+            mat-raised-button
             color="primary"
             (click)="openAddTarjetaModal()"
             [disabled]="loading"
-            class="add-tarjeta-button">
+            class="add-tarjeta-button"
+          >
             <mat-icon>add</mat-icon> Agregar Nueva Tarjeta
           </button>
-          <button 
-            mat-icon-button 
-            (click)="refreshTarjetas()"
-            [disabled]="loading"
-            matTooltip="Actualizar lista">
-            <mat-icon>refresh</mat-icon>
-          </button>
         </div>
-        
-        <table mat-table [dataSource]="filteredTarjetas" class="mat-elevation-z2 full-width-table">
+
+        <table
+          mat-table
+          [dataSource]="filteredTarjetas"
+          class="mat-elevation-z2 full-width-table"
+        >
           <!-- Columna ID -->
           <ng-container matColumnDef="id">
-            <th mat-header-cell *matHeaderCellDef> ID </th>
-            <td mat-cell *matCellDef="let tarjeta"> 
+            <th mat-header-cell *matHeaderCellDef>ID</th>
+            <td mat-cell *matCellDef="let tarjeta">
               <span class="tarjeta-id">{{ tarjeta.id }}</span>
             </td>
           </ng-container>
 
           <!-- Columna RFID -->
           <ng-container matColumnDef="rfid">
-            <th mat-header-cell *matHeaderCellDef> RFID </th>
-            <td mat-cell *matCellDef="let tarjeta"> 
-              <span class="tarjeta-rfid">{{ tarjeta.rfid | number:'1.0-0' }}</span>
+            <th mat-header-cell *matHeaderCellDef>RFID</th>
+            <td mat-cell *matCellDef="let tarjeta">
+              <span class="tarjeta-rfid">{{
+                tarjeta.rfid | number : "1.0-0"
+              }}</span>
             </td>
           </ng-container>
 
           <!-- Columna Código -->
           <ng-container matColumnDef="codigo">
-            <th mat-header-cell *matHeaderCellDef> Código </th>
-            <td mat-cell *matCellDef="let tarjeta"> 
+            <th mat-header-cell *matHeaderCellDef>Código</th>
+            <td mat-cell *matCellDef="let tarjeta">
               <span class="tarjeta-codigo">{{ tarjeta.codigo }}</span>
             </td>
           </ng-container>
 
           <!-- Columna Alumno -->
           <ng-container matColumnDef="alumno">
-            <th mat-header-cell *matHeaderCellDef> Alumno Asociado </th>
+            <th mat-header-cell *matHeaderCellDef>Alumno Asociado</th>
             <td mat-cell *matCellDef="let tarjeta">
               <div *ngIf="tarjeta.alumnoData" class="alumno-info">
                 <div class="alumno-nombre">{{ tarjeta.alumnoNombre }}</div>
-            
+                <div class="alumno-codigo">
+                  Código: {{ tarjeta.alumnoCodigo }}
+                </div>
               </div>
               <span *ngIf="!tarjeta.alumnoData" class="no-alumno">
                 Sin asignar
@@ -87,12 +103,18 @@
 
           <!-- Columna Estado -->
           <ng-container matColumnDef="estado">
-            <th mat-header-cell *matHeaderCellDef> Estado </th>
-            <td mat-cell *matCellDef="let tarjeta"> 
-              <span *ngIf="tarjeta.alumnoData" class="estado-badge estado-asignada">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let tarjeta">
+              <span
+                *ngIf="tarjeta.alumnoData"
+                class="estado-badge estado-asignada"
+              >
                 <mat-icon>person</mat-icon> Asignada
               </span>
-              <span *ngIf="!tarjeta.alumnoData" class="estado-badge estado-disponible">
+              <span
+                *ngIf="!tarjeta.alumnoData"
+                class="estado-badge estado-disponible"
+              >
                 <mat-icon>credit_card</mat-icon> Disponible
               </span>
             </td>
@@ -100,10 +122,32 @@
 
           <!-- Columna Acciones -->
           <ng-container matColumnDef="acciones">
-            <th mat-header-cell *matHeaderCellDef> </th>
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
             <td mat-cell *matCellDef="let tarjeta">
               <div class="action-buttons">
-                
+                <!-- Botón Modificar -->
+                <button
+                  mat-mini-fab
+                  color="accent"
+                  class="action-button edit-button"
+                  (click)="openEditTarjetaModal(tarjeta)"
+                  [disabled]="loading"
+                  matTooltip="Modificar tarjeta"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+
+                <!-- Botón Eliminar -->
+                <button
+                  mat-mini-fab
+                  color="warn"
+                  class="action-button delete-button"
+                  (click)="deleteTarjeta(tarjeta)"
+                  [disabled]="loading"
+                  matTooltip="Eliminar tarjeta"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
               </div>
             </td>
           </ng-container>
@@ -115,12 +159,12 @@
 
       <!-- Estados de carga y mensajes -->
       <div *ngIf="loading" class="loading">
-        <mat-spinner diameter="24"></mat-spinner> 
-        <span>Cargando tarjetas...</span>
+        <mat-spinner diameter="24"></mat-spinner>
+        <span>{{ loadingMessage || "Cargando tarjetas..." }}</span>
       </div>
 
       <div *ngIf="error" class="error" (click)="clearMessages()">
-        <mat-icon>error_outline</mat-icon> 
+        <mat-icon>error_outline</mat-icon>
         <span>{{ error }}</span>
         <button mat-icon-button>
           <mat-icon>close</mat-icon>
@@ -128,7 +172,7 @@
       </div>
 
       <div *ngIf="successMessage" class="success" (click)="clearMessages()">
-        <mat-icon>check_circle</mat-icon> 
+        <mat-icon>check_circle</mat-icon>
         <span>{{ successMessage }}</span>
         <button mat-icon-button>
           <mat-icon>close</mat-icon>
@@ -136,20 +180,44 @@
       </div>
 
       <!-- Mensaje cuando no hay tarjetas -->
-      <div *ngIf="!loading && !error && filteredTarjetas.length === 0 && totalTarjetas === 0" class="no-data">
+      <div
+        *ngIf="
+          !loading &&
+          !error &&
+          filteredTarjetas.length === 0 &&
+          totalTarjetas === 0
+        "
+        class="no-data"
+      >
         <mat-icon>credit_card</mat-icon>
         <h3>No hay tarjetas registradas</h3>
         <p>No hay tarjetas registradas en este colegio</p>
-        <button mat-raised-button color="primary" (click)="openAddTarjetaModal()">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="openAddTarjetaModal()"
+        >
           <mat-icon>add</mat-icon> Agregar Primera Tarjeta
         </button>
       </div>
 
       <!-- Mensaje cuando la búsqueda no encuentra resultados -->
-      <div *ngIf="!loading && !error && filteredTarjetas.length === 0 && totalTarjetas > 0" class="no-results">
+      <div
+        *ngIf="
+          !loading &&
+          !error &&
+          filteredTarjetas.length === 0 &&
+          totalTarjetas > 0
+        "
+        class="no-results"
+      >
         <mat-icon>search_off</mat-icon>
         <h3>Sin resultados</h3>
-        <p>No se encontraron tarjetas que coincidan con la búsqueda "{{ tarjetaForm.get('searchTerm')?.value }}"</p>
+        <p>
+          No se encontraron tarjetas que coincidan con la búsqueda "{{
+            tarjetaForm.get("searchTerm")?.value
+          }}"
+        </p>
         <button mat-button color="primary" (click)="clearSearch()">
           <mat-icon>clear</mat-icon> Limpiar búsqueda
         </button>

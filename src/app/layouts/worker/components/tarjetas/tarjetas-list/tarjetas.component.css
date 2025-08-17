@@ -93,7 +93,7 @@ mat-form-field .mat-error {
 .full-width-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 900px;
+  min-width: 1000px;
 }
 
 .full-width-table th {
@@ -149,14 +149,48 @@ mat-form-field .mat-error {
   font-family: monospace;
 }
 
+/* Información del alumno */
+.alumno-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.alumno-nombre {
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.alumno-codigo {
+  font-size: 12px;
+  color: #666;
+  font-family: monospace;
+}
+
+.no-alumno {
+  color: #999;
+  font-style: italic;
+  font-size: 13px;
+}
+
 /* Badges de estado */
 .estado-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 4px 12px;
   border-radius: 12px;
   font-size: 11px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.estado-badge mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
 }
 
 .estado-disponible {
@@ -172,42 +206,55 @@ mat-form-field .mat-error {
 }
 
 /* Botones de acción */
-.action-button {
-  display: inline-flex;
+.action-buttons {
+  display: flex;
+  gap: 8px;
   align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-weight: 500;
-  margin-right: 8px;
-  min-width: 80px;
-  font-size: 12px;
+  justify-content: flex-start;
+}
+
+.action-button {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  line-height: 36px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .edit-button {
-  background-color: #e0f2f7;
-  color: #0288d1;
+  background-color: #ff9800;
+  color: white;
 }
 
 .edit-button:hover {
-  background-color: #bbdefb;
-  color: #01579b;
+  background-color: #f57c00;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(255, 152, 0, 0.3);
 }
 
 .delete-button {
-  background-color: #ffebee;
-  color: #d32f2f;
+  background-color: #f44336;
+  color: white;
 }
 
 .delete-button:hover {
-  background-color: #ffcdd2;
-  color: #b71c1c;
+  background-color: #d32f2f;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3);
+}
+
+.action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
 .action-button mat-icon {
-  font-size: 14px;
-  width: 14px;
-  height: 14px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
 }
 
 /* Header de la tabla con botones */
@@ -237,25 +284,26 @@ mat-form-field .mat-error {
 }
 
 .refresh-button {
-  padding: 12px 20px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
   background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
   color: white;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 14px;
+  border-radius: 50%;
   transition: all 0.3s ease;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
   border: none;
   cursor: pointer;
 }
 
-.add-tarjeta-button:hover,
+.add-tarjeta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(25, 118, 210, 0.3);
+}
+
 .refresh-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 10px rgba(76, 175, 80, 0.3);
 }
 
 .add-tarjeta-button:active,
@@ -265,7 +313,9 @@ mat-form-field .mat-error {
 
 .add-tarjeta-button mat-icon,
 .refresh-button mat-icon {
-  font-size: 18px;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
 }
 
 /* Estados de carga y mensajes */
@@ -293,6 +343,11 @@ mat-form-field .mat-error {
   padding: 15px;
   border-radius: 4px;
   border-left: 4px solid #d32f2f;
+  cursor: pointer;
+}
+
+.error:hover {
+  background: #ffcdd2;
 }
 
 .success {
@@ -306,6 +361,11 @@ mat-form-field .mat-error {
   padding: 15px;
   border-radius: 4px;
   border-left: 4px solid #2e7d32;
+  cursor: pointer;
+}
+
+.success:hover {
+  background: #c8e6c9;
 }
 
 /* Mensajes de estado especiales */
@@ -325,15 +385,34 @@ mat-form-field .mat-error {
   margin-bottom: 16px;
 }
 
+.no-data h3,
+.no-results h3 {
+  margin: 16px 0 8px 0;
+  color: #555;
+  font-weight: 500;
+}
+
 .no-data p,
 .no-results p {
   font-size: 16px;
   margin: 16px 0;
+  color: #666;
 }
 
 .no-data button,
 .no-results button {
   margin-top: 16px;
+}
+
+/* Estilos para SnackBar */
+::ng-deep .snackbar-success {
+  background-color: #4caf50 !important;
+  color: white !important;
+}
+
+::ng-deep .snackbar-error {
+  background-color: #f44336 !important;
+  color: white !important;
 }
 
 /* Ajustes responsivos */
@@ -351,6 +430,10 @@ mat-form-field .mat-error {
   .table-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .full-width-table {
+    min-width: 800px;
   }
 }
 
@@ -376,14 +459,30 @@ mat-form-field .mat-error {
     gap: 15px;
   }
 
-  .add-tarjeta-button,
-  .refresh-button {
+  .add-tarjeta-button {
     width: 100%;
     justify-content: center;
   }
 
   .search-field {
     max-width: 100%;
+  }
+
+  .action-buttons {
+    gap: 4px;
+  }
+
+  .action-button {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    line-height: 32px;
+  }
+
+  .action-button mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
   }
 }
 
@@ -407,11 +506,37 @@ mat-form-field .mat-error {
     font-size: 12px;
   }
 
-  .action-button {
-    padding: 4px 8px;
+  .alumno-nombre {
+    font-size: 12px;
+  }
+
+  .alumno-codigo {
     font-size: 10px;
-    min-width: 60px;
-    margin-right: 4px;
+  }
+
+  .tarjeta-rfid,
+  .tarjeta-codigo,
+  .tarjeta-id {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+
+  .estado-badge {
+    font-size: 9px;
+    padding: 2px 8px;
+  }
+
+  .action-button {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    line-height: 28px;
+  }
+
+  .action-button mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
   }
 }
 
@@ -435,9 +560,20 @@ mat-form-field .mat-error {
     align-items: flex-start;
   }
   
-  .add-tarjeta-button,
-  .refresh-button {
+  .add-tarjeta-button {
     width: 100%;
     margin-bottom: 10px;
+  }
+
+  .refresh-button {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+  }
+
+  .refresh-button mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
   }
 }

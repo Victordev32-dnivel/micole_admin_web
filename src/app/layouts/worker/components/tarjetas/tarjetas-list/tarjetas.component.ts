@@ -23,13 +23,16 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { EditTarjetaModalComponent } from '../edit-tarjeta-modal/edit-tarjeta-modal.component';
+import { ConfirmDeleteModalComponent } from '../tarjetas-list/eliminar.component';
 import {
   HttpClient,
   HttpClientModule,
   HttpHeaders,
   HttpErrorResponse,
 } from '@angular/common/http';
-import { TarjetasModalComponent } from '../tarjetas-modal/tarjetas-modal.component';
 import { AddTarjetaModalComponent } from '../add-tarjeta-modal/add-tarjeta-modal.component';
 import { UserService } from '../../../../../services/UserData';
 import { catchError, throwError, forkJoin } from 'rxjs';
@@ -68,6 +71,13 @@ interface ApiResponse<T> {
   success?: boolean;
 }
 
+interface TarjetaUpdateData {
+  Rfid: number;
+  Codigo: string;
+  IdAlumno: number;
+  IdColegio: number;
+}
+
 @Component({
   selector: 'app-tarjetas',
   standalone: true,
@@ -85,6 +95,8 @@ interface ApiResponse<T> {
     MatTableModule,
     HttpClientModule,
     MatDialogModule,
+    MatTooltipModule,
+    MatSnackBarModule,
   ],
   templateUrl: './tarjetas.component.html',
   styleUrls: ['./tarjetas.component.css'],
@@ -95,6 +107,7 @@ export class TarjetasComponent implements OnInit {
   filteredTarjetas: TarjetaConAlumno[] = [];
   alumnos: Alumno[] = [];
   loading: boolean = false;
+  loadingMessage: string = '';
   error: string | null = null;
   successMessage: string | null = null;
   colegioId: number = 0;
@@ -120,6 +133,7 @@ export class TarjetasComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
     private userService: UserService,
+    private snackBar: MatSnackBar,
     @Inject(PLATFORM_ID) private platformId: Object,
     private dialog: MatDialog
   ) {
@@ -165,7 +179,8 @@ export class TarjetasComponent implements OnInit {
   }
 
   private getHeaders(): HttpHeaders {
-    const jwtToken = this.userService.getJwtToken();
+    const userData = this.userService.getUserData();
+    const jwtToken = '732612882';
     return new HttpHeaders({
       Authorization: `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
@@ -187,13 +202,13 @@ export class TarjetasComponent implements OnInit {
     this.ngZone.run(() => {
       this.error = errorMessage;
       this.loading = false;
+      this.loadingMessage = '';
       this.cdr.detectChanges();
     });
 
     return throwError(() => error);
   };
 
-  // Método corregido para usar el campo "alumno" de la API
   private asociarTarjetasConAlumnos(
     tarjetas: TarjetaResponse[]
   ): TarjetaConAlumno[] {
@@ -203,7 +218,6 @@ export class TarjetasComponent implements OnInit {
     return tarjetas.map((tarjeta) => {
       const tarjetaConAlumno: TarjetaConAlumno = { ...tarjeta };
 
-      // Si la tarjeta tiene "alumno" (ID del alumno), buscar el alumno por ID
       if (tarjeta.alumno) {
         const alumnoEncontrado = this.alumnos.find(
           (a) => a.id === tarjeta.alumno
@@ -229,6 +243,15 @@ export class TarjetasComponent implements OnInit {
     });
   }
 
+  private showSnackBar(message: string, type: 'success' | 'error' = 'success'): void {
+    this.snackBar.open(message, 'Cerrar', {
+      duration: 4000,
+      panelClass: type === 'success' ? 'snackbar-success' : 'snackbar-error',
+      horizontalPosition: 'right',
+      verticalPosition: 'top',
+    });
+  }
+
   loadData(): void {
     if (!this.colegioId) {
       this.error = 'ID del colegio no disponible';
@@ -236,6 +259,7 @@ export class TarjetasComponent implements OnInit {
     }
 
     this.loading = true;
+    this.loadingMessage = 'Cargando tarjetas...';
     this.error = null;
     this.successMessage = null;
 
@@ -263,7 +287,6 @@ export class TarjetasComponent implements OnInit {
           console.log('Respuesta completa:', response);
 
           this.ngZone.run(() => {
-            // Procesar alumnos primero
             const alumnosData = response.alumnos.data || [];
             this.alumnos = alumnosData.map((alumno) => ({
               ...alumno,
@@ -273,7 +296,6 @@ export class TarjetasComponent implements OnInit {
 
             console.log('Alumnos procesados:', this.alumnos);
 
-            // Procesar tarjetas y asociar con alumnos
             const tarjetasRaw = response.tarjetas.data || [];
             console.log('Tarjetas raw:', tarjetasRaw);
 
@@ -284,6 +306,7 @@ export class TarjetasComponent implements OnInit {
             console.log('Tarjetas procesadas:', this.tarjetas);
 
             this.loading = false;
+            this.loadingMessage = '';
             this.cdr.detectChanges();
           });
         },
@@ -291,6 +314,7 @@ export class TarjetasComponent implements OnInit {
           console.error('Error al cargar datos:', error);
           this.ngZone.run(() => {
             this.loading = false;
+            this.loadingMessage = '';
             this.error = 'Error al cargar datos. Intente nuevamente.';
             this.cdr.detectChanges();
           });
@@ -324,65 +348,9 @@ export class TarjetasComponent implements OnInit {
     this.filteredTarjetas = [...this.tarjetas];
   }
 
-  editTarjeta(tarjeta: TarjetaConAlumno): void {
-    const dialogRef = this.dialog.open(TarjetasModalComponent, {
-      width: '500px',
-      data: {
-        tarjetaId: tarjeta.id,
-        currentRfid: tarjeta.rfid,
-        currentCodigo: tarjeta.codigo,
-        colegioId: this.colegioId,
-        mode: 'edit',
-        alumnos: this.alumnos,
-        currentAlumno: tarjeta.alumnoData,
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.successMessage = 'Tarjeta actualizada con éxito';
-        this.loadData();
-        setTimeout(() => {
-          this.successMessage = null;
-        }, 3000);
-      }
-    });
-  }
-
-  deleteTarjeta(tarjeta: TarjetaConAlumno): void {
-    const alumnoInfo = tarjeta.alumnoNombre
-      ? ` (Asignada a: ${tarjeta.alumnoNombre})`
-      : '';
-
-    if (
-      confirm(
-        `¿Está seguro de que desea eliminar la tarjeta ${tarjeta.codigo} (RFID: ${tarjeta.rfid})${alumnoInfo}?`
-      )
-    ) {
-      this.loading = true;
-      this.error = null;
-      this.successMessage = null;
-
-      const headers = this.getHeaders();
-      const url = `${this.apiUrlTarjeta}/${tarjeta.id}`;
-
-      this.http
-        .delete(url, { headers })
-        .pipe(catchError(this.handleError))
-        .subscribe({
-          next: () => {
-            this.ngZone.run(() => {
-              this.successMessage = `Tarjeta ${tarjeta.codigo} eliminada con éxito`;
-              this.loading = false;
-              this.loadData();
-              setTimeout(() => {
-                this.successMessage = null;
-              }, 3000);
-            });
-          },
-        });
-    }
-  }
+  // ===============================
+  // FUNCIONALIDADES CRUD
+  // ===============================
 
   openAddTarjetaModal(): void {
     const dialogRef = this.dialog.open(AddTarjetaModalComponent, {
@@ -392,6 +360,7 @@ export class TarjetasComponent implements OnInit {
         colegioId: this.colegioId,
         mode: 'add',
         alumnos: this.alumnos,
+        jwtToken: this.getHeaders().get('Authorization')?.replace('Bearer ', '') || '',
       },
     });
 
@@ -402,16 +371,48 @@ export class TarjetasComponent implements OnInit {
     });
   }
 
+  openEditTarjetaModal(tarjeta: TarjetaConAlumno): void {
+    const dialogRef = this.dialog.open(EditTarjetaModalComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: {
+        colegioId: this.colegioId,
+        tarjeta: tarjeta,
+        alumnos: this.alumnos,
+        jwtToken: this.getHeaders().get('Authorization')?.replace('Bearer ', '') || '',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.success) {
+        console.log('Resultado del modal:', result);
+        
+        if (result.action === 'update') {
+          // La tarjeta fue actualizada
+          this.showSnackBar('Tarjeta actualizada exitosamente', 'success');
+          this.loadData(); // Recargar los datos
+        } else if (result.action === 'delete') {
+          // La tarjeta fue eliminada desde el modal
+          this.showSnackBar(`Tarjeta ${result.data.codigo} eliminada exitosamente`, 'success');
+          this.loadData(); // Recargar los datos
+        }
+      }
+    });
+  }
+
   addTarjeta(tarjetaData: any): void {
     console.log('🔍 Datos recibidos en addTarjeta:', tarjetaData);
 
     this.loading = true;
+    this.loadingMessage = 'Agregando tarjeta...';
     this.error = null;
     this.successMessage = null;
 
     if (!tarjetaData) {
       this.error = 'No se proporcionaron datos para la tarjeta';
       this.loading = false;
+      this.loadingMessage = '';
       return;
     }
 
@@ -420,40 +421,18 @@ export class TarjetasComponent implements OnInit {
       console.log('✅ Datos limpiados para enviar:', cleanedData);
 
       const headers = this.getHeaders();
-      console.log('🔑 Headers:', headers);
-      console.log('🌐 URL destino:', this.apiUrlTarjeta);
 
       this.http
         .post(this.apiUrlTarjeta, cleanedData, { headers })
-        .pipe(
-          catchError((error: HttpErrorResponse) => {
-            console.error('❌ Error completo:', error);
-            console.error('❌ Status:', error.status);
-            console.error('❌ Error body:', error.error);
-            console.error('❌ Message:', error.message);
-
-            // Log adicional para debugging
-            if (error.error) {
-              console.error(
-                '❌ Detalles del error del servidor:',
-                JSON.stringify(error.error, null, 2)
-              );
-            }
-
-            return this.handleError(error);
-          })
-        )
+        .pipe(catchError(this.handleError))
         .subscribe({
           next: (response: any) => {
             console.log('✅ Respuesta exitosa:', response);
             this.ngZone.run(() => {
-              this.successMessage = 'Tarjeta agregada con éxito';
+              this.showSnackBar('Tarjeta agregada con éxito', 'success');
               this.loading = false;
+              this.loadingMessage = '';
               this.loadData();
-
-              setTimeout(() => {
-                this.successMessage = null;
-              }, 3000);
             });
           },
           error: (error) => {
@@ -464,9 +443,114 @@ export class TarjetasComponent implements OnInit {
       console.error('❌ Error en validación:', error);
       this.error = error.message || 'Error al validar los datos de la tarjeta';
       this.loading = false;
+      this.loadingMessage = '';
     }
   }
-  private validateAndCleanTarjetaData(data: any): any {
+
+  updateTarjeta(tarjetaId: number, tarjetaData: any): void {
+    console.log('🔍 Datos recibidos en updateTarjeta:', { tarjetaId, tarjetaData });
+
+    this.loading = true;
+    this.loadingMessage = 'Actualizando tarjeta...';
+    this.error = null;
+    this.successMessage = null;
+
+    if (!tarjetaData) {
+      this.error = 'No se proporcionaron datos para la tarjeta';
+      this.loading = false;
+      this.loadingMessage = '';
+      return;
+    }
+
+    try {
+      const cleanedData = this.validateAndCleanTarjetaData(tarjetaData);
+      console.log('✅ Datos limpiados para actualizar:', cleanedData);
+
+      const headers = this.getHeaders();
+      const updateUrl = `${this.apiUrlTarjeta}/${tarjetaId}`;
+
+      this.http
+        .put(updateUrl, cleanedData, { headers })
+        .pipe(catchError(this.handleError))
+        .subscribe({
+          next: (response: any) => {
+            console.log('✅ Tarjeta actualizada exitosamente:', response);
+            this.ngZone.run(() => {
+              this.showSnackBar('Tarjeta actualizada con éxito', 'success');
+              this.loading = false;
+              this.loadingMessage = '';
+              this.loadData();
+            });
+          },
+          error: (error) => {
+            console.error('❌ Error al actualizar tarjeta:', error);
+          },
+        });
+    } catch (error: any) {
+      console.error('❌ Error en validación:', error);
+      this.error = error.message || 'Error al validar los datos de la tarjeta';
+      this.loading = false;
+      this.loadingMessage = '';
+    }
+  }
+
+  // ===============================
+  // MÉTODO ACTUALIZADO PARA ELIMINAR CON MODAL
+  // ===============================
+  deleteTarjeta(tarjeta: TarjetaConAlumno): void {
+    const dialogRef = this.dialog.open(ConfirmDeleteModalComponent, {
+      width: '500px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: {
+        tarjeta: {
+          id: tarjeta.id,
+          rfid: tarjeta.rfid,
+          codigo: tarjeta.codigo,
+          alumnoNombre: tarjeta.alumnoNombre
+        }
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        this.performDelete(tarjeta);
+      }
+    });
+  }
+
+  // Método separado para realizar la eliminación
+  private performDelete(tarjeta: TarjetaConAlumno): void {
+    this.loading = true;
+    this.loadingMessage = 'Eliminando tarjeta...';
+    this.error = null;
+    this.successMessage = null;
+
+    const headers = this.getHeaders();
+    const deleteUrl = `${this.apiUrlTarjeta}/${tarjeta.id}`;
+
+    console.log(`🗑️ Eliminando tarjeta con URL: ${deleteUrl}`);
+
+    this.http
+      .delete(deleteUrl, { headers })
+      .pipe(catchError(this.handleError))
+      .subscribe({
+        next: (response: any) => {
+          console.log('✅ Tarjeta eliminada exitosamente:', response);
+          this.ngZone.run(() => {
+            this.showSnackBar(`Tarjeta ${tarjeta.codigo} eliminada con éxito`, 'success');
+            this.loading = false;
+            this.loadingMessage = '';
+            this.loadData();
+          });
+        },
+        error: (error) => {
+          console.error('❌ Error al eliminar tarjeta:', error);
+        },
+      });
+  }
+
+  private validateAndCleanTarjetaData(data: any): TarjetaUpdateData {
     console.log(
       '🔍 Datos originales recibidos:',
       JSON.stringify(data, null, 2)
@@ -484,11 +568,10 @@ export class TarjetasComponent implements OnInit {
       colegioId: this.colegioId,
     });
 
-    // Crear objeto con el formato que espera el servidor
-    const cleanedData: any = {
-      Rfid: null,
-      Codigo: null,
-      IdAlumno: 0, // Usar 0 como valor por defecto si no hay alumno
+    const cleanedData: TarjetaUpdateData = {
+      Rfid: 0,
+      Codigo: '',
+      IdAlumno: 0,
       IdColegio: this.colegioId,
     };
 
@@ -526,8 +609,6 @@ export class TarjetasComponent implements OnInit {
         cleanedData.IdAlumno = alumnoNumber;
       }
     } else {
-      // Si no hay alumno seleccionado, intentar con 0
-      // Si el servidor no acepta 0, deberás cambiar esta lógica
       cleanedData.IdAlumno = 0;
       console.log('⚠️ No hay alumno seleccionado, enviando IdAlumno = 0');
     }
