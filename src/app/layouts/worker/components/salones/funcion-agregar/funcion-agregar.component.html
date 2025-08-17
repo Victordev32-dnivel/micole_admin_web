@@ -17,27 +17,39 @@
       <ng-container *ngSwitchCase="'salones'">
         <mat-form-field>
           <mat-label>Hora Inicio</mat-label>
-          <input matInput formControlName="horaInicio">
+          <input matInput formControlName="horaInicio" placeholder="Ej: 08:00:00">
         </mat-form-field>
         <mat-form-field>
           <mat-label>Hora Fin</mat-label>
-          <input matInput formControlName="horaFin">
+          <input matInput formControlName="horaFin" placeholder="Ej: 18:00:00">
         </mat-form-field>
         <mat-form-field>
           <mat-label>Tipo</mat-label>
           <input matInput formControlName="tipo">
         </mat-form-field>
         <mat-form-field>
-          <mat-label>ID Grado</mat-label>
-          <input matInput formControlName="idGrado">
+          <mat-label>Grado</mat-label>
+          <mat-select formControlName="idGrado">
+            <mat-option *ngFor="let grado of grados" [value]="grado.id">
+              {{ grado.nombre }}
+            </mat-option>
+          </mat-select>
         </mat-form-field>
         <mat-form-field>
-          <mat-label>ID Sección</mat-label>
-          <input matInput formControlName="idSeccion">
+          <mat-label>Sección</mat-label>
+          <mat-select formControlName="idSeccion">
+            <mat-option *ngFor="let seccion of secciones" [value]="seccion.id">
+              {{ seccion.nombre }}
+            </mat-option>
+          </mat-select>
         </mat-form-field>
         <mat-form-field>
-          <mat-label>ID Nivel</mat-label>
-          <input matInput formControlName="idNivel">
+          <mat-label>Nivel</mat-label>
+          <mat-select formControlName="idNivel">
+            <mat-option *ngFor="let nivel of niveles" [value]="nivel.id">
+              {{ nivel.nombre }}
+            </mat-option>
+          </mat-select>
         </mat-form-field>
       </ng-container>
     </ng-container>
