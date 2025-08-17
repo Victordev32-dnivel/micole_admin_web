@@ -22,7 +22,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { UserService } from '../../../../../services/UserData';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../../environment/environment';
 import { S3 } from 'aws-sdk';
 import { Buffer } from 'buffer';
 
@@ -364,7 +364,7 @@ export class ModalAnuncioSalonComponent implements OnInit {
   }
 
   private getHeaders(): HttpHeaders {
-    const jwtToken = this.userService.getJwtToken() || '732612882';
+    const jwtToken = '732612882';
     return new HttpHeaders({
       Authorization: `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
