@@ -75,7 +75,7 @@
         <ng-template #salonesRow>
           <span class="cell">{{ item.id }}</span>
           <span class="cell">{{ item.nombre }}</span>
-          <span class="cell">{{ item.horaInicio || '-' }} — {{ item.horaFin || '-' }}</span>
+          <span class="cell">{{ item.horario || '-' }}</span>
           <span class="cell">{{ item.tipo || '-' }}</span>
           <span class="cell acciones">
             <mat-icon class="action edit" title="Editar">edit</mat-icon>
@@ -92,7 +92,6 @@
   <!-- filtros inferiores SOLO para salones -->
   <div *ngIf="tipoSeleccionado.value === 'salones' && !loading" class="salones-filters-bottom">
     <div class="salones-filters-row">
-
       <!-- Campo búsqueda -->
       <div class="campo-busqueda">
         <mat-form-field appearance="outline">
@@ -104,14 +103,14 @@
         </mat-form-field>
       </div>
 
-      <!-- Selector tipo horario -->
-      <div class="horario-container">
-        <mat-form-field appearance="outline" class="horario-field">
-          <mat-label>Horario</mat-label>
-          <mat-select formControlName="tipoHorario">
-            <mat-option value="mañana">Mañana</mat-option>
-            <mat-option value="tarde">Tarde</mat-option>
-            <mat-option value="noche">Noche</mat-option>
+      <!-- Selector tipo -->
+      <div class="tipo-container">
+        <mat-form-field appearance="outline" class="tipo-field">
+          <mat-label>Tipo</mat-label>
+          <mat-select name="tipoHorario" [(ngModel)]="tipoHorario" (selectionChange)="applyFilters()">
+            <mat-option value="" selected>Todos</mat-option>
+            <mat-option value="entrada">Entrada</mat-option>
+            <mat-option value="salida">Salida</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
@@ -121,10 +120,8 @@
         <small><strong>{{ filteredData.length }}</strong> resultados</small>
         <button mat-stroked-button color="primary" (click)="searchTerm=''; tipoHorario=''; applyFilters()">Limpiar filtros</button>
       </div>
-
     </div>
   </div>
-
 
   <!-- footer: paginación y pageSize -->
   <div class="footer">
