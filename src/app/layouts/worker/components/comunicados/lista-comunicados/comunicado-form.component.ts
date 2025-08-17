@@ -20,8 +20,13 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatTooltipModule } from '@angular/material/tooltip'; // Add this import
 import { CommonModule } from '@angular/common';
 import { UserData, UserService } from '../../../../../services/UserData';
+
+// IMPORTACIONES DE LOS MODALES
+import { ModalAnuncioGeneralComponent } from './add-comunicato.form.component';
+import { ModalAnuncioSalonComponent } from './add-comunicadoSalon.form.component';
 
 // Interface para anuncio general - DEBE coincidir con la respuesta de la API
 interface AnuncioGeneral {
@@ -83,6 +88,7 @@ interface ComunicadoDisplay {
     MatPaginatorModule,
     MatSelectModule,
     MatFormFieldModule,
+    MatTooltipModule, // Add this to imports array
   ],
 })
 export class ComunicadosListadoComponent implements OnInit {
@@ -137,6 +143,56 @@ export class ComunicadosListadoComponent implements OnInit {
       'Content-Type': 'application/json',
       Accept: 'application/json',
     });
+  }
+
+  // MÉTODO PARA AGREGAR COMUNICADO SEGÚN EL TIPO DE VISTA
+  agregarComunicado(): void {
+    let dialogRef;
+    
+    if (this.tipoVista === 'general') {
+      // Abrir modal para anuncios generales
+      dialogRef = this.dialog.open(ModalAnuncioGeneralComponent, {
+        width: '600px',
+        maxHeight: '90vh',
+        disableClose: true,
+        data: {
+          colegioId: this.colegioId
+        }
+      });
+    } else if (this.tipoVista === 'salon') {
+      // Abrir modal para anuncios por salón
+      dialogRef = this.dialog.open(ModalAnuncioSalonComponent, {
+        width: '600px',
+        maxHeight: '90vh',
+        disableClose: true,
+        data: {
+          colegioId: this.colegioId
+        }
+      });
+    }
+
+    // Manejar el resultado del modal
+    if (dialogRef) {
+      dialogRef.afterClosed().subscribe(result => {
+        if (result && result.success) {
+          // Mostrar mensaje de éxito
+          const tipoTexto = this.tipoVista === 'general' ? 'Anuncio general' : 'Anuncio por salón';
+          this.snackBar.open(`✅ ${tipoTexto} creado exitosamente`, 'Cerrar', {
+            duration: 3000,
+            panelClass: ['success-snackbar'],
+            verticalPosition: 'top',
+            horizontalPosition: 'center'
+          });
+          
+          // Recargar la lista según el tipo
+          if (this.tipoVista === 'general') {
+            this.loadComunicados();
+          } else if (this.salonSeleccionado) {
+            this.loadAnunciosSalonSeleccionado();
+          }
+        }
+      });
+    }
   }
 
   // Método para cambiar el tipo de vista
