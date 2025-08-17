@@ -1,56 +1,58 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { MatDialog } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIcon, MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { UserService } from '../../../../../services/UserData';
+import { FuncionAgregarComponent } from '../funcion-agregar/funcion-agregar.component';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatOptionModule } from '@angular/material/core';
 
 @Component({
   selector: 'app-lista-general',
   standalone: true,
   imports: [
-    FormsModule,
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
-    MatTableModule,
     MatButtonModule,
     MatIconModule,
-    MatSelectModule,
-    MatInputModule,
-    MatFormFieldModule,
     MatProgressSpinnerModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatOptionModule,
   ],
   templateUrl: './lista-general.component.html',
   styleUrls: ['./lista-general.component.css'],
 })
 export class ListaGeneralComponent implements OnInit {
-  tipoSeleccionado = new FormControl('niveles');
+  tipoSeleccionado = new FormControl<'niveles' | 'secciones' | 'salones'>(
+    'niveles',
+    { nonNullable: true }
+  );
   colegiosId: number = 0;
   data: any[] = [];
   filteredData: any[] = [];
-  loading: boolean = false;
+  loading = false;
   error: string | null = null;
   displayedColumns: string[] = [];
-  currentPage: number = 1;
-  totalPages: number = 1;
-  pageSize: number = 10;
-  totalResults: number = 0;
+  currentPage = 1;
+  totalPages = 1;
+  pageSize = 10;
+  totalResults = 0;
   pages: number[] = [];
-
-  // 🔹 Filtros adicionales para "salones"
-  searchTerm: string = '';
-  tipoHorario: string = 'entrada'; // entrada | salida
+  searchTerm = '';
+  tipoHorario: '' | 'entrada' | 'salida' = '';
+  private apiBase = 'https://proy-back-dnivel-44j5.onrender.com/api';
 
   constructor(
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
-    private userService: UserService
+    private userService: UserService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit() {
@@ -64,19 +66,18 @@ export class ListaGeneralComponent implements OnInit {
     }
 
     this.loadData();
-
-    // Cuando cambia el tipo de vista (niveles, secciones, salones)
     this.tipoSeleccionado.valueChanges.subscribe(() => {
       this.currentPage = 1;
       this.searchTerm = '';
-      this.tipoHorario = 'entrada';
+      this.tipoHorario = '';
       this.loadData();
     });
   }
 
   private getHeaders(): HttpHeaders {
+    const token = this.userService.getJwtToken() || '732612882';
     return new HttpHeaders({
-      Authorization: `Bearer ${this.userService.getJwtToken()}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     });
   }
@@ -84,19 +85,17 @@ export class ListaGeneralComponent implements OnInit {
   loadData() {
     this.loading = true;
     this.error = null;
-    let url = '';
 
+    let url = '';
     switch (this.tipoSeleccionado.value) {
       case 'niveles':
-        url = `https://proy-back-dnivel-44j5.onrender.com/api/nivel/colegio/${this.colegiosId}?page=${this.currentPage}`;
+        url = `${this.apiBase}/nivel/colegio/${this.colegiosId}?page=${this.currentPage}`;
         break;
       case 'secciones':
-        url = `https://proy-back-dnivel-44j5.onrender.com/api/seccion/colegio/${this.colegiosId}?page=${this.currentPage}`;
+        url = `${this.apiBase}/seccion/colegio/${this.colegiosId}?page=${this.currentPage}`;
         break;
       case 'salones':
-        url = `https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/${this.colegiosId}?page=${this.currentPage}&pagesize=${this.pageSize}`;
-        break;
-      default:
+        url = `${this.apiBase}/salon/colegio/${this.colegiosId}?page=${this.currentPage}&pagesize=${this.pageSize}`;
         break;
     }
 
@@ -109,15 +108,15 @@ export class ListaGeneralComponent implements OnInit {
           response.totalNiveles ||
           response.totalSecciones ||
           response.totalSalones ||
-          0;
+          this.data.length;
         this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
         this.setDisplayedColumns(this.tipoSeleccionado.value);
-        this.applyFilters(); // 🔹 aplicar filtros en carga
+        this.applyFilters();
         this.loading = false;
         this.cdr.detectChanges();
       },
-      error: (error) => {
-        console.error('Error al cargar datos:', error);
+      error: (err) => {
+        console.error('Error al cargar datos:', err);
         this.error = 'Error al cargar los datos. Intente de nuevo';
         this.loading = false;
         this.cdr.detectChanges();
@@ -125,31 +124,25 @@ export class ListaGeneralComponent implements OnInit {
     });
   }
 
-  setDisplayedColumns(tipo: string | null) {
+  setDisplayedColumns(tipo: 'niveles' | 'secciones' | 'salones') {
     switch (tipo) {
       case 'niveles':
-        this.displayedColumns = ['id', 'nombre', 'actions'];
-        break;
       case 'secciones':
         this.displayedColumns = ['id', 'nombre', 'actions'];
         break;
       case 'salones':
         this.displayedColumns = ['id', 'nombre', 'horario', 'tipo', 'actions'];
         break;
-      default:
-        this.displayedColumns = [];
     }
   }
 
-  // 🔹 Filtrar resultados (solo aplica para "salones")
   applyFilters() {
     if (this.tipoSeleccionado.value === 'salones') {
-      this.filteredData = this.data.filter((salon) => {
+      const term = (this.searchTerm || '').toLowerCase().trim();
+      this.filteredData = this.data.filter((s) => {
         const matchesSearch =
-          !this.searchTerm ||
-          salon.nombre.toLowerCase().includes(this.searchTerm.toLowerCase());
-        const matchesTipo =
-          !this.tipoHorario || salon.tipo === this.tipoHorario;
+          !term || (s.nombre || '').toLowerCase().includes(term);
+        const matchesTipo = !this.tipoHorario || s.tipo === this.tipoHorario;
         return matchesSearch && matchesTipo;
       });
     } else {
@@ -158,6 +151,7 @@ export class ListaGeneralComponent implements OnInit {
   }
 
   changePage(page: number) {
+    if (page < 1 || page > this.totalPages) return;
     this.currentPage = page;
     this.loadData();
   }
@@ -165,5 +159,25 @@ export class ListaGeneralComponent implements OnInit {
   onPageSizeChange() {
     this.currentPage = 1;
     this.loadData();
+  }
+
+  abrirModalAgregar() {
+    const tipo = this.tipoSeleccionado.value;
+    const width = tipo === 'salones' ? '820px' : '520px';
+
+    const dialogRef = this.dialog.open(FuncionAgregarComponent, {
+      width,
+      maxWidth: '95vw',
+      panelClass: 'custom-dialog',
+      data: { tipo, idColegio: this.colegiosId },
+      disableClose: true,
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result && result.success) {
+        this.currentPage = 1; // Reiniciar a la primera página para ver el nuevo elemento
+        this.loadData();
+      }
+    });
   }
 }

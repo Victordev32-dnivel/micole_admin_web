@@ -263,21 +263,56 @@
   box-shadow: 0 0 0 3px rgba(33,150,243,.15);
 }
 
-.filters-container {
+/* ----- Filtros de salones ----- */
+.salones-filters-bottom {
+  padding: 12px;
+  background: #f4f6f8;
+  border-radius: 8px;
+  border: 1px solid #e6ecf5;
+  margin-top: 16px;
+}
+
+.salones-filters-row {
   display: flex;
-  justify-content: flex-start;
-  gap: 20px;
-  margin-top: 20px;
-  margin-bottom: 10px;
+  align-items: center;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-.filter-input,
-.filter-select {
+/* Campo búsqueda */
+.salones-filters-bottom .campo-busqueda {
   flex: 1;
   min-width: 220px;
 }
 
+/* Campo horario */
+.salones-filters-bottom .campo-horario {
+  width: 220px;
+  flex-shrink: 0;
+}
+
+/* Acciones */
+.salones-filters-bottom .acciones-filtros {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.salones-filters-bottom .acciones-filtros small {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.salones-filters-bottom button {
+  border-radius: 8px;
+  padding: 6px 14px;
+  transition: background-color .2s ease, box-shadow .2s ease;
+}
+
+.salones-filters-bottom button:hover {
+  box-shadow: 0 2px 8px rgba(33,150,243,.12);
+}
 
 /* ----- Responsive ----- */
 @media (max-width: 1024px) {
@@ -350,6 +385,26 @@
     margin-left: 0;
     justify-content: flex-end;
   }
+
+  .salones-filters-bottom {
+    padding: 8px;
+  }
+
+  .salones-filters-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .salones-filters-bottom .campo-busqueda,
+  .salones-filters-bottom .campo-horario {
+    width: 100%;
+    flex: unset;
+  }
+
+  .salones-filters-bottom .acciones-filtros {
+    justify-content: flex-end;
+    width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -369,6 +424,3 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-
-/* ----- (Opcional) Si tu layout agrega una clase cuando el sidebar está colapsado ----- */
-/* .sidenav-collapsed .lista-general-container { margin-left: 72px; max-width: calc(100vw - 72px - 40px); } */

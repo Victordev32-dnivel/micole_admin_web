@@ -1,0 +1,53 @@
+<div class="modal-content">
+  <h2>Agregar {{ tipo }}</h2>
+  <form [formGroup]="addForm" (ngSubmit)="onSubmit()">
+    <ng-container [ngSwitch]="tipo">
+      <ng-container *ngSwitchCase="'niveles'">
+        <mat-form-field>
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="nombre">
+        </mat-form-field>
+      </ng-container>
+      <ng-container *ngSwitchCase="'secciones'">
+        <mat-form-field>
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="nombre">
+        </mat-form-field>
+      </ng-container>
+      <ng-container *ngSwitchCase="'salones'">
+        <mat-form-field>
+          <mat-label>Hora Inicio</mat-label>
+          <input matInput formControlName="horaInicio">
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Hora Fin</mat-label>
+          <input matInput formControlName="horaFin">
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Tipo</mat-label>
+          <input matInput formControlName="tipo">
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>ID Grado</mat-label>
+          <input matInput formControlName="idGrado">
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>ID Sección</mat-label>
+          <input matInput formControlName="idSeccion">
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>ID Nivel</mat-label>
+          <input matInput formControlName="idNivel">
+        </mat-form-field>
+      </ng-container>
+    </ng-container>
+
+    <div class="button-group">
+      <button mat-raised-button color="primary" [disabled]="loading" type="submit">Confirmar</button>
+      <button mat-button (click)="onCancel()">Cancelar</button>
+    </div>
+  </form>
+  <mat-spinner *ngIf="loading"></mat-spinner>
+  <p *ngIf="error" class="error">{{ error }}</p>
+  <p *ngIf="successMessage" class="success">{{ successMessage }}</p>
+</div>
