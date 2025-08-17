@@ -1,0 +1,65 @@
+<div class="modal-content">
+  <h2>Editar {{ tipo }}</h2>
+  <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+    <ng-container [ngSwitch]="tipo">
+      <ng-container *ngSwitchCase="'niveles'">
+        <mat-form-field>
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="nombre">
+        </mat-form-field>
+      </ng-container>
+      <ng-container *ngSwitchCase="'secciones'">
+        <mat-form-field>
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="nombre">
+        </mat-form-field>
+      </ng-container>
+      <ng-container *ngSwitchCase="'salones'">
+        <mat-form-field>
+          <mat-label>Hora Inicio</mat-label>
+          <input matInput formControlName="horaInicio" placeholder="Ej: 08:00:00">
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Hora Fin</mat-label>
+          <input matInput formControlName="horaFin" placeholder="Ej: 18:00:00">
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Tipo</mat-label>
+          <input matInput formControlName="tipo">
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Grado</mat-label>
+          <mat-select formControlName="idGrado">
+            <mat-option *ngFor="let grado of grados" [value]="grado.id">
+              {{ grado.nombre }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Sección</mat-label>
+          <mat-select formControlName="idSeccion">
+            <mat-option *ngFor="let seccion of secciones" [value]="seccion.id">
+              {{ seccion.nombre }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Nivel</mat-label>
+          <mat-select formControlName="idNivel">
+            <mat-option *ngFor="let nivel of niveles" [value]="nivel.id">
+              {{ nivel.nombre }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </ng-container>
+    </ng-container>
+
+    <div class="button-group">
+      <button mat-raised-button color="primary" [disabled]="loading" type="submit">Confirmar</button>
+      <button mat-button (click)="onCancel()">Cancelar</button>
+    </div>
+  </form>
+  <mat-spinner *ngIf="loading"></mat-spinner>
+  <p *ngIf="error" class="error">{{ error }}</p>
+  <p *ngIf="successMessage" class="success">{{ successMessage }}</p>
+</div>
