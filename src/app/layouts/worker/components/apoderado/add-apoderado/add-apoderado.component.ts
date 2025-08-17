@@ -28,13 +28,13 @@ export class AddApoderadosComponent {
   ) {
     this.apoderadoForm = this.fb.group({
       nombre: ['', Validators.required],
-      apellido: ['', Validators.required],
+      apellidos: ['', Validators.required],
       dni: [
         '',
         [Validators.required, Validators.minLength(8), Validators.maxLength(8)],
       ],
       telefono: ['', Validators.required],
-      correo: ['', [Validators.required, Validators.email]],
+     
     });
   }
 

@@ -3,7 +3,6 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -62,7 +61,6 @@ export class ApoderadoListComponent implements OnInit {
       })
       .subscribe({
         next: (resp) => {
-          // Ajusta según la estructura exacta de tu API: resp.data, resp, etc.
           this.apoderados = resp?.data || resp || [];
           this.filteredApoderados = [...this.apoderados];
           this.loading = false;
@@ -86,11 +84,11 @@ export class ApoderadoListComponent implements OnInit {
       }
       this.filteredApoderados = this.apoderados.filter((a) => {
         const byNombre = a?.nombre?.toLowerCase().includes(search);
-        const byApellido = a?.apellido?.toLowerCase().includes(search);
+        const byApellidos = a?.apellidos?.toLowerCase().includes(search);
         const byDni = a?.dni?.toLowerCase?.()
           ? a.dni.toLowerCase().includes(search)
           : (a?.dni || '').includes(search);
-        return !!(byNombre || byApellido || byDni);
+        return !!(byNombre || byApellidos || byDni);
       });
       this.cdr.detectChanges();
     });
@@ -102,7 +100,7 @@ export class ApoderadoListComponent implements OnInit {
       maxWidth: '50vw',
       height: '30vw',
       panelClass: 'custom-dialog',
-      data: { isEditMode: false, apoderado: null }, // por consistencia
+      data: { isEditMode: false, apoderado: null },
     });
 
     dialogRef.afterClosed().subscribe((result) => {

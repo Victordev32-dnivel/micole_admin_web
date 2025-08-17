@@ -3,31 +3,19 @@
     <mat-form-field appearance="outline" class="search-field">
       <input
         matInput
-        placeholder="Buscar por nombre, apellido o DNI"
+        placeholder="Buscar por nombre, apellidos o DNI"
         [formControl]="searchTermControl"
       />
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
-
-    <button
-      mat-raised-button
-      color="primary"
-      class="add-button"
-      [disabled]="loading"
-      (click)="openAddDialog()"
-    >
-      <mat-icon>add</mat-icon>
-      Agregar Apoderado
-    </button>
   </div>
 
   <div class="apoderado-table">
     <div class="table-header">
       <span data-label="NOMBRE">NOMBRE</span>
-      <span data-label="APELLIDO">APELLIDO</span>
+      <span data-label="APELLIDOS">APELLIDOS</span>
       <span data-label="DNI">DNI</span>
       <span data-label="TELÉFONO">TELÉFONO</span>
-      <span data-label="CORREO">CORREO</span>
       <span data-label="ACCIONES">ACCIONES</span>
     </div>
 
@@ -38,10 +26,9 @@
 
       <div class="student-row" *ngFor="let apoderado of filteredApoderados">
         <span data-label="NOMBRE">{{ apoderado.nombre }}</span>
-        <span data-label="APELLIDO">{{ apoderado.apellido }}</span>
+        <span data-label="APELLIDOS">{{ apoderado.apellidos }}</span>
         <span data-label="DNI">{{ apoderado.dni }}</span>
         <span data-label="TELÉFONO">{{ apoderado.telefono }}</span>
-        <span data-label="CORREO">{{ apoderado.correo }}</span>
         <span class="actions" data-label="ACCIONES">
           <mat-icon
             (click)="openEditDialog(apoderado)"

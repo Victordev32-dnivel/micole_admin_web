@@ -1,7 +1,11 @@
-/* El padding del contenedor del diálogo se maneja globalmente con .custom-dialog en styles.css */
+/* Encapsulación específica para el componente */
+:host {
+  display: block;
+  width: 100%;
+}
 
-/* Contenedor principal */
-.apoderado-container {
+/* Contenedor principal - MÁS ESPECÍFICO */
+:host .apoderado-container {
   margin: 80px 0 20px 15vw;
   padding: 20px;
   background: #ffffff;
@@ -12,7 +16,7 @@
 }
 
 /* Barra superior con buscador y botón */
-.toolbar {
+:host .toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -23,12 +27,12 @@
   border-radius: 8px;
 }
 
-.search-field {
+:host .search-field {
   width: 300px;
   max-width: 100%;
 }
 
-.toolbar button {
+:host .toolbar button {
   padding: 8px 16px;
   background-color: black;
   color: white;
@@ -39,12 +43,12 @@
   min-width: 140px;
 }
 
-.toolbar button:hover {
+:host .toolbar button:hover {
   background-color: #333;
 }
 
-/* Tabla */
-.apoderado-table {
+/* Tabla - MÁS ESPECÍFICO */
+:host .apoderado-table {
   width: 100%;
   border-collapse: collapse;
   max-height: 70vh;
@@ -54,7 +58,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.table-header {
+:host .table-header {
   display: grid;
   grid-template-columns: 1fr 2fr 1.5fr 1fr 1fr 1fr;
   padding: 15px;
@@ -65,17 +69,17 @@
   color: #495057;
 }
 
-.table-header span {
+:host .table-header span {
   padding: 5px;
 }
 
-.table-body {
+:host .table-body {
   display: block;
   max-height: 60vh;
   overflow-y: auto;
 }
 
-.loading-container {
+:host .loading-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -83,7 +87,7 @@
   background-color: #fff;
 }
 
-.loading {
+:host .loading {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -92,7 +96,7 @@
   color: #333;
 }
 
-.spinner {
+:host .spinner {
   width: 20px;
   height: 20px;
   margin-left: 10px;
@@ -107,8 +111,8 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Fila de datos */
-.student-row {
+/* Fila de datos - MÁS ESPECÍFICO */
+:host .student-row {
   font-weight: 500;
   display: grid;
   grid-template-columns: 1fr 2fr 1.5fr 1fr 1fr 1fr;
@@ -119,78 +123,85 @@
   background-color: #fff;
 }
 
-.student-row:hover {
+:host .student-row:hover {
   background-color: #f8f9fa;
 }
 
-.student-row:last-child {
+:host .student-row:last-child {
   border-bottom: none;
 }
 
-.student-row span {
+:host .student-row span {
   padding: 5px;
   color: #333;
   word-break: break-word;
 }
 
-/* Acciones */
-.actions {
+/* Acciones - MÁS ESPECÍFICO */
+:host .actions {
   display: flex;
   justify-content: center;
   gap: 10px;
 }
 
-.actions mat-icon {
+:host .actions mat-icon {
   cursor: pointer;
   transition: all 0.2s;
   padding: 1px;
   border-radius: 4px;
 }
 
-.actions mat-icon:hover {
+:host .actions mat-icon:hover {
   background-color: rgba(255, 204, 0, 0.1);
   transform: scale(1.1);
 }
 
-/* Responsive igual que colegios */
+/* Responsive - ENCAPSULADO */
 @media (max-width: 1024px) {
-  .apoderado-container {
+  :host .apoderado-container {
     margin: 80px 10px 20px 10px;
     padding: 15px;
   }
-  .search-field {
+  
+  :host .search-field {
     width: 250px;
   }
 }
 
 @media (max-width: 767px) {
-  .apoderado-container {
+  :host .apoderado-container {
     margin: 70px 5px 20px 5px;
     padding: 10px;
     max-width: calc(100vw - 10px);
   }
-  .toolbar {
+  
+  :host .toolbar {
     flex-direction: column;
     gap: 15px;
     padding: 15px;
     align-items: stretch;
   }
-  .search-field {
+  
+  :host .search-field {
     width: 100%;
     margin-bottom: 0;
   }
-  .toolbar button {
+  
+  :host .toolbar button {
     width: 100%;
     min-width: unset;
     padding: 12px;
   }
-  .apoderado-table {
+  
+  :host .apoderado-table {
     overflow-x: auto;
   }
-  .table-header {
+  
+  :host .table-header {
     display: none;
   }
-  .student-row {
+  
+  :host .student-row {
     display: block;
     border: 1px solid #e9ecef;
     border-radius: 8px;
@@ -199,17 +210,20 @@
     background-color: #fff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
-  .student-row span {
+  
+  :host .student-row span {
     display: block;
     text-align: left;
     padding: 8px 0;
     border-bottom: 1px solid #f1f1f1;
     word-break: break-word;
   }
-  .student-row span:last-child {
+  
+  :host .student-row span:last-child {
     border-bottom: none;
   }
-  .student-row span::before {
+  
+  :host .student-row span::before {
     content: attr(data-label) ": ";
     font-weight: bold;
     color: #666;
@@ -218,12 +232,14 @@
     font-size: 0.85rem;
     text-transform: uppercase;
   }
-  .actions {
+  
+  :host .actions {
     justify-content: flex-start;
     margin-top: 10px;
     padding-top: 10px;
   }
-  .actions::before {
+  
+  :host .actions::before {
     content: "ACCIONES: ";
     font-weight: bold;
     color: #666;
@@ -233,27 +249,32 @@
 }
 
 @media (max-width: 480px) {
-  .apoderado-container {
+  :host .apoderado-container {
     margin: 60px 2px 20px 2px;
     padding: 8px;
   }
-  .toolbar {
+  
+  :host .toolbar {
     padding: 10px;
     gap: 10px;
   }
-  .toolbar button {
+  
+  :host .toolbar button {
     padding: 10px;
     font-size: 0.9rem;
   }
-  .student-row {
+  
+  :host .student-row {
     padding: 12px;
     margin-bottom: 12px;
   }
-  .student-row span {
+  
+  :host .student-row span {
     padding: 6px 0;
     font-size: 0.9rem;
   }
-  .student-row span::before {
+  
+  :host .student-row span::before {
     min-width: 80px;
     font-size: 0.8rem;
   }
