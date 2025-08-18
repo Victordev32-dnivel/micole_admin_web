@@ -92,12 +92,7 @@ export class EditTarjetaModalComponent implements OnInit {
     // Determinar el ID del alumno actual
     this.alumnoActualId = this.determinarAlumnoActualId();
 
-    console.log('🔧 Modal de edición inicializado:', {
-      tarjeta: this.tarjeta,
-      alumnoActualId: this.alumnoActualId,
-      alumnos: this.alumnos.length,
-      colegioId: this.colegioId
-    });
+   
 
     this.editTarjetaForm = this.fb.group({
       rfid: [
@@ -123,7 +118,7 @@ export class EditTarjetaModalComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log('🔧 Formulario inicializado con valores:', this.editTarjetaForm.value);
+  
   }
 
   // Método para determinar el ID del alumno actual
@@ -235,8 +230,7 @@ export class EditTarjetaModalComponent implements OnInit {
         IdColegio: this.colegioId,
       };
 
-      console.log('📤 Enviando datos de actualización:', payload);
-      console.log('🔗 URL de actualización:', `${this.baseUrl}/tarjeta/${this.tarjeta.id}`);
+     
 
       const updateUrl = `${this.baseUrl}/tarjeta/${this.tarjeta.id}`;
       const headers = this.getHeaders();
@@ -245,7 +239,7 @@ export class EditTarjetaModalComponent implements OnInit {
         .pipe(catchError(this.handleError))
         .subscribe({
           next: (response: any) => {
-            console.log('✅ Tarjeta actualizada exitosamente:', response);
+           
             this.loading = false;
             this.showSnackBar('Tarjeta actualizada exitosamente', 'success');
             
@@ -264,7 +258,7 @@ export class EditTarjetaModalComponent implements OnInit {
           },
         });
     } else {
-      console.log('❌ Formulario inválido:', this.editTarjetaForm.errors);
+     
       this.markFormGroupTouched();
       this.showSnackBar('Por favor, corrija los errores en el formulario', 'error');
     }
@@ -288,13 +282,13 @@ export class EditTarjetaModalComponent implements OnInit {
     const deleteUrl = `${this.baseUrl}/tarjeta/${this.tarjeta.id}`;
     const headers = this.getHeaders();
 
-    console.log('🗑️ Eliminando tarjeta:', deleteUrl);
+  
 
     this.http.delete(deleteUrl, { headers })
       .pipe(catchError(this.handleError))
       .subscribe({
         next: (response: any) => {
-          console.log('✅ Tarjeta eliminada exitosamente:', response);
+       
           this.loading = false;
           this.showSnackBar('Tarjeta eliminada exitosamente', 'success');
           

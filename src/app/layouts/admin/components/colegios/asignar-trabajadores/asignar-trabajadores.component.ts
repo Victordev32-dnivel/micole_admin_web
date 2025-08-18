@@ -130,9 +130,7 @@ export class AsignarTrabajadoresComponent {
 
     const requests = this.selectedTrabajadores.map((trabajador) => {
       const url = `https://proy-back-dnivel-44j5.onrender.com/api/Trabajador/${trabajador.id}/colegio`;
-      console.log(
-        `Asignando trabajador ID ${trabajador.id} a colegio ID ${this.data.colegioId}`
-      );
+   
       return this.http.patch(url, `"${this.data.colegioId}"`, {
         headers: this.getHeaders(),
       });
@@ -140,7 +138,7 @@ export class AsignarTrabajadoresComponent {
 
     Promise.all(requests.map((request) => request.toPromise()))
       .then((responses) => {
-        console.log('Respuestas de las solicitudes:', responses);
+       
         this.loading = false;
         this.dialogRef.close(this.selectedTrabajadores);
       })

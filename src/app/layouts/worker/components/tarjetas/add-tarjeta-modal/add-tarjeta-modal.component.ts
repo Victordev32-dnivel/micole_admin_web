@@ -646,20 +646,7 @@ export class AddTarjetaModalComponent {
       };
 
       // AGREGAR ESTOS LOGS PARA DEBUG:
-      console.log('📤 Datos finales antes de enviar:', tarjetaData);
-      console.log('🔍 Tipos de datos:', {
-        rfid: typeof tarjetaData.rfid,
-        codigo: typeof tarjetaData.codigo,
-        idAlumno: typeof tarjetaData.idAlumno,
-        idColegio: typeof tarjetaData.idColegio,
-      });
-      console.log('✅ Validaciones:', {
-        rfidEsNumero: !isNaN(tarjetaData.rfid),
-        rfidTiene10Digitos: tarjetaData.rfid.toString().length === 10,
-        codigoNoVacio: tarjetaData.codigo.length > 0,
-        idAlumnoValido: tarjetaData.idAlumno > 0,
-        idColegioValido: tarjetaData.idColegio > 0,
-      });
+     
 
       this.dialogRef.close(tarjetaData);
     }

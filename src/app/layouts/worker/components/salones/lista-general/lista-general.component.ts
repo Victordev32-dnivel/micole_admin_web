@@ -64,14 +64,14 @@ export class ListaGeneralComponent implements OnInit {
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {
-    console.log('🏗️ ListaGeneralComponent constructor ejecutado');
+   
   }
 
   ngOnInit() {
-    console.log('🚀 ListaGeneralComponent ngOnInit iniciado');
+    
     const userData = this.userService.getUserData();
     this.colegiosId = userData?.colegio || 0;
-    console.log('🏫 ID del colegio:', this.colegiosId);
+   
 
     if (!this.colegiosId) {
       this.error = 'No se encontró el ID del colegio';
@@ -81,7 +81,7 @@ export class ListaGeneralComponent implements OnInit {
 
     this.loadData();
     this.tipoSeleccionado.valueChanges.subscribe(() => {
-      console.log('🔄 Tipo seleccionado cambió a:', this.tipoSeleccionado.value);
+    
       this.currentPage = 1;
       this.searchTerm = '';
       this.tipoHorario = '';
@@ -98,7 +98,7 @@ export class ListaGeneralComponent implements OnInit {
   }
 
   loadData() {
-    console.log('📊 Cargando datos para:', this.tipoSeleccionado.value);
+   
     this.loading = true;
     this.error = null;
 
@@ -118,11 +118,11 @@ export class ListaGeneralComponent implements OnInit {
         break;
     }
 
-    console.log('🌐 URL de carga:', url);
+  
 
     this.http.get<any>(url, { headers: this.getHeaders() }).subscribe({
       next: (response) => {
-        console.log('✅ Datos cargados exitosamente:', response);
+      
         this.data = response.data || [];
         this.filteredData = [...this.data];
         this.totalPages = response.totalPages || 1;
@@ -186,7 +186,7 @@ export class ListaGeneralComponent implements OnInit {
   }
 
   abrirModalAgregar() {
-    console.log('➕ Abriendo modal agregar para:', this.tipoSeleccionado.value);
+   
     const tipo = this.tipoSeleccionado.value;
     const width = tipo === 'salones' ? '820px' : '520px';
 
@@ -207,7 +207,7 @@ export class ListaGeneralComponent implements OnInit {
   }
 
   abrirModalEditar(id: number, tipo: string) {
-    console.log('✏️ Abriendo modal editar para:', tipo, 'ID:', id);
+   
     const dialogRef = this.dialog.open(FuncionEditarComponent, {
       width: tipo === 'salones' ? '820px' : '520px',
       maxWidth: '95vw',
@@ -226,7 +226,7 @@ export class ListaGeneralComponent implements OnInit {
 
   // FUNCIÓN PARA ELIMINAR CON MEJOR MANEJO DE ERRORES Y DEBUG
   abrirModalEliminar(id: number, nombre: string) {
-    console.log('🗑️ CLICK EN ELIMINAR DETECTADO!');
+  
     
     if (!id || !nombre) {
       console.error('❌ Error: ID o nombre faltantes', { id, nombre });

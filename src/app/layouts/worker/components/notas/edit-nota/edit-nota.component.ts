@@ -80,7 +80,6 @@ export class EditNotasComponent implements OnInit {
       pdf: this.data.nota.pdf // Mantener valor original
     };
 
-    console.log('Enviando payload (solo editando nombre):', payload);
 
     this.http.put(
       `https://proy-back-dnivel-44j5.onrender.com/api/nota/${this.data.nota.id}`,
@@ -91,7 +90,7 @@ export class EditNotasComponent implements OnInit {
       }
     ).subscribe({
       next: (response) => {
-        console.log('Respuesta del servidor:', response);
+      
         this.snackBar.open('Nombre de nota actualizado correctamente', 'Cerrar', {
           duration: 3000,
           panelClass: ['success-snackbar']

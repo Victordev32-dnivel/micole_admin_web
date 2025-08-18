@@ -103,9 +103,7 @@ export class ColegioListComponent implements OnInit {
             return matchesName || matchesDireccion;
           });
         }
-        console.log(
-          `Colegios filtrados: ${this.filteredColegios.length} de ${this.colegios.length} total`
-        );
+       
         this.loading = false;
         this.cdr.detectChanges();
       }, 100);
@@ -181,7 +179,7 @@ export class ColegioListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        console.log('Trabajadores desasignados:', result);
+     
       }
     });
   }

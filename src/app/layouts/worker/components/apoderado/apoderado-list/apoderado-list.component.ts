@@ -98,8 +98,7 @@ export class ApoderadoListComponent implements OnInit {
     // Usar el colegioId dinámico en lugar del hardcodeado
     const url = `https://proy-back-dnivel-44j5.onrender.com/api/apoderado/colegio/lista/${this.colegioId}`;
     
-    console.log('🔍 Cargando apoderados para colegio ID:', this.colegioId);
-    console.log('📡 URL de la petición:', url);
+  
 
     this.http
       .get<any>(url, {
@@ -107,12 +106,12 @@ export class ApoderadoListComponent implements OnInit {
       })
       .subscribe({
         next: (resp) => {
-          console.log('✅ Respuesta del servidor:', resp);
+      
           this.ngZone.run(() => {
             this.apoderados = resp?.data || resp || [];
             this.filteredApoderados = [...this.apoderados];
             this.loading = false;
-            console.log(`📋 Total de apoderados cargados: ${this.apoderados.length}`);
+          
             this.cdr.detectChanges();
           });
         },
@@ -224,7 +223,7 @@ export class ApoderadoListComponent implements OnInit {
   }
 
   confirmDelete(apoderado: any) {
-    console.log('🔍 Datos del apoderado a eliminar:', apoderado);
+   
     
     // Determinar el ID del apoderado
     const apoderadoId = typeof apoderado === 'object' ? apoderado.id : apoderado;
@@ -232,7 +231,7 @@ export class ApoderadoListComponent implements OnInit {
     // Buscar la información completa del apoderado
     const apoderadoCompleto = this.apoderados.find(a => a.id === apoderadoId) || apoderado;
     
-    console.log('📋 Información completa encontrada:', apoderadoCompleto);
+  
     
     const dialogRef = this.dialog.open(EliminarApoderadoComponent, {
       width: '500px',
@@ -249,11 +248,11 @@ export class ApoderadoListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        console.log('✅ Apoderado eliminado, recargando lista...');
+     
         // El modal ya maneja el mensaje de éxito
         this.loadApoderados();
       } else {
-        console.log('❌ Eliminación cancelada');
+      
       }
     });
   }

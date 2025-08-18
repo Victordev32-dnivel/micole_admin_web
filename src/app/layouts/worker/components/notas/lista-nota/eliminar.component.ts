@@ -271,7 +271,7 @@ export class DeleteNotaModalComponent {
       )
       .subscribe({
         next: (response) => {
-          console.log('Nota eliminada exitosamente:', response);
+      
           
           this.snackBar.open('✅ Nota eliminada correctamente', 'Cerrar', {
             duration: 3000,

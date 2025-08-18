@@ -101,7 +101,7 @@ export class EditColegioComponent implements OnInit {
       this.loading = true;
       this.error = null;
       const formData = this.colegioForm.value;
-      console.log('Enviando datos al PUT:', formData); // Depuración
+   
       this.http
         .put(
           `https://proy-back-dnivel-44j5.onrender.com/api/colegio/${this.colegioId}`,
@@ -110,7 +110,7 @@ export class EditColegioComponent implements OnInit {
         )
         .subscribe({
           next: (response) => {
-            console.log('Respuesta del servidor:', response);
+          
             this.successMessage = 'Colegio actualizado exitosamente';
             this.loading = false;
             this.cdr.detectChanges();

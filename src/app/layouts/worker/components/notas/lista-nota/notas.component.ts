@@ -123,7 +123,7 @@ export class NotasComponent implements OnInit {
     .subscribe({
       next: (response) => {
         this.ngZone.run(() => {
-          console.log('Respuesta del servidor:', response);
+        
 
           // Manejar diferentes tipos de respuesta
           if (Array.isArray(response)) {
@@ -135,7 +135,7 @@ export class NotasComponent implements OnInit {
             }));
           } else if (response === null || response === undefined) {
             // Si la respuesta es null o undefined, inicializar como array vacío
-            console.log('Respuesta vacía del servidor, inicializando lista vacía');
+         
             this.notas = [];
           } else {
             // Si la respuesta no es un array pero tampoco es null, intentar convertir
@@ -158,7 +158,7 @@ export class NotasComponent implements OnInit {
           this.error = 'Error de conexión. Verifique su internet';
         } else if (error.status === 404) {
           // Si es 404, puede significar que no hay notas, no necesariamente un error
-          console.log('Endpoint no encontrado o sin notas, mostrando lista vacía');
+       
           this.notas = [];
           this.totalNotas = 0;
           this.error = null; // No mostrar error
@@ -223,7 +223,6 @@ export class NotasComponent implements OnInit {
       return;
     }
 
-    console.log('Abriendo PDF:', linkUrl);
 
     // Intentar abrir el PDF y manejar errores
     const newWindow = window.open(linkUrl, '_blank');
@@ -254,7 +253,7 @@ export class NotasComponent implements OnInit {
         }
       } catch (error) {
         // Error de acceso por CORS, pero esto es normal
-        console.log('PDF abierto correctamente');
+      
       }
     }, 2000);
   }
@@ -299,7 +298,7 @@ export class NotasComponent implements OnInit {
       )
       .subscribe({
         next: (response) => {
-          console.log('Nota actualizada exitosamente:', response);
+       
           this.loadNotas(); // Recargar la lista
         },
         error: (error) => {
@@ -329,7 +328,7 @@ export class NotasComponent implements OnInit {
       })
       .subscribe({
         next: (response) => {
-          console.log('Nota eliminada exitosamente:', response);
+      
           this.snackBar.open('✅ Nota eliminada correctamente', 'Cerrar', {
             duration: 3000,
             panelClass: ['success-snackbar'],
@@ -390,7 +389,7 @@ export class NotasComponent implements OnInit {
 }
 
   toggleMenu() {
-    console.log('Toggle menu clicked');
+    
   }
 
   onBack(): void {

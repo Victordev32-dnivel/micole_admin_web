@@ -460,7 +460,6 @@ export class EditApoderadosComponent implements OnInit {
     this.loading = true;
     this.loadError = null;
 
-    console.log('🔄 Cargando datos del apoderado desde lista:', this.data);
 
     // Buscar el apoderado en la lista que se pasó desde el componente padre
     const apoderado = this.data.apoderados.find(
@@ -468,7 +467,7 @@ export class EditApoderadosComponent implements OnInit {
     );
 
     if (apoderado) {
-      console.log('✅ Datos del apoderado encontrados:', apoderado);
+  
 
       // Mapear los datos del listado al formulario de edición
       this.apoderadoForm.patchValue({
@@ -485,9 +484,7 @@ export class EditApoderadosComponent implements OnInit {
 
       // Forzar actualización del formulario
       this.apoderadoForm.updateValueAndValidity();
-      console.log('📝 Formulario inicializado:', this.apoderadoForm.value);
-      console.log('✅ Formulario válido:', this.apoderadoForm.valid);
-      console.log('❌ Errores del formulario:', this.getFormErrors());
+   
 
       this.loading = false;
     } else {
@@ -544,11 +541,11 @@ export class EditApoderadosComponent implements OnInit {
       contrasena: 'KEEP_CURRENT' // Indicador para que el backend no cambie la contraseña
     };
 
-    console.log('🔄 Actualizando apoderado (sin cambiar contraseña):', url, updateData);
+   
 
     this.http.put(url, updateData, { headers: this.getHeaders() }).subscribe({
       next: (response) => {
-        console.log('✅ Apoderado actualizado exitosamente:', response);
+      
 
         this.snackBar.open('✅ Apoderado actualizado correctamente', 'Cerrar', {
           duration: 3000,

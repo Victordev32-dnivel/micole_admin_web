@@ -170,7 +170,7 @@ export class TarjetasComponent implements OnInit {
     try {
       const userData = this.userService.getUserData();
       
-      console.log('🔍 UserData completo:', userData);
+   
       
       if (userData) {
         // Casting para permitir acceso dinámico a propiedades
@@ -179,7 +179,7 @@ export class TarjetasComponent implements OnInit {
         // Verificar diferentes propiedades posibles para el ID del colegio
         this.colegioId = userData.colegio || userDataAny.idColegio || userDataAny.colegioId || userDataAny.id_colegio;
         
-        console.log('🏫 ColegioId obtenido:', this.colegioId);
+      
         
         // TEMPORAL: Para testing, usar ID 1 si no se encuentra otro
         if (!this.colegioId || this.colegioId === 0) {
@@ -187,7 +187,7 @@ export class TarjetasComponent implements OnInit {
           this.colegioId = 1; // Usar 1 temporalmente para testing
         }
         
-        console.log('✅ ColegioId final:', this.colegioId);
+      
         this.loadData();
         
       } else {
@@ -200,16 +200,16 @@ export class TarjetasComponent implements OnInit {
       // Suscribirse a cambios en userData
       this.userService.userData$.subscribe((newUserData) => {
         if (newUserData) {
-          console.log('🔄 Nuevo userData recibido:', newUserData);
+        
           
           const newUserDataAny = newUserData as any;
           const newColegioId = newUserData.colegio || newUserDataAny.idColegio || newUserDataAny.colegioId || newUserDataAny.id_colegio || 1;
           
-          console.log('🔄 Nuevo ColegioId:', newColegioId);
+         
           
           if (newColegioId && newColegioId !== this.colegioId) {
             this.colegioId = newColegioId;
-            console.log('✅ ColegioId actualizado a:', this.colegioId);
+          
             this.loadData();
             this.cdr.detectChanges();
           }
@@ -263,7 +263,7 @@ export class TarjetasComponent implements OnInit {
 
   // Método actualizado para mapear los datos de la API al formato interno
   private mapearTarjetasApi(tarjetasApi: TarjetaApiResponse[]): TarjetaConAlumno[] {
-    console.log('📋 Mapeando tarjetas de API:', tarjetasApi);
+
 
     return tarjetasApi.map((tarjetaApi) => {
       const tarjetaConAlumno: TarjetaConAlumno = {
@@ -309,7 +309,7 @@ export class TarjetasComponent implements OnInit {
       return;
     }
 
-    console.log('🚀 Iniciando carga de datos con colegioId:', this.colegioId);
+   
 
     this.loading = true;
     this.loadingMessage = 'Cargando tarjetas...';
@@ -320,13 +320,13 @@ export class TarjetasComponent implements OnInit {
     
     // Cargar alumnos primero
     const alumnosUrl = `${this.apiUrlAlumnos}/${this.colegioId}`;
-    console.log('🔗 URL alumnos:', alumnosUrl);
+   
 
     this.http.get<ApiResponse<Alumno[]>>(alumnosUrl, { headers })
       .pipe(catchError(this.handleError))
       .subscribe({
         next: (alumnosResponse) => {
-          console.log('✅ Alumnos cargados:', alumnosResponse);
+     
           
           const alumnosData = alumnosResponse.data || [];
           this.alumnos = alumnosData.map((alumno) => ({
@@ -334,7 +334,7 @@ export class TarjetasComponent implements OnInit {
             nombre_completo: alumno.nombre_completo?.replace(/\t/g, ' ').trim() || '',
           }));
 
-          console.log('👥 Alumnos procesados:', this.alumnos.length);
+      
           
           // Ahora cargar las tarjetas
           this.loadAllTarjetas();
@@ -353,13 +353,13 @@ export class TarjetasComponent implements OnInit {
     const headers = this.getHeaders();
     const tarjetasUrl = `${this.apiUrlTarjetaLista}/${this.colegioId}`;
     
-    console.log('🔗 URL tarjetas:', tarjetasUrl);
+
 
     this.http.get<TarjetasApiResponse>(tarjetasUrl, { headers })
       .pipe(catchError(this.handleError))
       .subscribe({
         next: (response) => {
-          console.log('✅ Respuesta tarjetas:', response);
+        
 
           this.ngZone.run(() => {
             this.totalTarjetas = response.totalTarjetas || 0;
@@ -367,12 +367,12 @@ export class TarjetasComponent implements OnInit {
             this.currentPage = response.page || 1;
             
             const tarjetasApi = response.data || [];
-            console.log('💳 Tarjetas recibidas de API:', tarjetasApi.length);
+        
 
             this.tarjetas = this.mapearTarjetasApi(tarjetasApi);
             this.filteredTarjetas = [...this.tarjetas];
 
-            console.log('✅ Tarjetas procesadas:', this.tarjetas.length);
+           
 
             // Si hay más páginas, cargar todas
             if (this.totalPages > 1) {
@@ -411,7 +411,7 @@ export class TarjetasComponent implements OnInit {
       .pipe(catchError(this.handleError))
       .subscribe({
         next: (responses: TarjetasApiResponse[]) => {
-          console.log('✅ Páginas adicionales cargadas:', responses.length);
+        
 
           this.ngZone.run(() => {
             // Combinar todas las tarjetas
@@ -427,7 +427,7 @@ export class TarjetasComponent implements OnInit {
             this.filteredTarjetas = [...this.tarjetas];
             this.totalTarjetas = this.tarjetas.length;
 
-            console.log('✅ Total de tarjetas cargadas:', this.tarjetas.length);
+         
 
             this.loading = false;
             this.loadingMessage = '';
@@ -510,7 +510,7 @@ export class TarjetasComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result?.success) {
-        console.log('Resultado del modal:', result);
+       
         
         if (result.action === 'update') {
           this.showSnackBar('Tarjeta actualizada exitosamente', 'success');
@@ -524,7 +524,7 @@ export class TarjetasComponent implements OnInit {
   }
 
   addTarjeta(tarjetaData: any): void {
-    console.log('🔍 Datos recibidos en addTarjeta:', tarjetaData);
+ 
 
     this.loading = true;
     this.loadingMessage = 'Agregando tarjeta...';
@@ -540,7 +540,7 @@ export class TarjetasComponent implements OnInit {
 
     try {
       const cleanedData = this.validateAndCleanTarjetaData(tarjetaData);
-      console.log('✅ Datos limpiados para enviar:', cleanedData);
+    
 
       const headers = this.getHeaders();
 
@@ -549,7 +549,7 @@ export class TarjetasComponent implements OnInit {
         .pipe(catchError(this.handleError))
         .subscribe({
           next: (response: any) => {
-            console.log('✅ Respuesta exitosa:', response);
+          
             this.ngZone.run(() => {
               this.showSnackBar('Tarjeta agregada con éxito', 'success');
               this.loading = false;
@@ -570,7 +570,7 @@ export class TarjetasComponent implements OnInit {
   }
 
   updateTarjeta(tarjetaId: number, tarjetaData: any): void {
-    console.log('🔍 Datos recibidos en updateTarjeta:', { tarjetaId, tarjetaData });
+
 
     this.loading = true;
     this.loadingMessage = 'Actualizando tarjeta...';
@@ -586,7 +586,7 @@ export class TarjetasComponent implements OnInit {
 
     try {
       const cleanedData = this.validateAndCleanTarjetaData(tarjetaData);
-      console.log('✅ Datos limpiados para actualizar:', cleanedData);
+     
 
       const headers = this.getHeaders();
       const updateUrl = `${this.apiUrlTarjeta}/${tarjetaId}`;
@@ -596,7 +596,7 @@ export class TarjetasComponent implements OnInit {
         .pipe(catchError(this.handleError))
         .subscribe({
           next: (response: any) => {
-            console.log('✅ Tarjeta actualizada exitosamente:', response);
+           
             this.ngZone.run(() => {
               this.showSnackBar('Tarjeta actualizada con éxito', 'success');
               this.loading = false;
@@ -647,14 +647,14 @@ export class TarjetasComponent implements OnInit {
     const headers = this.getHeaders();
     const deleteUrl = `${this.apiUrlTarjeta}/${tarjeta.id}`;
 
-    console.log(`🗑️ Eliminando tarjeta con URL: ${deleteUrl}`);
+   
 
     this.http
       .delete(deleteUrl, { headers })
       .pipe(catchError(this.handleError))
       .subscribe({
         next: (response: any) => {
-          console.log('✅ Tarjeta eliminada exitosamente:', response);
+        
           this.ngZone.run(() => {
             this.showSnackBar(`Tarjeta ${tarjeta.codigo} eliminada con éxito`, 'success');
             this.loading = false;
@@ -669,22 +669,14 @@ export class TarjetasComponent implements OnInit {
   }
 
   private validateAndCleanTarjetaData(data: any): TarjetaUpdateData {
-    console.log(
-      '🔍 Datos originales recibidos:',
-      JSON.stringify(data, null, 2)
-    );
+   
 
     const rfidValue = data.rfid || data.Rfid || data.RFID;
     const codigoValue = data.codigo || data.Codigo || data.code || data.horario;
     const alumnoValue =
       data.alumno || data.idAlumno || data.alumnoId || data.student;
 
-    console.log('📋 Valores extraídos:', {
-      rfidValue,
-      codigoValue,
-      alumnoValue,
-      colegioId: this.colegioId,
-    });
+  
 
     const cleanedData: TarjetaUpdateData = {
       Rfid: 0,
@@ -721,14 +713,14 @@ export class TarjetasComponent implements OnInit {
     ) {
       const alumnoNumber = Number(alumnoValue);
       if (isNaN(alumnoNumber)) {
-        console.log('⚠️ ID de alumno inválido, usando 0');
+     
         cleanedData.IdAlumno = 0;
       } else {
         cleanedData.IdAlumno = alumnoNumber;
       }
     } else {
       cleanedData.IdAlumno = 0;
-      console.log('⚠️ No hay alumno seleccionado, enviando IdAlumno = 0');
+      
     }
 
     // Validar colegio
@@ -736,10 +728,7 @@ export class TarjetasComponent implements OnInit {
       throw new Error('ID del colegio no está disponible');
     }
 
-    console.log(
-      '✅ Datos finales para enviar:',
-      JSON.stringify(cleanedData, null, 2)
-    );
+   
 
     return cleanedData;
   }

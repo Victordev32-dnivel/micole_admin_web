@@ -58,7 +58,7 @@ export class EliminarSalonesComponent {
 
     this.http.delete(url, this.getHeaders()).subscribe({
       next: (response) => {
-        console.log('Respuesta del servidor:', response);
+     
         this.dialogRef.close({ 
           success: true,
           message: 'Salón eliminado correctamente'

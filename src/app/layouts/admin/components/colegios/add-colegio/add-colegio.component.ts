@@ -78,7 +78,7 @@ export class AddColegioComponent implements OnInit {
       this.loading = true;
       this.error = null;
       const formData = this.colegioForm.value;
-      console.log('Enviando datos al POST:', formData); // Depuración
+   
       this.http
         .post(
           'https://proy-back-dnivel-44j5.onrender.com/api/colegio',
@@ -89,7 +89,7 @@ export class AddColegioComponent implements OnInit {
         )
         .subscribe({
           next: (response) => {
-            console.log('Respuesta del servidor:', response);
+         
             this.successMessage = 'Colegio agregado exitosamente';
             this.loading = false;
             this.cdr.detectChanges();

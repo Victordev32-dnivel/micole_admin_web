@@ -48,7 +48,7 @@ export class ConfirmationDeleteComponent {
 
   onConfirm() {
     this.loading = true;
-    console.log('Enviando solicitud DELETE para ID:', this.colegioId); // Depuración
+  
     this.http
       .delete(
         `https://proy-back-dnivel-44j5.onrender.com/api/colegio/${this.colegioId}`,
@@ -56,7 +56,7 @@ export class ConfirmationDeleteComponent {
       )
       .subscribe({
         next: (response) => {
-          console.log('Respuesta del servidor:', response);
+      
           this.loading = false;
           this.dialogRef.close(true);
         },

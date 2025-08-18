@@ -199,7 +199,7 @@ export class EliminarComunicadoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    console.log('Datos recibidos para eliminar:', this.data);
+   
   }
 
   private getHeaders(): HttpHeaders {
@@ -219,14 +219,14 @@ export class EliminarComunicadoComponent implements OnInit {
     this.eliminando = true;
     this.error = null;
 
-    console.log('🔥 ELIMINANDO CON NUEVA API:', this.data.endpoint);
+   
 
     // ✅ USANDO LA NUEVA API: https://proy-back-dnivel-44j5.onrender.com/{id}
     this.http
       .delete(this.data.endpoint, { headers: this.getHeaders() })
       .subscribe({
         next: (response) => {
-          console.log('✅ Comunicado eliminado exitosamente:', response);
+     
           this.eliminando = false;
           
           this.snackBar.open('✅ Comunicado eliminado exitosamente', 'Cerrar', {

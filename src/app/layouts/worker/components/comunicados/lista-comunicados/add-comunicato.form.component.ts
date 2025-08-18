@@ -470,7 +470,7 @@ export class ModalAnuncioGeneralComponent implements OnInit {
       url: this.generalForm.get('url')?.value.trim() ? 1 : 0 // Convertir URL a número (0 o 1)
     };
 
-    console.log('Datos a enviar:', formData); // Para depuración
+  
 
     this.http.post(
       'https://proy-back-dnivel-44j5.onrender.com/api/anuncio/general',
@@ -481,7 +481,7 @@ export class ModalAnuncioGeneralComponent implements OnInit {
       }
     ).subscribe({
       next: (response) => {
-        console.log('Respuesta exitosa:', response);
+       
         this.loading = false;
         this.dialogRef.close({ success: true, data: response.body });
       },

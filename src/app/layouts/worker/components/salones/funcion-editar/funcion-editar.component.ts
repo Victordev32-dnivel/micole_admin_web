@@ -183,10 +183,7 @@ export class FuncionEditarComponent implements OnInit {
       this.error = null;
       this.isSubmitting = true;
       const formData = this.editForm.value;
-      console.log(
-        'Datos enviados al submit:',
-        JSON.stringify(formData, null, 2)
-      );
+     
       let url = '';
       switch (this.tipo) {
         case 'niveles':
@@ -199,10 +196,10 @@ export class FuncionEditarComponent implements OnInit {
           url = `https://proy-back-dnivel-44j5.onrender.com/api/salon/${this.id}`;
           break;
       }
-      console.log('URL de la petición:', url);
+   
       this.http.put(url, formData, { headers: this.getHeaders() }).subscribe({
         next: (response) => {
-          console.log('Respuesta de la API:', response);
+         
           this.successMessage = 'Editado exitosamente';
           this.loading = false;
           this.isSubmitting = false;

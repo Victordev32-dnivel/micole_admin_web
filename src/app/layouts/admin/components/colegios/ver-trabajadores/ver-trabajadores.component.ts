@@ -76,9 +76,7 @@ export class VerTrabajadoresComponent {
 
     const requests = this.trabajadoresDesasignados.map((trabajador) => {
       const url = `https://proy-back-dnivel-44j5.onrender.com/api/Trabajador/${trabajador.id}/colegio`;
-      console.log(
-        `Desasignando trabajador ID ${trabajador.id} con cuerpo: "0"`
-      );
+     
       return this.http.patch(url, '"0"', {
         headers: this.getHeaders(),
       });
@@ -86,10 +84,7 @@ export class VerTrabajadoresComponent {
 
     Promise.all(requests.map((request) => request.toPromise()))
       .then((responses) => {
-        console.log(
-          'Respuestas de las solicitudes de desasignación:',
-          responses
-        );
+    
         this.loading = false;
         this.dialogRef.close(this.trabajadoresDesasignados);
       })

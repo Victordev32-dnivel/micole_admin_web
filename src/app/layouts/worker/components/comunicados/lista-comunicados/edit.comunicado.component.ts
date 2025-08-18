@@ -386,7 +386,7 @@ export class EditarComunicadoComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log('Datos recibidos para editar:', this.data);
+  
     this.populateForm();
   }
 
@@ -448,14 +448,11 @@ export class EditarComunicadoComponent implements OnInit {
 
     const formValues = this.editForm.value;
 
-    // ✅ DEBUGGING: Verificar datos antes de construir payload
-    console.log('🔍 Form Values:', formValues);
-    console.log('🔍 Comunicado Original:', this.data.comunicado);
-    console.log('🔍 Colegio ID:', this.data.colegioId);
+    
 
     // ✅ CORREGIR: Obtener userId de manera más robusta
     const userId = this.getUserId();
-    console.log('🔍 User ID obtenido:', userId);
+   
 
     // Construir payload según la API
     const updatePayload: any = {
@@ -499,21 +496,15 @@ export class EditarComunicadoComponent implements OnInit {
       }
     });
 
-    console.log('🔄 PAYLOAD FINAL LIMPIO:', updatePayload);
-    console.log(
-      '🔄 PAYLOAD SIZE:',
-      JSON.stringify(updatePayload).length,
-      'bytes'
-    );
 
     const endpoint = `https://proy-back-dnivel-44j5.onrender.com/api/anuncio/${this.data.comunicado.id}`;
-    console.log('🔄 ENDPOINT:', endpoint);
+  
 
     this.http
       .put(endpoint, updatePayload, { headers: this.getHeaders() })
       .subscribe({
         next: (response) => {
-          console.log('✅ Comunicado editado exitosamente:', response);
+       
           this.guardando = false;
 
           this.snackBar.open(
@@ -585,11 +576,10 @@ export class EditarComunicadoComponent implements OnInit {
     try {
       // ✅ CORREGIR: Usar solo propiedades que existen en UserData
       const userData = this.userService.getUserData();
-      console.log('🔍 UserData completo:', userData);
-      
+    
       // Usar solo la propiedad 'id' que existe en tu interfaz
       if (userData?.id) {
-        console.log('✅ ID encontrado en userData:', userData.id);
+       
         return Number(userData.id);
       }
       
@@ -598,10 +588,10 @@ export class EditarComunicadoComponent implements OnInit {
       if (userFromStorage) {
         try {
           const parsedUser = JSON.parse(userFromStorage);
-          console.log('🔍 User from localStorage:', parsedUser);
+        
           
           if (parsedUser?.id) {
-            console.log('✅ ID encontrado en localStorage:', parsedUser.id);
+          
             return Number(parsedUser.id);
           }
         } catch (parseError) {

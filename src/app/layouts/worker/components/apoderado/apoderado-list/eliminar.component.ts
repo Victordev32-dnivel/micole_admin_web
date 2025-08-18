@@ -326,16 +326,10 @@ export class EliminarApoderadoComponent implements OnInit {
     if (this.data.apoderado) {
       this.apoderadoInfo = this.data.apoderado;
     } else {
-      // Si no, intentamos obtenerla (aunque no tenemos GET individual)
-      console.log('ℹ️ No se proporcionó información del apoderado');
+
     }
 
-    console.log('🗑️ Inicializando eliminación de apoderado:', {
-      id: this.data.id,
-      message: this.data.message,
-      apoderado: this.apoderadoInfo,
-      dataCompleta: this.data
-    });
+   
   }
 
   // Métodos auxiliares para obtener datos del apoderado de forma segura
@@ -376,7 +370,7 @@ export class EliminarApoderadoComponent implements OnInit {
     if (this.deleting) {
       return; // No permitir cancelar si está eliminando
     }
-    console.log('❌ Eliminación cancelada por el usuario');
+  
     this.dialogRef.close(false);
   }
 
@@ -393,8 +387,7 @@ export class EliminarApoderadoComponent implements OnInit {
     this.error = null;
 
     const url = `https://proy-back-dnivel-44j5.onrender.com/api/apoderado/${this.data.id}`;
-    
-    console.log('🔄 Iniciando eliminación del apoderado:', url);
+  
 
     // Configurar headers para aceptar texto plano también
     const headers = new HttpHeaders({
@@ -408,7 +401,7 @@ export class EliminarApoderadoComponent implements OnInit {
       responseType: 'text' as 'json' // Tratar respuesta como texto
     }).subscribe({
       next: (response) => {
-        console.log('✅ Apoderado eliminado exitosamente:', response);
+       
 
         // La respuesta es texto, no JSON
         const message = response && response.toString().includes('eliminó') 

@@ -206,10 +206,7 @@ export class EliminarComponent {
   confirmarEliminacion(): void {
     this.eliminando = true;
     const url = this.getApiEndpoint();
-    
-    console.log(`🗑️ Intentando eliminar ${this.data.tipo} con ID: ${this.data.id}`);
-    console.log(`📍 URL: ${url}`);
-    console.log(`🔑 Token: ${this.userService.getJwtToken()?.substring(0, 20)}...`);
+  
 
     // Primero intentamos con observe: 'response' para capturar toda la respuesta HTTP
     this.http.delete(url, { 
@@ -218,9 +215,7 @@ export class EliminarComponent {
       responseType: 'text'
     }).subscribe({
       next: (response) => {
-        console.log('✅ Respuesta completa:', response);
-        console.log('📊 Status:', response.status);
-        console.log('📄 Body:', response.body);
+      
         
         if (response.status === 200 || response.status === 204) {
           const message = response.body === 'Se elimino' || response.body === 'Se eliminó' || !response.body
