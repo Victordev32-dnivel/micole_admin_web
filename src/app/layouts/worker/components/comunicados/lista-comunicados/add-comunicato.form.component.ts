@@ -21,7 +21,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { UserService } from '../../../../../services/UserData';
-import { environment } from '../../../../../environment/environment';
+import { environment } from '@environments/environment';
 import { S3 } from 'aws-sdk';
 import { Buffer } from 'buffer';
 

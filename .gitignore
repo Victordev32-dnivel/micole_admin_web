@@ -43,5 +43,5 @@ Thumbs.db
 .vercel
 # Excluir componente específico
 # Excluir environments.ts
-/src/app/environment/environment.ts
+/src/environments/environment.ts
 
