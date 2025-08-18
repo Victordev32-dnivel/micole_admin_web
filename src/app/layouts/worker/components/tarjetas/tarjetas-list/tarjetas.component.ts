@@ -37,17 +37,28 @@ import { AddTarjetaModalComponent } from '../add-tarjeta-modal/add-tarjeta-modal
 import { UserService } from '../../../../../services/UserData';
 import { catchError, throwError, forkJoin } from 'rxjs';
 
+// Interfaz actualizada para la respuesta de la API
+interface TarjetaApiResponse {
+  id: number;
+  rfid: number;
+  horario: string; // Cambiado de 'codigo' a 'horario'
+  alumno: string; // Es un string con el nombre, no un ID
+}
+
+// Interfaz para la respuesta paginada de la API
+interface TarjetasApiResponse {
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  totalTarjetas: number;
+  data: TarjetaApiResponse[];
+}
+
+// Interfaz para uso interno (manteniendo compatibilidad)
 interface Tarjeta {
   id: number;
   rfid: number;
-  codigo: string;
-}
-
-interface TarjetaResponse {
-  id: number;
-  rfid: number;
-  codigo: string;
-  alumno?: number; // ID del alumno asociado (viene de la API)
+  codigo: string; // Para compatibilidad interna
 }
 
 interface Alumno {
@@ -58,11 +69,12 @@ interface Alumno {
   telefono?: string | null;
 }
 
-interface TarjetaConAlumno extends TarjetaResponse {
-  alumnoData?: Alumno; // Datos completos del alumno
+interface TarjetaConAlumno extends Tarjeta {
+  alumnoData?: Alumno;
   alumnoNombre?: string;
   alumnoDocumento?: string;
   alumnoCodigo?: string;
+  horario?: string; // Agregamos el campo horario de la API
 }
 
 interface ApiResponse<T> {
@@ -113,8 +125,13 @@ export class TarjetasComponent implements OnInit {
   colegioId: number = 0;
   totalTarjetas: number = 0;
 
+  // Variables para paginación
+  currentPage: number = 1;
+  pageSize: number = 10;
+  totalPages: number = 0;
+
   private readonly baseUrl = 'https://proy-back-dnivel-44j5.onrender.com/api';
-  private readonly apiUrlTarjetaLista = `${this.baseUrl}/tarjeta/lista/colegio`;
+  private readonly apiUrlTarjetaLista = `${this.baseUrl}/tarjeta/colegio`; // Actualizada URL
   private readonly apiUrlTarjeta = `${this.baseUrl}/tarjeta`;
   private readonly apiUrlAlumnos = `${this.baseUrl}/alumno/colegio`;
 
@@ -153,7 +170,7 @@ export class TarjetasComponent implements OnInit {
     try {
       const userData = this.userService.getUserData();
       
-      console.log('🔍 UserData completo:', userData); // Para debugging
+      console.log('🔍 UserData completo:', userData);
       
       if (userData) {
         // Casting para permitir acceso dinámico a propiedades
@@ -162,39 +179,22 @@ export class TarjetasComponent implements OnInit {
         // Verificar diferentes propiedades posibles para el ID del colegio
         this.colegioId = userData.colegio || userDataAny.idColegio || userDataAny.colegioId || userDataAny.id_colegio;
         
-        console.log('🏫 ColegioId obtenido:', this.colegioId); // Para debugging
+        console.log('🏫 ColegioId obtenido:', this.colegioId);
         
-        if (this.colegioId && this.colegioId !== 1) {
-          console.log('✅ ColegioId válido encontrado:', this.colegioId);
-          this.loadData();
-        } else {
-          console.warn('⚠️ ColegioId es 1 o no válido, verificando estructura de userData');
-          console.log('📋 Propiedades disponibles en userData:', Object.keys(userData));
-          
-          // Intentar encontrar el ID correcto en otras propiedades
-          const possibleKeys = ['colegio', 'idColegio', 'colegioId', 'id_colegio', 'school_id', 'schoolId'];
-          let foundId = null;
-          
-          for (const key of possibleKeys) {
-            const value = userDataAny[key];
-            if (value && value !== 1) {
-              foundId = value;
-              console.log(`✅ ID encontrado en propiedad '${key}':`, foundId);
-              break;
-            }
-          }
-          
-          if (foundId) {
-            this.colegioId = foundId;
-            this.loadData();
-          } else {
-            this.error = 'No se pudo obtener un ID válido del colegio';
-            console.error('❌ No se encontró un ID válido del colegio en userData');
-          }
+        // TEMPORAL: Para testing, usar ID 1 si no se encuentra otro
+        if (!this.colegioId || this.colegioId === 0) {
+          console.warn('⚠️ ColegioId no válido, usando ID 1 para testing');
+          this.colegioId = 1; // Usar 1 temporalmente para testing
         }
+        
+        console.log('✅ ColegioId final:', this.colegioId);
+        this.loadData();
+        
       } else {
-        this.error = 'No se pudieron cargar los datos del usuario';
-        console.error('❌ userData es null or undefined');
+        // Si no hay userData, usar ID 1 para testing
+        console.warn('⚠️ No hay userData, usando colegioId = 1 para testing');
+        this.colegioId = 1;
+        this.loadData();
       }
 
       // Suscribirse a cambios en userData
@@ -203,7 +203,7 @@ export class TarjetasComponent implements OnInit {
           console.log('🔄 Nuevo userData recibido:', newUserData);
           
           const newUserDataAny = newUserData as any;
-          const newColegioId = newUserData.colegio || newUserDataAny.idColegio || newUserDataAny.colegioId || newUserDataAny.id_colegio;
+          const newColegioId = newUserData.colegio || newUserDataAny.idColegio || newUserDataAny.colegioId || newUserDataAny.id_colegio || 1;
           
           console.log('🔄 Nuevo ColegioId:', newColegioId);
           
@@ -217,7 +217,10 @@ export class TarjetasComponent implements OnInit {
       });
     } catch (error) {
       console.error('❌ Error en loadUserData:', error);
-      this.error = 'Error al cargar datos del usuario';
+      // En caso de error, usar ID 1 para testing
+      this.colegioId = 1;
+      this.error = 'Error al cargar datos del usuario, usando datos de prueba';
+      this.loadData();
     }
   }
 
@@ -258,34 +261,31 @@ export class TarjetasComponent implements OnInit {
     return throwError(() => error);
   };
 
-  private asociarTarjetasConAlumnos(
-    tarjetas: TarjetaResponse[]
-  ): TarjetaConAlumno[] {
-    console.log('Tarjetas recibidas:', tarjetas);
-    console.log('Alumnos disponibles:', this.alumnos);
+  // Método actualizado para mapear los datos de la API al formato interno
+  private mapearTarjetasApi(tarjetasApi: TarjetaApiResponse[]): TarjetaConAlumno[] {
+    console.log('📋 Mapeando tarjetas de API:', tarjetasApi);
 
-    return tarjetas.map((tarjeta) => {
-      const tarjetaConAlumno: TarjetaConAlumno = { ...tarjeta };
+    return tarjetasApi.map((tarjetaApi) => {
+      const tarjetaConAlumno: TarjetaConAlumno = {
+        id: tarjetaApi.id,
+        rfid: tarjetaApi.rfid,
+        codigo: tarjetaApi.horario, // Mapear horario a codigo para compatibilidad
+        horario: tarjetaApi.horario,
+        alumnoNombre: tarjetaApi.alumno?.replace(/\t/g, ' ').trim() || undefined
+      };
 
-      if (tarjeta.alumno) {
+      // Si hay un nombre de alumno, intentar encontrar el alumno completo
+      if (tarjetaApi.alumno && tarjetaApi.alumno !== 'Sin asignar') {
+        const nombreLimpio = tarjetaApi.alumno.replace(/\t/g, ' ').trim();
         const alumnoEncontrado = this.alumnos.find(
-          (a) => a.id === tarjeta.alumno
+          (a) => a.nombre_completo.replace(/\t/g, ' ').trim() === nombreLimpio
         );
-        console.log(`Tarjeta ${tarjeta.id} tiene alumno ID: ${tarjeta.alumno}`);
 
         if (alumnoEncontrado) {
-          console.log(`Alumno encontrado:`, alumnoEncontrado);
           tarjetaConAlumno.alumnoData = alumnoEncontrado;
-          tarjetaConAlumno.alumnoNombre = alumnoEncontrado.nombre_completo
-            .replace(/\t/g, ' ')
-            .trim();
           tarjetaConAlumno.alumnoDocumento = alumnoEncontrado.numero_documento;
           tarjetaConAlumno.alumnoCodigo = alumnoEncontrado.codigo;
-        } else {
-          console.log(`No se encontró alumno con ID: ${tarjeta.alumno}`);
         }
-      } else {
-        console.log(`Tarjeta ${tarjeta.id} no tiene alumno asignado`);
       }
 
       return tarjetaConAlumno;
@@ -301,6 +301,7 @@ export class TarjetasComponent implements OnInit {
     });
   }
 
+  // Método actualizado para cargar todas las páginas de tarjetas
   loadData(): void {
     if (!this.colegioId) {
       this.error = 'ID del colegio no disponible';
@@ -316,50 +317,117 @@ export class TarjetasComponent implements OnInit {
     this.successMessage = null;
 
     const headers = this.getHeaders();
-    const tarjetasUrl = `${this.apiUrlTarjetaLista}/${this.colegioId}`;
+    
+    // Cargar alumnos primero
     const alumnosUrl = `${this.apiUrlAlumnos}/${this.colegioId}`;
+    console.log('🔗 URL alumnos:', alumnosUrl);
 
-    console.log('🔗 URLs construidas:', { 
-      tarjetasUrl, 
-      alumnosUrl,
-      colegioIdUsado: this.colegioId 
-    });
+    this.http.get<ApiResponse<Alumno[]>>(alumnosUrl, { headers })
+      .pipe(catchError(this.handleError))
+      .subscribe({
+        next: (alumnosResponse) => {
+          console.log('✅ Alumnos cargados:', alumnosResponse);
+          
+          const alumnosData = alumnosResponse.data || [];
+          this.alumnos = alumnosData.map((alumno) => ({
+            ...alumno,
+            nombre_completo: alumno.nombre_completo?.replace(/\t/g, ' ').trim() || '',
+          }));
 
-    const tarjetasRequest = this.http.get<ApiResponse<TarjetaResponse[]>>(
-      tarjetasUrl,
-      { headers }
-    );
-    const alumnosRequest = this.http.get<ApiResponse<Alumno[]>>(alumnosUrl, {
-      headers,
-    });
+          console.log('👥 Alumnos procesados:', this.alumnos.length);
+          
+          // Ahora cargar las tarjetas
+          this.loadAllTarjetas();
+        },
+        error: (error) => {
+          console.error('❌ Error al cargar alumnos:', error);
+          // Continuar sin alumnos
+          this.alumnos = [];
+          this.loadAllTarjetas();
+        },
+      });
+  }
 
-    forkJoin({
-      tarjetas: tarjetasRequest,
-      alumnos: alumnosRequest,
-    })
+  // Método para cargar todas las tarjetas (manejando paginación)
+  private loadAllTarjetas(): void {
+    const headers = this.getHeaders();
+    const tarjetasUrl = `${this.apiUrlTarjetaLista}/${this.colegioId}`;
+    
+    console.log('🔗 URL tarjetas:', tarjetasUrl);
+
+    this.http.get<TarjetasApiResponse>(tarjetasUrl, { headers })
       .pipe(catchError(this.handleError))
       .subscribe({
         next: (response) => {
-          console.log('✅ Respuesta completa:', response);
+          console.log('✅ Respuesta tarjetas:', response);
 
           this.ngZone.run(() => {
-            const alumnosData = response.alumnos.data || [];
-            this.alumnos = alumnosData.map((alumno) => ({
-              ...alumno,
-              nombre_completo:
-                alumno.nombre_completo?.replace(/\t/g, ' ').trim() || '',
-            }));
+            this.totalTarjetas = response.totalTarjetas || 0;
+            this.totalPages = response.totalPages || 0;
+            this.currentPage = response.page || 1;
+            
+            const tarjetasApi = response.data || [];
+            console.log('💳 Tarjetas recibidas de API:', tarjetasApi.length);
 
-            console.log('👥 Alumnos procesados:', this.alumnos.length);
+            this.tarjetas = this.mapearTarjetasApi(tarjetasApi);
+            this.filteredTarjetas = [...this.tarjetas];
 
-            const tarjetasRaw = response.tarjetas.data || [];
-            console.log('💳 Tarjetas raw recibidas:', tarjetasRaw.length);
+            console.log('✅ Tarjetas procesadas:', this.tarjetas.length);
 
-            this.tarjetas = this.asociarTarjetasConAlumnos(tarjetasRaw);
+            // Si hay más páginas, cargar todas
+            if (this.totalPages > 1) {
+              this.loadRemainingPages();
+            } else {
+              this.loading = false;
+              this.loadingMessage = '';
+              this.cdr.detectChanges();
+            }
+          });
+        },
+        error: (error) => {
+          console.error('❌ Error al cargar tarjetas:', error);
+        },
+      });
+  }
+
+  // Método para cargar las páginas restantes
+  private loadRemainingPages(): void {
+    const headers = this.getHeaders();
+    const requests = [];
+
+    for (let page = 2; page <= this.totalPages; page++) {
+      const url = `${this.apiUrlTarjetaLista}/${this.colegioId}?page=${page}`;
+      requests.push(this.http.get<TarjetasApiResponse>(url, { headers }));
+    }
+
+    if (requests.length === 0) {
+      this.loading = false;
+      this.loadingMessage = '';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    forkJoin(requests)
+      .pipe(catchError(this.handleError))
+      .subscribe({
+        next: (responses: TarjetasApiResponse[]) => {
+          console.log('✅ Páginas adicionales cargadas:', responses.length);
+
+          this.ngZone.run(() => {
+            // Combinar todas las tarjetas
+            const todasLasTarjetas = [...this.tarjetas];
+
+            responses.forEach(response => {
+              const tarjetasApi = response.data || [];
+              const tarjetasMapeadas = this.mapearTarjetasApi(tarjetasApi);
+              todasLasTarjetas.push(...tarjetasMapeadas);
+            });
+
+            this.tarjetas = todasLasTarjetas;
             this.filteredTarjetas = [...this.tarjetas];
             this.totalTarjetas = this.tarjetas.length;
 
-            console.log('✅ Tarjetas procesadas:', this.tarjetas.length);
+            console.log('✅ Total de tarjetas cargadas:', this.tarjetas.length);
 
             this.loading = false;
             this.loadingMessage = '';
@@ -367,13 +435,11 @@ export class TarjetasComponent implements OnInit {
           });
         },
         error: (error) => {
-          console.error('❌ Error al cargar datos:', error);
-          this.ngZone.run(() => {
-            this.loading = false;
-            this.loadingMessage = '';
-            this.error = 'Error al cargar datos. Intente nuevamente.';
-            this.cdr.detectChanges();
-          });
+          console.error('❌ Error al cargar páginas adicionales:', error);
+          // Mantener las tarjetas ya cargadas
+          this.loading = false;
+          this.loadingMessage = '';
+          this.cdr.detectChanges();
         },
       });
   }
@@ -395,7 +461,9 @@ export class TarjetasComponent implements OnInit {
         (tarjeta.alumnoData?.codigo &&
           tarjeta.alumnoData.codigo.toLowerCase().includes(term)) ||
         (tarjeta.alumnoData?.numero_documento &&
-          tarjeta.alumnoData.numero_documento.includes(term))
+          tarjeta.alumnoData.numero_documento.includes(term)) ||
+        (tarjeta.horario &&
+          tarjeta.horario.toLowerCase().includes(term))
     );
   }
 
@@ -405,7 +473,7 @@ export class TarjetasComponent implements OnInit {
   }
 
   // ===============================
-  // FUNCIONALIDADES CRUD
+  // FUNCIONALIDADES CRUD (mantenidas igual)
   // ===============================
 
   openAddTarjetaModal(): void {
@@ -445,13 +513,11 @@ export class TarjetasComponent implements OnInit {
         console.log('Resultado del modal:', result);
         
         if (result.action === 'update') {
-          // La tarjeta fue actualizada
           this.showSnackBar('Tarjeta actualizada exitosamente', 'success');
-          this.loadData(); // Recargar los datos
+          this.loadData();
         } else if (result.action === 'delete') {
-          // La tarjeta fue eliminada desde el modal
           this.showSnackBar(`Tarjeta ${result.data.codigo} eliminada exitosamente`, 'success');
-          this.loadData(); // Recargar los datos
+          this.loadData();
         }
       }
     });
@@ -550,9 +616,6 @@ export class TarjetasComponent implements OnInit {
     }
   }
 
-  // ===============================
-  // MÉTODO ACTUALIZADO PARA ELIMINAR CON MODAL
-  // ===============================
   deleteTarjeta(tarjeta: TarjetaConAlumno): void {
     const dialogRef = this.dialog.open(ConfirmDeleteModalComponent, {
       width: '500px',
@@ -575,7 +638,6 @@ export class TarjetasComponent implements OnInit {
     });
   }
 
-  // Método separado para realizar la eliminación
   private performDelete(tarjeta: TarjetaConAlumno): void {
     this.loading = true;
     this.loadingMessage = 'Eliminando tarjeta...';
@@ -613,7 +675,7 @@ export class TarjetasComponent implements OnInit {
     );
 
     const rfidValue = data.rfid || data.Rfid || data.RFID;
-    const codigoValue = data.codigo || data.Codigo || data.code;
+    const codigoValue = data.codigo || data.Codigo || data.code || data.horario;
     const alumnoValue =
       data.alumno || data.idAlumno || data.alumnoId || data.student;
 

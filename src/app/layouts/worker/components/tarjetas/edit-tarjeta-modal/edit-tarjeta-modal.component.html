@@ -8,7 +8,7 @@
         </div>
         <div class="title-text">
           <h2 mat-dialog-title class="modal-title">Editar Tarjeta RFID</h2>
-          <p class="modal-subtitle">Modificar información de la tarjeta</p>
+          <p class="modal-subtitle">{{ getCurrentTarjetaInfo() }}</p>
         </div>
       </div>
       <button
@@ -26,11 +26,9 @@
   <!-- Información actual de la tarjeta -->
   <div class="current-info">
     <div class="info-card">
-     
-      
       <div class="alumno-status">
-        <div class="status-indicator" [class.assigned]="tarjeta.alumnoData" [class.available]="!tarjeta.alumnoData">
-          <mat-icon>{{ tarjeta.alumnoData ? 'person' : 'credit_card' }}</mat-icon>
+        <div class="status-indicator" [class.assigned]="tarjeta.alumnoData || tarjeta.alumnoNombre" [class.available]="!tarjeta.alumnoData && !tarjeta.alumnoNombre">
+          <mat-icon>{{ (tarjeta.alumnoData || tarjeta.alumnoNombre) ? 'person' : 'credit_card' }}</mat-icon>
           <span>{{ getCurrentAlumnoInfo() }}</span>
         </div>
       </div>
@@ -43,7 +41,7 @@
       
       <!-- Campo RFID -->
       <div class="form-group">
-        <mat-form-field appearance="outline" class="">
+        <mat-form-field appearance="outline" class="form-field">
           <mat-label>Número RFID</mat-label>
           <input
             matInput
@@ -69,7 +67,7 @@
             matInput
             type="text"
             formControlName="codigo"
-            placeholder="Ej: TRJ-001"
+            placeholder="Ej: ASIGNADO, TRJ-001, etc."
             [disabled]="loading"
             autocomplete="off"
             maxlength="50"
@@ -78,7 +76,7 @@
           <mat-error *ngIf="hasFieldError('codigo')">
             {{ getFieldError('codigo') }}
           </mat-error>
-          <mat-hint>Código alfanumérico de identificación</mat-hint>
+          <mat-hint>Código alfanumérico de identificación (puede incluir espacios)</mat-hint>
         </mat-form-field>
       </div>
 
@@ -96,10 +94,9 @@
             <mat-option
               *ngFor="let alumno of alumnos"
               [value]="alumno.id"
-              [class.current-assignment]="alumno.id === tarjeta.alumno"
+              [class.current-assignment]="alumno.id === alumnoActualId"
             >
               <div class="option-content">
-              
                 <div class="alumno-details">
                   <div class="alumno-nombre">{{ alumno.nombre_completo.replace('\t', ' ').trim() }}</div>
                   <div class="alumno-info">
@@ -108,7 +105,7 @@
                     <span class="documento">{{ alumno.numero_documento }}</span>
                   </div>
                 </div>
-                <div *ngIf="alumno.id === tarjeta.alumno" class="current-badge">
+                <div *ngIf="alumno.id === alumnoActualId" class="current-badge">
                   <mat-icon>check_circle</mat-icon>
                   <span>Actual</span>
                 </div>
@@ -123,7 +120,6 @@
         </mat-form-field>
       </div>
       
-
       <!-- Indicador de cambios -->
       <div *ngIf="hasChanges() && !loading" class="changes-indicator">
         <mat-icon>edit</mat-icon>
@@ -137,43 +133,61 @@
   <mat-dialog-actions class="modal-actions">
     <div class="action-buttons">
       
-      <button
-        mat-button
-        type="button"
-        (click)="resetForm()"
-        [disabled]="loading || !hasChanges()"
-        class="reset-button"
-        matTooltip="Restaurar valores originales"
-      >
-        <mat-icon>restore</mat-icon>
-        <span class="button-text">Restaurar</span>
-      </button>
+      <!-- Botón de eliminar (lado izquierdo) -->
+      <div class="left-actions">
+        <button
+          mat-button
+          type="button"
+          (click)="onDelete()"
+          [disabled]="loading"
+          class="delete-button"
+          matTooltip="Eliminar esta tarjeta"
+        >
+          <mat-icon>delete</mat-icon>
+          <span class="button-text">Eliminar</span>
+        </button>
+      </div>
 
-      <button
-        mat-button
-        type="button"
-        (click)="onCancel()"
-        [disabled]="loading"
-        class="cancel-button"
-      >
-        <mat-icon>cancel</mat-icon>
-        <span class="button-text">Cancelar</span>
-      </button>
+      <!-- Botones principales (lado derecho) -->
+      <div class="right-actions">
+        <button
+          mat-button
+          type="button"
+          (click)="resetForm()"
+          [disabled]="loading || !hasChanges()"
+          class="reset-button"
+          matTooltip="Restaurar valores originales"
+        >
+          <mat-icon>restore</mat-icon>
+          <span class="button-text">Restaurar</span>
+        </button>
 
-      <button
-        mat-raised-button
-        color="primary"
-        type="submit"
-        (click)="onSubmit()"
-        [disabled]="loading || editTarjetaForm.invalid || !hasChanges()"
-        class="save-button"
-      >
-        <div class="button-content">
-          <mat-spinner diameter="20" *ngIf="loading" class="spinner"></mat-spinner>
-          <mat-icon *ngIf="!loading">save</mat-icon>
-          <span class="button-text">{{ loading ? 'Guardando...' : 'Guardar Cambios' }}</span>
-        </div>
-      </button>
+        <button
+          mat-button
+          type="button"
+          (click)="onCancel()"
+          [disabled]="loading"
+          class="cancel-button"
+        >
+          <mat-icon>cancel</mat-icon>
+          <span class="button-text">Cancelar</span>
+        </button>
+
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          (click)="onSubmit()"
+          [disabled]="loading || editTarjetaForm.invalid || !hasChanges()"
+          class="save-button"
+        >
+          <div class="button-content">
+            <mat-spinner diameter="20" *ngIf="loading" class="spinner"></mat-spinner>
+            <mat-icon *ngIf="!loading">save</mat-icon>
+            <span class="button-text">{{ loading ? 'Guardando...' : 'Guardar Cambios' }}</span>
+          </div>
+        </button>
+      </div>
       
     </div>
   </mat-dialog-actions>
@@ -182,7 +196,7 @@
   <div *ngIf="loading" class="loading-overlay">
     <div class="loading-content">
       <mat-spinner diameter="40"></mat-spinner>
-      <p>Actualizando tarjeta...</p>
+      <p>{{ loading ? 'Procesando...' : 'Cargando...' }}</p>
     </div>
   </div>
 </div>
