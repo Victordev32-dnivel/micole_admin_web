@@ -7,8 +7,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSnackBar } from '@angular/material/snack-bar'; // Agregar para mensajes
+import { UserData, UserService } from '../../../../../services/UserData'; // Importar el UserService
 import { EditApoderadosComponent } from '../apoderado-list/edit-apoderados.component';
-import { EliminarApoderadoComponent } from '../apoderado-list/eliminar.component'; // Importar el nuevo componente
+import { EliminarApoderadoComponent } from '../apoderado-list/eliminar.component';
 import { AddApoderadosComponent } from '../add-apoderado/add-apoderado.component';
 
 @Component({
@@ -31,46 +33,116 @@ export class ApoderadoListComponent implements OnInit {
   loading: boolean = true;
   error: string | null = null;
   searchTermControl = new FormControl('');
+  colegioId: number | null = null; // Variable para almacenar el ID del colegio
 
   constructor(
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private userService: UserService, // Inyectar UserService
+    private snackBar: MatSnackBar // Inyectar MatSnackBar
   ) {}
 
   ngOnInit() {
-    this.loadApoderados();
+    this.loadUserData();
+    this.setupSearch();
+  }
+
+  private loadUserData(): void {
+    // Obtener datos del usuario al inicializar
+    const userData = this.userService.getUserData();
+    if (userData) {
+      this.colegioId = userData.colegio;
+      this.loadApoderados(); // Cargar apoderados después de obtener el ID del colegio
+    }
+
+    // Suscribirse a cambios en los datos del usuario
+    this.userService.userData$.subscribe((userData: UserData | null) => {
+      if (userData) {
+        this.colegioId = userData.colegio;
+        this.loadApoderados();
+      }
+    });
+  }
+
+  private setupSearch(): void {
     this.searchTermControl.valueChanges.subscribe((term) => {
       this.filterApoderados(term || '');
     });
   }
 
   private getHeaders(): HttpHeaders {
+    // Usar el JWT token del usuario en lugar del token hardcodeado
+    const jwtToken = this.userService.getJwtToken() || '732612882';
     return new HttpHeaders({
-      Authorization: `Bearer 732612882`,
+      Authorization: `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
+      Accept: 'application/json',
     });
   }
 
   loadApoderados() {
+    // Validar que tengamos el ID del colegio
+    if (!this.colegioId) {
+      console.error('ID del colegio no disponible');
+      this.error = 'Error: ID del colegio no disponible';
+      this.loading = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
     this.loading = true;
+    this.error = null;
+
+    // Usar el colegioId dinámico en lugar del hardcodeado
+    const url = `https://proy-back-dnivel-44j5.onrender.com/api/apoderado/colegio/lista/${this.colegioId}`;
+    
+    console.log('🔍 Cargando apoderados para colegio ID:', this.colegioId);
+    console.log('📡 URL de la petición:', url);
+
     this.http
-      .get<any>('https://proy-back-dnivel-44j5.onrender.com/api/apoderado/colegio/lista/1', {
+      .get<any>(url, {
         headers: this.getHeaders(),
       })
       .subscribe({
         next: (resp) => {
-          this.apoderados = resp?.data || resp || [];
-          this.filteredApoderados = [...this.apoderados];
-          this.loading = false;
-          this.cdr.detectChanges();
+          console.log('✅ Respuesta del servidor:', resp);
+          this.ngZone.run(() => {
+            this.apoderados = resp?.data || resp || [];
+            this.filteredApoderados = [...this.apoderados];
+            this.loading = false;
+            console.log(`📋 Total de apoderados cargados: ${this.apoderados.length}`);
+            this.cdr.detectChanges();
+          });
         },
         error: (error) => {
           console.error('[Apoderados] Error al cargar:', error);
-          this.error = 'Error al cargar los apoderados. Intente de nuevo';
-          this.loading = false;
-          this.cdr.detectChanges();
+          this.ngZone.run(() => {
+            let errorMessage = 'Error al cargar los apoderados. Intente de nuevo';
+            
+            if (error.status === 404) {
+              errorMessage = 'No se encontraron apoderados para este colegio';
+            } else if (error.status === 403) {
+              errorMessage = 'No tiene permisos para acceder a esta información';
+            } else if (error.status === 0) {
+              errorMessage = 'Error de conexión. Verifique su internet';
+            } else if (error.error?.message) {
+              errorMessage = error.error.message;
+            }
+            
+            this.error = errorMessage;
+            this.loading = false;
+            
+            this.snackBar.open(`❌ ${errorMessage}`, 'Cerrar', {
+              duration: 5000,
+              panelClass: ['error-snackbar'],
+              verticalPosition: 'top',
+              horizontalPosition: 'center'
+            });
+            
+            this.cdr.detectChanges();
+          });
         },
       });
   }
@@ -95,16 +167,34 @@ export class ApoderadoListComponent implements OnInit {
   }
 
   openAddDialog() {
+    if (!this.colegioId) {
+      this.snackBar.open('❌ Error: ID del colegio no disponible', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+
     const dialogRef = this.dialog.open(AddApoderadosComponent, {
       width: '25vw',
       maxWidth: '50vw',
       height: '30vw',
       panelClass: 'custom-dialog',
-      data: { isEditMode: false, apoderado: null },
+      data: { 
+        isEditMode: false, 
+        apoderado: null,
+        colegioId: this.colegioId // Pasar el ID del colegio al modal
+      },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result) this.loadApoderados();
+      if (result) {
+        this.snackBar.open('✅ Apoderado agregado correctamente', 'Cerrar', {
+          duration: 3000,
+          panelClass: ['success-snackbar']
+        });
+        this.loadApoderados();
+      }
     });
   }
 
@@ -115,11 +205,21 @@ export class ApoderadoListComponent implements OnInit {
       height: 'auto',
       maxHeight: '90vh',
       panelClass: 'custom-dialog',
-      data: { id: apoderado.id, apoderados: this.apoderados },
+      data: { 
+        id: apoderado.id, 
+        apoderados: this.apoderados,
+        colegioId: this.colegioId // Pasar el ID del colegio al modal
+      },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result) this.loadApoderados();
+      if (result) {
+        this.snackBar.open('✅ Apoderado actualizado correctamente', 'Cerrar', {
+          duration: 3000,
+          panelClass: ['success-snackbar']
+        });
+        this.loadApoderados();
+      }
     });
   }
 
@@ -142,13 +242,15 @@ export class ApoderadoListComponent implements OnInit {
       data: { 
         id: apoderadoId,
         message: '¿Estás seguro de que deseas eliminar este apoderado?',
-        apoderado: apoderadoCompleto // Pasar la información completa
+        apoderado: apoderadoCompleto, // Pasar la información completa
+        colegioId: this.colegioId // Pasar el ID del colegio al modal
       },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         console.log('✅ Apoderado eliminado, recargando lista...');
+        // El modal ya maneja el mensaje de éxito
         this.loadApoderados();
       } else {
         console.log('❌ Eliminación cancelada');
@@ -160,4 +262,11 @@ export class ApoderadoListComponent implements OnInit {
   private getApoderadoById(id: number): any {
     return this.apoderados.find(a => a.id === id) || null;
   }
+
+  // Método para refrescar la lista manualmente
+  refreshApoderados(): void {
+    this.loadApoderados();
+  }
+
+
 }
