@@ -5,10 +5,7 @@ import {
   NgZone,
   ViewChild,
 } from '@angular/core';
-import {
-  HttpClient,
-  HttpHeaders,
-} from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -21,7 +18,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
 import { UserData, UserService } from '../../../../../services/UserData';
 import { AddNotaComponent } from '../add-nota/add-notas.component';
-import { EditNotasComponent } from '../edit-nota/edit-nota.component'; // Importar el componente de edición
+import { EditNotasComponent } from '../edit-nota/edit-nota.component';
+import { DeleteNotaModalComponent } from '../lista-nota/eliminar.component'; // Importar el componente de edición
 
 // Nueva interface que coincide con el formato requerido del endpoint
 interface NotaResponse {
@@ -126,19 +124,19 @@ export class NotasComponent implements OnInit {
         next: (response) => {
           this.ngZone.run(() => {
             console.log('Respuesta del servidor:', response);
-            
+
             // El endpoint ahora devuelve directamente el formato [{"nombre": "...", "link": "..."}]
             if (Array.isArray(response)) {
               this.notas = response.map((nota, index) => ({
                 nombre: nota.nombre,
                 link: nota.link,
-                id: nota.id || index + 1 // Si no hay ID, usar índice como fallback
+                id: nota.id || index + 1, // Si no hay ID, usar índice como fallback
               }));
             } else {
               console.warn('La respuesta no es un array:', response);
               this.notas = [];
             }
-            
+
             this.totalNotas = this.notas.length;
             this.loadingNotas = false;
             this.cdr.detectChanges();
@@ -158,10 +156,10 @@ export class NotasComponent implements OnInit {
       width: '600px',
       maxHeight: '90vh',
       disableClose: true,
-      data: { colegioId: this.colegioId }
+      data: { colegioId: this.colegioId },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.snackBar.open('Nota agregada correctamente', 'Cerrar', {
           duration: 3000,
@@ -172,16 +170,22 @@ export class NotasComponent implements OnInit {
   }
 
   onViewPdf(linkUrl: string): void {
-    if (!linkUrl || linkUrl.trim() === '' || linkUrl === 'qwqw' || linkUrl === 'null' || linkUrl === 'undefined') {
+    if (
+      !linkUrl ||
+      linkUrl.trim() === '' ||
+      linkUrl === 'qwqw' ||
+      linkUrl === 'null' ||
+      linkUrl === 'undefined'
+    ) {
       this.snackBar.open('❌ El PDF no está disponible o no existe', 'Cerrar', {
         duration: 4000,
         panelClass: ['error-snackbar'],
         verticalPosition: 'top',
-        horizontalPosition: 'center'
+        horizontalPosition: 'center',
       });
       return;
     }
-    
+
     // Validar si la URL es válida
     try {
       new URL(linkUrl);
@@ -190,26 +194,30 @@ export class NotasComponent implements OnInit {
         duration: 4000,
         panelClass: ['error-snackbar'],
         verticalPosition: 'top',
-        horizontalPosition: 'center'
+        horizontalPosition: 'center',
       });
       return;
     }
-    
+
     console.log('Abriendo PDF:', linkUrl);
-    
+
     // Intentar abrir el PDF y manejar errores
     const newWindow = window.open(linkUrl, '_blank');
-    
+
     if (!newWindow) {
-      this.snackBar.open('❌ No se pudo abrir el PDF. Verifique su bloqueador de ventanas emergentes', 'Cerrar', {
-        duration: 5000,
-        panelClass: ['error-snackbar'],
-        verticalPosition: 'top',
-        horizontalPosition: 'center'
-      });
+      this.snackBar.open(
+        '❌ No se pudo abrir el PDF. Verifique su bloqueador de ventanas emergentes',
+        'Cerrar',
+        {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+          verticalPosition: 'top',
+          horizontalPosition: 'center',
+        }
+      );
       return;
     }
-    
+
     // Verificar si el PDF se carga correctamente (después de un tiempo)
     setTimeout(() => {
       try {
@@ -217,7 +225,7 @@ export class NotasComponent implements OnInit {
           // La ventana se cerró, posiblemente por error de carga
           this.snackBar.open('⚠️ El PDF podría no estar disponible', 'Cerrar', {
             duration: 3000,
-            panelClass: ['warning-snackbar']
+            panelClass: ['warning-snackbar'],
           });
         }
       } catch (error) {
@@ -227,25 +235,26 @@ export class NotasComponent implements OnInit {
     }, 2000);
   }
 
+
   // Método actualizado para editar/modificar nota usando el modal
   editNota(nota: Nota): void {
     const dialogRef = this.dialog.open(EditNotasComponent, {
       width: '600px',
       maxHeight: '90vh',
       disableClose: true,
-      data: { 
+      data: {
         nota: nota, // Pasar la nota completa al modal
-        colegioId: this.colegioId 
-      }
+        colegioId: this.colegioId,
+      },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.snackBar.open('✅ Nota actualizada correctamente', 'Cerrar', {
           duration: 3000,
           panelClass: ['success-snackbar'],
           verticalPosition: 'top',
-          horizontalPosition: 'center'
+          horizontalPosition: 'center',
         });
         this.loadNotas(); // Recargar la lista después de editar
       }
@@ -255,7 +264,7 @@ export class NotasComponent implements OnInit {
   // Método auxiliar para actualizar nota (ahora se usará desde el modal)
   updateNota(notaId: number, nuevoNombre: string): void {
     const payload = {
-      nombre: nuevoNombre
+      nombre: nuevoNombre,
     };
 
     this.http
@@ -272,7 +281,7 @@ export class NotasComponent implements OnInit {
         error: (error) => {
           console.error('Error al actualizar nota:', error);
           let errorMessage = 'Error al actualizar la nota';
-          
+
           if (error.status === 404) {
             errorMessage = 'La nota no fue encontrada';
           } else if (error.status === 403) {
@@ -280,34 +289,20 @@ export class NotasComponent implements OnInit {
           } else if (error.error?.message) {
             errorMessage = error.error.message;
           }
-          
+
           throw new Error(errorMessage);
         },
       });
   }
 
   // Método para eliminar nota usando el endpoint proporcionado
-  confirmDelete(nota: Nota): void {
-    if (!nota.id) {
-      this.snackBar.open('❌ No se puede eliminar: ID de nota no disponible', 'Cerrar', {
-        duration: 3000,
-        panelClass: ['error-snackbar']
-      });
-      return;
-    }
 
-    const confirmacion = confirm(`¿Está seguro de eliminar la nota "${nota.nombre}"?\n\nEsta acción no se puede deshacer.`);
-    if (confirmacion) {
-      this.deleteNota(nota.id);
-    }
-  }
 
   private deleteNota(notaId: number): void {
     this.http
-      .delete(
-        `https://proy-back-dnivel-44j5.onrender.com/api/nota/${notaId}`,
-        { headers: this.getHeaders() }
-      )
+      .delete(`https://proy-back-dnivel-44j5.onrender.com/api/nota/${notaId}`, {
+        headers: this.getHeaders(),
+      })
       .subscribe({
         next: (response) => {
           console.log('Nota eliminada exitosamente:', response);
@@ -315,14 +310,14 @@ export class NotasComponent implements OnInit {
             duration: 3000,
             panelClass: ['success-snackbar'],
             verticalPosition: 'top',
-            horizontalPosition: 'center'
+            horizontalPosition: 'center',
           });
           this.loadNotas(); // Recargar la lista
         },
         error: (error) => {
           console.error('Error al eliminar nota:', error);
           let errorMessage = 'Error al eliminar la nota';
-          
+
           if (error.status === 404) {
             errorMessage = 'La nota no fue encontrada';
           } else if (error.status === 403) {
@@ -330,16 +325,45 @@ export class NotasComponent implements OnInit {
           } else if (error.error?.message) {
             errorMessage = error.error.message;
           }
-          
+
           this.snackBar.open(`❌ ${errorMessage}`, 'Cerrar', {
             duration: 4000,
             panelClass: ['error-snackbar'],
             verticalPosition: 'top',
-            horizontalPosition: 'center'
+            horizontalPosition: 'center',
           });
         },
       });
   }
+  confirmDelete(nota: Nota): void {
+  if (!nota.id) {
+    this.snackBar.open('❌ No se puede eliminar: ID de nota no disponible', 'Cerrar', {
+      duration: 3000,
+      panelClass: ['error-snackbar']
+    });
+    return;
+  }
+
+  const dialogRef = this.dialog.open(DeleteNotaModalComponent, {
+    width: '500px',
+    maxWidth: '95vw',
+    disableClose: true,
+    data: {
+      nota: {
+        id: nota.id,
+        nombre: nota.nombre,
+        link: nota.link
+      }
+    }
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    if (result) {
+      // El modal ya maneja el SnackBar de éxito
+      this.loadNotas(); // Recargar la lista después de eliminar
+    }
+  });
+}
 
   toggleMenu() {
     console.log('Toggle menu clicked');
