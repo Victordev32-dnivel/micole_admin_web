@@ -15,19 +15,29 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatSelectModule } from '@angular/material/select';
 
-interface ApoderadoData {
+interface ApoderadoCompleto {
   id: number;
-  nombre: string;
-  apellidos: string;
-  dni: string;
+  numeroDocumento: string;
+  tipoUsuario: string;
+  contrasena: string;
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  genero: string;
   telefono: string;
+  parentesco: string;
+  idColegio: number;
+  // Campos adicionales que pueden venir
+  nombre?: string;
+  apellidos?: string;
+  dni?: string;
   email?: string;
 }
 
 interface DialogData {
   id: number;
-  apoderado: ApoderadoData; // Cambiar para recibir el objeto completo
   apoderados: any[];
 }
 
@@ -43,6 +53,7 @@ interface DialogData {
     MatIconModule,
     MatProgressSpinnerModule,
     MatDialogModule,
+    MatSelectModule,
   ],
   template: `
     <div class="edit-apoderado-dialog">
@@ -84,47 +95,51 @@ interface DialogData {
         class="edit-form"
       >
         <mat-dialog-content class="dialog-content">
-          <!-- Campo Nombre -->
+          <!-- Campo Nombres -->
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Nombre</mat-label>
+            <mat-label>Nombres</mat-label>
             <input
               matInput
-              formControlName="nombre"
-              placeholder="Ingrese el nombre"
+              formControlName="nombres"
+              placeholder="Ingrese los nombres"
               [disabled]="updating"
             />
             <mat-icon matSuffix>person</mat-icon>
-            <mat-error
-              *ngIf="apoderadoForm.get('nombre')?.hasError('required')"
-            >
-              El nombre es obligatorio
+            <mat-error *ngIf="apoderadoForm.get('nombres')?.hasError('required')">
+              Los nombres son obligatorios
             </mat-error>
-            <mat-error
-              *ngIf="apoderadoForm.get('nombre')?.hasError('minlength')"
-            >
-              El nombre debe tener al menos 2 caracteres
+            <mat-error *ngIf="apoderadoForm.get('nombres')?.hasError('minlength')">
+              Los nombres deben tener al menos 2 caracteres
             </mat-error>
           </mat-form-field>
 
-          <!-- Campo Apellidos -->
+          <!-- Campo Apellido Paterno -->
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Apellidos</mat-label>
+            <mat-label>Apellido Paterno</mat-label>
             <input
               matInput
-              formControlName="apellidos"
-              placeholder="Ingrese los apellidos"
+              formControlName="apellidoPaterno"
+              placeholder="Ingrese el apellido paterno"
               [disabled]="updating"
             />
             <mat-icon matSuffix>person_outline</mat-icon>
-            <mat-error
-              *ngIf="apoderadoForm.get('apellidos')?.hasError('required')"
-            >
-              Los apellidos son obligatorios
+            <mat-error *ngIf="apoderadoForm.get('apellidoPaterno')?.hasError('required')">
+              El apellido paterno es obligatorio
             </mat-error>
-            <mat-error
-              *ngIf="apoderadoForm.get('apellidos')?.hasError('minlength')"
-            >
-              Los apellidos deben tener al menos 2 caracteres
+          </mat-form-field>
+
+          <!-- Campo Apellido Materno -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Apellido Materno</mat-label>
+            <input
+              matInput
+              formControlName="apellidoMaterno"
+              placeholder="Ingrese el apellido materno"
+              [disabled]="updating"
+            />
+            <mat-icon matSuffix>person_outline</mat-icon>
+            <mat-error *ngIf="apoderadoForm.get('apellidoMaterno')?.hasError('required')">
+              El apellido materno es obligatorio
             </mat-error>
           </mat-form-field>
 
@@ -133,16 +148,16 @@ interface DialogData {
             <mat-label>DNI</mat-label>
             <input
               matInput
-              formControlName="dni"
+              formControlName="numeroDocumento"
               placeholder="Ingrese el DNI"
               maxlength="8"
               [disabled]="updating"
             />
             <mat-icon matSuffix>badge</mat-icon>
-            <mat-error *ngIf="apoderadoForm.get('dni')?.hasError('required')">
+            <mat-error *ngIf="apoderadoForm.get('numeroDocumento')?.hasError('required')">
               El DNI es obligatorio
             </mat-error>
-            <mat-error *ngIf="apoderadoForm.get('dni')?.hasError('pattern')">
+            <mat-error *ngIf="apoderadoForm.get('numeroDocumento')?.hasError('pattern')">
               El DNI debe tener 8 dígitos
             </mat-error>
           </mat-form-field>
@@ -158,36 +173,53 @@ interface DialogData {
               [disabled]="updating"
             />
             <mat-icon matSuffix>phone</mat-icon>
-            <mat-error
-              *ngIf="apoderadoForm.get('telefono')?.hasError('required')"
-            >
+            <mat-error *ngIf="apoderadoForm.get('telefono')?.hasError('required')">
               El teléfono es obligatorio
             </mat-error>
-            <mat-error
-              *ngIf="apoderadoForm.get('telefono')?.hasError('pattern')"
-            >
+            <mat-error *ngIf="apoderadoForm.get('telefono')?.hasError('pattern')">
               El teléfono debe tener 9 dígitos
             </mat-error>
           </mat-form-field>
 
-          <!-- Campo Email (opcional) -->
+          <!-- Campo Género -->
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Email (opcional)</mat-label>
-            <input
-              matInput
-              formControlName="email"
-              placeholder="Ingrese el email"
-              type="email"
-              [disabled]="updating"
-            />
-            <mat-icon matSuffix>email</mat-icon>
-            <mat-error *ngIf="apoderadoForm.get('email')?.hasError('email')">
-              Ingrese un email válido
+            <mat-label>Género</mat-label>
+            <mat-select formControlName="genero" [disabled]="updating">
+              <mat-option value="M">Masculino</mat-option>
+              <mat-option value="F">Femenino</mat-option>
+            </mat-select>
+            <mat-icon matSuffix>person</mat-icon>
+            <mat-error *ngIf="apoderadoForm.get('genero')?.hasError('required')">
+              El género es obligatorio
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Campo Parentesco -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Parentesco</mat-label>
+            <mat-select formControlName="parentesco" [disabled]="updating">
+              <mat-option value="PADRE">Padre</mat-option>
+              <mat-option value="MADRE">Madre</mat-option>
+              <mat-option value="ABUELO">Abuelo</mat-option>
+              <mat-option value="ABUELA">Abuela</mat-option>
+              <mat-option value="TIO">Tío</mat-option>
+              <mat-option value="TIA">Tía</mat-option>
+              <mat-option value="HERMANO">Hermano</mat-option>
+              <mat-option value="HERMANA">Hermana</mat-option>
+              <mat-option value="TUTOR">Tutor Legal</mat-option>
+              <mat-option value="OTRO">Otro</mat-option>
+            </mat-select>
+            <mat-icon matSuffix>family_restroom</mat-icon>
+            <mat-error *ngIf="apoderadoForm.get('parentesco')?.hasError('required')">
+              El parentesco es obligatorio
             </mat-error>
           </mat-form-field>
         </mat-dialog-content>
 
         <mat-dialog-actions class="dialog-actions">
+          <!-- Debug info (temporal) -->
+         
+
           <button
             mat-button
             type="button"
@@ -222,7 +254,7 @@ interface DialogData {
     `
       .edit-apoderado-dialog {
         width: 100%;
-        max-width: 500px;
+        max-width: 600px;
         padding: 0;
       }
 
@@ -386,6 +418,7 @@ export class EditApoderadosComponent implements OnInit {
   updating: boolean = false;
   loadError: string | null = null;
   apoderadoId: number;
+  apoderadoCompleto: ApoderadoCompleto | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -403,14 +436,18 @@ export class EditApoderadosComponent implements OnInit {
   }
 
   private initializeForm() {
-  this.apoderadoForm = this.fb.group({
-    nombre: ['', [Validators.required, Validators.minLength(2)]],
-    apellidos: ['', [Validators.required, Validators.minLength(2)]],
-    dni: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
-    telefono: ['', [Validators.required, Validators.pattern(/^\d{9}$/)]],
-    email: ['', [Validators.email]],
-  });
-}
+    this.apoderadoForm = this.fb.group({
+      numeroDocumento: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
+      tipoUsuario: ['APODERADO'], // Valor fijo
+      nombres: ['', [Validators.required, Validators.minLength(2)]],
+      apellidoPaterno: ['', [Validators.required, Validators.minLength(2)]],
+      apellidoMaterno: ['', [Validators.required, Validators.minLength(2)]],
+      genero: ['', [Validators.required]],
+      telefono: ['', [Validators.required, Validators.pattern(/^\d{9}$/)]],
+      parentesco: ['', [Validators.required]],
+      idColegio: [1] // Valor fijo según tu API
+    });
+  }
 
   private getHeaders(): HttpHeaders {
     return new HttpHeaders({
@@ -423,7 +460,7 @@ export class EditApoderadosComponent implements OnInit {
     this.loading = true;
     this.loadError = null;
 
-    console.log('🔄 Cargando datos del apoderado desde DialogData:', this.data);
+    console.log('🔄 Cargando datos del apoderado desde lista:', this.data);
 
     // Buscar el apoderado en la lista que se pasó desde el componente padre
     const apoderado = this.data.apoderados.find(
@@ -433,29 +470,51 @@ export class EditApoderadosComponent implements OnInit {
     if (apoderado) {
       console.log('✅ Datos del apoderado encontrados:', apoderado);
 
+      // Mapear los datos del listado al formulario de edición
       this.apoderadoForm.patchValue({
-        nombre: apoderado.nombre || '',
-        apellidos: apoderado.apellidos || '',
-        dni: apoderado.dni || '',
+        numeroDocumento: apoderado.dni || apoderado.numeroDocumento || '',
+        tipoUsuario: apoderado.tipoUsuario || 'APODERADO',
+        nombres: apoderado.nombre || apoderado.nombres || '',
+        apellidoPaterno: this.extractFirstLastName(apoderado.apellidos) || apoderado.apellidoPaterno || '',
+        apellidoMaterno: this.extractSecondLastName(apoderado.apellidos) || apoderado.apellidoMaterno || '',
+        genero: apoderado.genero || 'M', // Valor por defecto
         telefono: apoderado.telefono || '',
-        email: apoderado.email || '',
+        parentesco: apoderado.parentesco || 'PADRE', // Valor por defecto
+        idColegio: apoderado.idColegio || 1
       });
+
+      // Forzar actualización del formulario
+      this.apoderadoForm.updateValueAndValidity();
+      console.log('📝 Formulario inicializado:', this.apoderadoForm.value);
+      console.log('✅ Formulario válido:', this.apoderadoForm.valid);
+      console.log('❌ Errores del formulario:', this.getFormErrors());
 
       this.loading = false;
     } else {
       console.error('❌ Apoderado no encontrado en la lista');
-      this.loadError = 'No se encontró el apoderado seleccionado';
-      this.loading = false;
-
-      this.snackBar.open(
-        '❌ No se encontró el apoderado seleccionado',
-        'Cerrar',
-        {
-          duration: 4000,
-          panelClass: ['error-snackbar'],
-        }
-      );
+      this.handleLoadError('No se encontró el apoderado seleccionado');
     }
+  }
+
+  private extractFirstLastName(apellidos: string): string {
+    if (!apellidos) return '';
+    const parts = apellidos.trim().split(' ');
+    return parts[0] || '';
+  }
+
+  private extractSecondLastName(apellidos: string): string {
+    if (!apellidos) return '';
+    const parts = apellidos.trim().split(' ');
+    return parts.slice(1).join(' ') || '';
+  }
+
+  private handleLoadError(message: string) {
+    this.loadError = message;
+    this.loading = false;
+    this.snackBar.open(`❌ ${message}`, 'Cerrar', {
+      duration: 4000,
+      panelClass: ['error-snackbar'],
+    });
   }
 
   onSubmit() {
@@ -470,14 +529,24 @@ export class EditApoderadosComponent implements OnInit {
     const formData = this.apoderadoForm.value;
     const url = `https://proy-back-dnivel-44j5.onrender.com/api/apoderado/${this.apoderadoId}`;
 
-    // Limpiar email si está vacío
-    if (!formData.email || formData.email.trim() === '') {
-      delete formData.email;
-    }
+    // Preparar datos para actualización (SIN contraseña)
+    const updateData: any = {
+      numeroDocumento: formData.numeroDocumento,
+      tipoUsuario: formData.tipoUsuario || 'APODERADO',
+      nombres: formData.nombres,
+      apellidoPaterno: formData.apellidoPaterno,
+      apellidoMaterno: formData.apellidoMaterno,
+      genero: formData.genero,
+      telefono: formData.telefono,
+      parentesco: formData.parentesco,
+      idColegio: formData.idColegio || 1,
+      // La contraseña se mantiene igual en el backend
+      contrasena: 'KEEP_CURRENT' // Indicador para que el backend no cambie la contraseña
+    };
 
-    console.log('🔄 Actualizando apoderado:', url, formData);
+    console.log('🔄 Actualizando apoderado (sin cambiar contraseña):', url, updateData);
 
-    this.http.put(url, formData, { headers: this.getHeaders() }).subscribe({
+    this.http.put(url, updateData, { headers: this.getHeaders() }).subscribe({
       next: (response) => {
         console.log('✅ Apoderado actualizado exitosamente:', response);
 
@@ -501,6 +570,8 @@ export class EditApoderadosComponent implements OnInit {
           errorMessage = 'Datos inválidos. Verifique la información';
         } else if (error.status === 404) {
           errorMessage = 'Apoderado no encontrado';
+        } else if (error.status === 405) {
+          errorMessage = 'Método no permitido. Contacte al administrador';
         } else if (error.status === 401) {
           errorMessage = 'No autorizado para editar este apoderado';
         } else if (error.status === 409) {
@@ -523,11 +594,9 @@ export class EditApoderadosComponent implements OnInit {
     if (this.updating) {
       return; // No permitir cancelar si está actualizando
     }
-
     this.dialogRef.close(false);
   }
 
-  // Métodos auxiliares para validación en tiempo real
   getErrorMessage(fieldName: string): string {
     const field = this.apoderadoForm.get(fieldName);
 
@@ -536,18 +605,64 @@ export class EditApoderadosComponent implements OnInit {
     }
 
     if (field?.hasError('minlength')) {
-      return `${fieldName} debe tener al menos 2 caracteres`;
+      return `${fieldName} debe tener al menos ${field.errors?.['minlength']?.requiredLength} caracteres`;
     }
 
     if (field?.hasError('pattern')) {
-      if (fieldName === 'dni') return 'El DNI debe tener 8 dígitos';
+      if (fieldName === 'numeroDocumento') return 'El DNI debe tener 8 dígitos';
       if (fieldName === 'telefono') return 'El teléfono debe tener 9 dígitos';
     }
 
-    if (field?.hasError('email')) {
-      return 'Ingrese un email válido';
-    }
-
     return '';
+  }
+
+  // Método para debug - mostrar errores del formulario
+  getFormErrors(): any {
+    let formErrors: any = {};
+    
+    Object.keys(this.apoderadoForm.controls).forEach(key => {
+      const controlErrors = this.apoderadoForm.get(key)?.errors;
+      if (controlErrors) {
+        formErrors[key] = controlErrors;
+      }
+    });
+    
+    return formErrors;
+  }
+
+  // Método para obtener lista de errores legible
+  getFormErrorsList(): string[] {
+    const errors: string[] = [];
+    
+    Object.keys(this.apoderadoForm.controls).forEach(key => {
+      const control = this.apoderadoForm.get(key);
+      if (control && control.errors) {
+        Object.keys(control.errors).forEach(errorKey => {
+          switch(errorKey) {
+            case 'required':
+              errors.push(`${key} es obligatorio`);
+              break;
+            case 'minlength':
+              errors.push(`${key} debe tener al menos ${control.errors?.[errorKey]?.requiredLength} caracteres`);
+              break;
+            case 'pattern':
+              if (key === 'numeroDocumento') errors.push('DNI debe tener 8 dígitos');
+              else if (key === 'telefono') errors.push('Teléfono debe tener 9 dígitos');
+              else errors.push(`${key} formato inválido`);
+              break;
+            default:
+              errors.push(`${key}: ${errorKey}`);
+          }
+        });
+      }
+    });
+    
+    return errors;
+  }
+
+  // Método para verificar si un campo específico es válido
+  isFieldValid(fieldName: string): boolean {
+    const field = this.apoderadoForm.get(fieldName);
+    return field ? field.valid : false;
   }
 }
