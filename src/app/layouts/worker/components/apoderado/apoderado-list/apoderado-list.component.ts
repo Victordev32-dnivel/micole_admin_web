@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { EditApoderadosComponent } from '../apoderado-list/edit-apoderados.component';
-import { ConfirmationDeleteComponent } from '../confirmation-delete/confirmation-delete.component';
+import { EliminarApoderadoComponent } from '../apoderado-list/eliminar.component'; // Importar el nuevo componente
 import { AddApoderadosComponent } from '../add-apoderado/add-apoderado.component';
 
 @Component({
@@ -110,9 +110,10 @@ export class ApoderadoListComponent implements OnInit {
 
   openEditDialog(apoderado: any) {
     const dialogRef = this.dialog.open(EditApoderadosComponent, {
-      width: '25vw',
-      maxWidth: '50vw',
-      height: '30vw',
+      width: '40vw', // Aumenté el ancho para el formulario de edición
+      maxWidth: '600px',
+      height: 'auto',
+      maxHeight: '90vh',
       panelClass: 'custom-dialog',
       data: { id: apoderado.id, apoderados: this.apoderados },
     });
@@ -122,16 +123,41 @@ export class ApoderadoListComponent implements OnInit {
     });
   }
 
-  confirmDelete(id: number) {
-    const dialogRef = this.dialog.open(ConfirmationDeleteComponent, {
-      width: '20vw',
-      maxWidth: '50vw',
+  confirmDelete(apoderado: any) {
+    console.log('🔍 Datos del apoderado a eliminar:', apoderado);
+    
+    // Determinar el ID del apoderado
+    const apoderadoId = typeof apoderado === 'object' ? apoderado.id : apoderado;
+    
+    // Buscar la información completa del apoderado
+    const apoderadoCompleto = this.apoderados.find(a => a.id === apoderadoId) || apoderado;
+    
+    console.log('📋 Información completa encontrada:', apoderadoCompleto);
+    
+    const dialogRef = this.dialog.open(EliminarApoderadoComponent, {
+      width: '500px',
+      maxWidth: '90vw',
       panelClass: 'custom-dialog',
-      data: { id, message: '¿Estás seguro de eliminar este apoderado?' },
+      disableClose: false, // Permitir cerrar haciendo clic fuera
+      data: { 
+        id: apoderadoId,
+        message: '¿Estás seguro de que deseas eliminar este apoderado?',
+        apoderado: apoderadoCompleto // Pasar la información completa
+      },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result) this.loadApoderados();
+      if (result) {
+        console.log('✅ Apoderado eliminado, recargando lista...');
+        this.loadApoderados();
+      } else {
+        console.log('❌ Eliminación cancelada');
+      }
     });
+  }
+
+  // Método auxiliar para obtener información de un apoderado por ID
+  private getApoderadoById(id: number): any {
+    return this.apoderados.find(a => a.id === id) || null;
   }
 }
