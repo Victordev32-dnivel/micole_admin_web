@@ -152,22 +152,71 @@ export class TarjetasComponent implements OnInit {
   private loadUserData(): void {
     try {
       const userData = this.userService.getUserData();
-
-      if (userData && userData.colegio) {
-        this.colegioId = userData.colegio;
-        this.loadData();
+      
+      console.log('🔍 UserData completo:', userData); // Para debugging
+      
+      if (userData) {
+        // Casting para permitir acceso dinámico a propiedades
+        const userDataAny = userData as any;
+        
+        // Verificar diferentes propiedades posibles para el ID del colegio
+        this.colegioId = userData.colegio || userDataAny.idColegio || userDataAny.colegioId || userDataAny.id_colegio;
+        
+        console.log('🏫 ColegioId obtenido:', this.colegioId); // Para debugging
+        
+        if (this.colegioId && this.colegioId !== 1) {
+          console.log('✅ ColegioId válido encontrado:', this.colegioId);
+          this.loadData();
+        } else {
+          console.warn('⚠️ ColegioId es 1 o no válido, verificando estructura de userData');
+          console.log('📋 Propiedades disponibles en userData:', Object.keys(userData));
+          
+          // Intentar encontrar el ID correcto en otras propiedades
+          const possibleKeys = ['colegio', 'idColegio', 'colegioId', 'id_colegio', 'school_id', 'schoolId'];
+          let foundId = null;
+          
+          for (const key of possibleKeys) {
+            const value = userDataAny[key];
+            if (value && value !== 1) {
+              foundId = value;
+              console.log(`✅ ID encontrado en propiedad '${key}':`, foundId);
+              break;
+            }
+          }
+          
+          if (foundId) {
+            this.colegioId = foundId;
+            this.loadData();
+          } else {
+            this.error = 'No se pudo obtener un ID válido del colegio';
+            console.error('❌ No se encontró un ID válido del colegio en userData');
+          }
+        }
       } else {
         this.error = 'No se pudieron cargar los datos del usuario';
+        console.error('❌ userData es null or undefined');
       }
 
-      this.userService.userData$.subscribe((userData) => {
-        if (userData && userData.colegio) {
-          this.colegioId = userData.colegio;
-          this.loadData();
-          this.cdr.detectChanges();
+      // Suscribirse a cambios en userData
+      this.userService.userData$.subscribe((newUserData) => {
+        if (newUserData) {
+          console.log('🔄 Nuevo userData recibido:', newUserData);
+          
+          const newUserDataAny = newUserData as any;
+          const newColegioId = newUserData.colegio || newUserDataAny.idColegio || newUserDataAny.colegioId || newUserDataAny.id_colegio;
+          
+          console.log('🔄 Nuevo ColegioId:', newColegioId);
+          
+          if (newColegioId && newColegioId !== this.colegioId) {
+            this.colegioId = newColegioId;
+            console.log('✅ ColegioId actualizado a:', this.colegioId);
+            this.loadData();
+            this.cdr.detectChanges();
+          }
         }
       });
     } catch (error) {
+      console.error('❌ Error en loadUserData:', error);
       this.error = 'Error al cargar datos del usuario';
     }
   }
@@ -255,8 +304,11 @@ export class TarjetasComponent implements OnInit {
   loadData(): void {
     if (!this.colegioId) {
       this.error = 'ID del colegio no disponible';
+      console.error('❌ colegioId no está disponible para loadData');
       return;
     }
+
+    console.log('🚀 Iniciando carga de datos con colegioId:', this.colegioId);
 
     this.loading = true;
     this.loadingMessage = 'Cargando tarjetas...';
@@ -267,7 +319,11 @@ export class TarjetasComponent implements OnInit {
     const tarjetasUrl = `${this.apiUrlTarjetaLista}/${this.colegioId}`;
     const alumnosUrl = `${this.apiUrlAlumnos}/${this.colegioId}`;
 
-    console.log('Cargando datos desde:', { tarjetasUrl, alumnosUrl });
+    console.log('🔗 URLs construidas:', { 
+      tarjetasUrl, 
+      alumnosUrl,
+      colegioIdUsado: this.colegioId 
+    });
 
     const tarjetasRequest = this.http.get<ApiResponse<TarjetaResponse[]>>(
       tarjetasUrl,
@@ -284,7 +340,7 @@ export class TarjetasComponent implements OnInit {
       .pipe(catchError(this.handleError))
       .subscribe({
         next: (response) => {
-          console.log('Respuesta completa:', response);
+          console.log('✅ Respuesta completa:', response);
 
           this.ngZone.run(() => {
             const alumnosData = response.alumnos.data || [];
@@ -294,16 +350,16 @@ export class TarjetasComponent implements OnInit {
                 alumno.nombre_completo?.replace(/\t/g, ' ').trim() || '',
             }));
 
-            console.log('Alumnos procesados:', this.alumnos);
+            console.log('👥 Alumnos procesados:', this.alumnos.length);
 
             const tarjetasRaw = response.tarjetas.data || [];
-            console.log('Tarjetas raw:', tarjetasRaw);
+            console.log('💳 Tarjetas raw recibidas:', tarjetasRaw.length);
 
             this.tarjetas = this.asociarTarjetasConAlumnos(tarjetasRaw);
             this.filteredTarjetas = [...this.tarjetas];
             this.totalTarjetas = this.tarjetas.length;
 
-            console.log('Tarjetas procesadas:', this.tarjetas);
+            console.log('✅ Tarjetas procesadas:', this.tarjetas.length);
 
             this.loading = false;
             this.loadingMessage = '';
@@ -311,7 +367,7 @@ export class TarjetasComponent implements OnInit {
           });
         },
         error: (error) => {
-          console.error('Error al cargar datos:', error);
+          console.error('❌ Error al cargar datos:', error);
           this.ngZone.run(() => {
             this.loading = false;
             this.loadingMessage = '';
