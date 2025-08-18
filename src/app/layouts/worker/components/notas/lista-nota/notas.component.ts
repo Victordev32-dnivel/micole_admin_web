@@ -105,51 +105,75 @@ export class NotasComponent implements OnInit {
   }
 
   loadNotas() {
-    if (!this.colegioId) {
-      console.error('ID del colegio no disponible');
-      this.loadingNotas = false;
-      return;
-    }
-
-    this.loadingNotas = true;
-    this.error = null;
-
-    // Usando el colegioId dinámico en lugar de hardcodeado
-    this.http
-      .get<NotaResponse[]>(
-        `https://proy-back-dnivel-44j5.onrender.com/api/nota/colegio/${this.colegioId}`,
-        { headers: this.getHeaders() }
-      )
-      .subscribe({
-        next: (response) => {
-          this.ngZone.run(() => {
-            console.log('Respuesta del servidor:', response);
-
-            // El endpoint ahora devuelve directamente el formato [{"nombre": "...", "link": "..."}]
-            if (Array.isArray(response)) {
-              this.notas = response.map((nota, index) => ({
-                nombre: nota.nombre,
-                link: nota.link,
-                id: nota.id || index + 1, // Si no hay ID, usar índice como fallback
-              }));
-            } else {
-              console.warn('La respuesta no es un array:', response);
-              this.notas = [];
-            }
-
-            this.totalNotas = this.notas.length;
-            this.loadingNotas = false;
-            this.cdr.detectChanges();
-          });
-        },
-        error: (error) => {
-          console.error('Error al cargar notas:', error);
-          this.loadingNotas = false;
-          this.error = 'Error al cargar las notas. Intente de nuevo';
-          this.cdr.detectChanges();
-        },
-      });
+  if (!this.colegioId) {
+    console.error('ID del colegio no disponible');
+    this.loadingNotas = false;
+    return;
   }
+
+  this.loadingNotas = true;
+  this.error = null;
+
+  // Usando el colegioId dinámico en lugar de hardcodeado
+  this.http
+    .get<NotaResponse[]>(
+      `https://proy-back-dnivel-44j5.onrender.com/api/nota/colegio/${this.colegioId}`,
+      { headers: this.getHeaders() }
+    )
+    .subscribe({
+      next: (response) => {
+        this.ngZone.run(() => {
+          console.log('Respuesta del servidor:', response);
+
+          // Manejar diferentes tipos de respuesta
+          if (Array.isArray(response)) {
+            // Si es un array (puede estar vacío o con datos)
+            this.notas = response.map((nota, index) => ({
+              nombre: nota.nombre,
+              link: nota.link,
+              id: nota.id || index + 1,
+            }));
+          } else if (response === null || response === undefined) {
+            // Si la respuesta es null o undefined, inicializar como array vacío
+            console.log('Respuesta vacía del servidor, inicializando lista vacía');
+            this.notas = [];
+          } else {
+            // Si la respuesta no es un array pero tampoco es null, intentar convertir
+            console.warn('La respuesta no es un array:', response);
+            this.notas = [];
+          }
+
+          this.totalNotas = this.notas.length;
+          this.loadingNotas = false;
+          // NO establecer error aquí, solo cuando hay un error real de conexión
+          this.cdr.detectChanges();
+        });
+      },
+      error: (error) => {
+        console.error('Error al cargar notas:', error);
+        this.loadingNotas = false;
+        
+        // Solo mostrar error en casos de error real de servidor/conexión
+        if (error.status === 0) {
+          this.error = 'Error de conexión. Verifique su internet';
+        } else if (error.status === 404) {
+          // Si es 404, puede significar que no hay notas, no necesariamente un error
+          console.log('Endpoint no encontrado o sin notas, mostrando lista vacía');
+          this.notas = [];
+          this.totalNotas = 0;
+          this.error = null; // No mostrar error
+        } else if (error.status >= 500) {
+          this.error = 'Error del servidor. Intente de nuevo';
+        } else if (error.status === 403) {
+          this.error = 'No tiene permisos para ver las notas';
+        } else {
+          this.error = 'Error al cargar las notas. Intente de nuevo';
+        }
+        
+        this.cdr.detectChanges();
+      },
+    });
+}
 
   openAddNotaDialog(): void {
     const dialogRef = this.dialog.open(AddNotaComponent, {
