@@ -9,8 +9,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmationDeleteComponent } from '../confirmation-delete/confirmation-delete.component';
-import { AddTrabajadoresComponent } from '../add-trabajadores/add-trabajadores.component';
-import { EditTrabajadoresComponent } from '../edit-trabajadores/edit-trabajadores.component';
+import { AddTrabajadoresComponent } from '../trabajadores-list/add-trabajadores.component';
+import { EditTrabajadoresComponent } from '../trabajadores-list/modificar-trabajador.component';
 
 @Component({
   selector: 'app-trabajadores-list',
@@ -30,6 +30,7 @@ import { EditTrabajadoresComponent } from '../edit-trabajadores/edit-trabajadore
 export class TrabajadoresListComponent implements OnInit {
   trabajadores: any[] = [];
   filteredTrabajadores: any[] = [];
+  colegios: any[] = [];
   loading: boolean = true;
   error: string | null = null;
   displayedColumns: string[] = [
@@ -39,6 +40,7 @@ export class TrabajadoresListComponent implements OnInit {
     'apellidoMaterno',
     'dni',
     'telefono',
+    'colegio',
     'actions',
   ];
   searchTermControl = new FormControl('');
@@ -51,6 +53,7 @@ export class TrabajadoresListComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.loadColegios();
     this.loadTrabajadores();
     this.searchTermControl.valueChanges.subscribe((value) => {
       this.filterTrabajadores(value || '');
@@ -64,21 +67,46 @@ export class TrabajadoresListComponent implements OnInit {
     });
   }
 
+  getNombreColegio(idColegio: number): string {
+    const colegio = this.colegios.find(c => c.id === idColegio);
+    return colegio ? colegio.nombre : 'Desconocido';
+  }
+
+  loadColegios() {
+    this.http.get<any>('https://proy-back-dnivel-44j5.onrender.com/api/colegio/lista', {
+      headers: this.getHeaders()
+    }).subscribe({
+      next: (response) => {
+        this.colegios = response.data.map((colegio: any) => ({
+          id: colegio.id,
+          nombre: colegio.nombre
+        }));
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al cargar colegios:', error);
+      }
+    });
+  }
+
   loadTrabajadores() {
+    this.loading = true;
     this.http
-      .get<any>('https://proy-back-dnivel-44j5.onrender.com/api/Trabajador', {
+      .get<any[]>('https://proy-back-dnivel-44j5.onrender.com/api/Trabajador', {
         headers: this.getHeaders(),
       })
       .subscribe({
         next: (response) => {
           this.trabajadores = response.map((t: any) => ({
-            id: t.idTrabajador,
-            nombre: t.nombre,
+            id: t.idTrabajador || t.idColegio,
+            nombre: t.nombres,
             apellidoPaterno: t.apellidoPaterno,
             apellidoMaterno: t.apellidoMaterno,
-            dni: t.dni,
+            dni: t.numeroDocumento,
             telefono: t.telefono,
             idColegio: t.idColegio,
+            tipoUsuario: t.tipoUsuario,
+            contrasena: t.contrasena
           }));
           this.filteredTrabajadores = [...this.trabajadores];
           this.loading = false;
@@ -102,29 +130,14 @@ export class TrabajadoresListComponent implements OnInit {
         } else {
           const searchTerm = term.toLowerCase().trim();
           this.filteredTrabajadores = this.trabajadores.filter((trabajador) => {
-            const matchesName = trabajador.nombre
-              .toLowerCase()
-              .includes(searchTerm);
-            const matchesApellidoPaterno = trabajador.apellidoPaterno
-              .toLowerCase()
-              .includes(searchTerm);
-            const matchesApellidoMaterno = trabajador.apellidoMaterno
-              .toLowerCase()
-              .includes(searchTerm);
-            const matchesDNI = trabajador.dni
-              .toLowerCase()
-              .includes(searchTerm);
-            return (
-              matchesName ||
-              matchesApellidoPaterno ||
-              matchesApellidoMaterno ||
-              matchesDNI
-            );
+            const matchesName = trabajador.nombre.toLowerCase().includes(searchTerm);
+            const matchesApellidoPaterno = trabajador.apellidoPaterno.toLowerCase().includes(searchTerm);
+            const matchesApellidoMaterno = trabajador.apellidoMaterno.toLowerCase().includes(searchTerm);
+            const matchesDNI = trabajador.dni.toLowerCase().includes(searchTerm);
+            const matchesColegio = this.getNombreColegio(trabajador.idColegio).toLowerCase().includes(searchTerm);
+            return matchesName || matchesApellidoPaterno || matchesApellidoMaterno || matchesDNI || matchesColegio;
           });
         }
-        console.log(
-          `Trabajadores filtrados: ${this.filteredTrabajadores.length} de ${this.trabajadores.length} total`
-        );
         this.loading = false;
         this.cdr.detectChanges();
       }, 100);
@@ -137,6 +150,7 @@ export class TrabajadoresListComponent implements OnInit {
       maxWidth: '50vw',
       height: '30.2vw',
       panelClass: 'custom-dialog',
+      data: { colegios: this.colegios }
     });
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -151,7 +165,11 @@ export class TrabajadoresListComponent implements OnInit {
       maxWidth: '50vw',
       height: '25vw',
       panelClass: 'custom-dialog',
-      data: { id, trabajador },
+      data: { 
+        id, 
+        trabajador,
+        colegios: this.colegios 
+      },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -163,7 +181,12 @@ export class TrabajadoresListComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmationDeleteComponent, {
       width: '20vw',
       maxWidth: '50vw',
-      data: { id, message: '¿Estás seguro de eliminar este trabajador?' },
+      data: { 
+        id, 
+        message: '¿Estás seguro de eliminar este trabajador?',
+        endpoint: 'Trabajador',
+        headers: this.getHeaders()
+      },
     });
 
     dialogRef.afterClosed().subscribe((result) => {

@@ -12,12 +12,13 @@
 
   <div class="trabajador-table">
     <div class="table-header">
-      <span data-label="ID">ID</span>
+  
       <span data-label="NOMBRE">NOMBRE</span>
       <span data-label="APELLIDO PATERNO">APELLIDO PATERNO</span>
       <span data-label="APELLIDO MATERNO">APELLIDO MATERNO</span>
       <span data-label="DNI">DNI</span>
       <span data-label="TELÉFONO">TELÉFONO</span>
+      <span data-label="COLEGIO">COLEGIO</span>
       <span data-label="ACCIONES">ACCIONES</span>
     </div>
 
@@ -27,12 +28,13 @@
       </div>
 
       <div class="student-row" *ngFor="let trabajador of filteredTrabajadores">
-        <span data-label="ID">{{ trabajador.id }}</span>
+      
         <span data-label="NOMBRE">{{ trabajador.nombre }}</span>
         <span data-label="APELLIDO PATERNO">{{ trabajador.apellidoPaterno }}</span>
         <span data-label="APELLIDO MATERNO">{{ trabajador.apellidoMaterno }}</span>
         <span data-label="DNI">{{ trabajador.dni }}</span>
         <span data-label="TELÉFONO">{{ trabajador.telefono }}</span>
+        <span data-label="COLEGIO">{{ getNombreColegio(trabajador.idColegio) }}</span>
         <span class="actions" data-label="ACCIONES">
           <mat-icon (click)="openEditDialog(trabajador.id)" style="color: #ffcc00;" title="Editar">edit</mat-icon>
           <mat-icon (click)="confirmDelete(trabajador.id)" style="color: #f44336;" title="Eliminar">delete</mat-icon>
