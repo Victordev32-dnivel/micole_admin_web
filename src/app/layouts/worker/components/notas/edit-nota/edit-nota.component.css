@@ -1,5 +1,6 @@
+edit-nota.component.css
 .edit-form {
-  min-width: 400px;
+  min-width: 450px;
   padding: 16px;
 }
 
@@ -11,3 +12,21 @@
 mat-spinner {
   margin-right: 8px;
 }
+
+/* Estilos para textarea */
+textarea.mat-input-element {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* Estilos para inputs numéricos */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+

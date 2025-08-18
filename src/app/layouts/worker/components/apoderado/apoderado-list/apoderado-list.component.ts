@@ -7,7 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { EditApoderadoComponent } from '../edit-apoderado/edit-apoderado.component';
+import { EditApoderadosComponent } from '../apoderado-list/edit-apoderados.component';
 import { ConfirmationDeleteComponent } from '../confirmation-delete/confirmation-delete.component';
 import { AddApoderadosComponent } from '../add-apoderado/add-apoderado.component';
 
@@ -109,7 +109,7 @@ export class ApoderadoListComponent implements OnInit {
   }
 
   openEditDialog(apoderado: any) {
-    const dialogRef = this.dialog.open(EditApoderadoComponent, {
+    const dialogRef = this.dialog.open(EditApoderadosComponent, {
       width: '25vw',
       maxWidth: '50vw',
       height: '30vw',

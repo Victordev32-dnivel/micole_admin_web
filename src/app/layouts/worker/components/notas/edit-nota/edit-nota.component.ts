@@ -1,3 +1,5 @@
+
+// edit-nota.component.ts
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
@@ -38,8 +40,13 @@ export class EditNotasComponent implements OnInit {
     public dialogRef: MatDialogRef<EditNotasComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
+    // Inicializar el formulario - solo el nombre es editable
     this.editForm = this.fb.group({
-      nombre: [data.nota.nombre, [Validators.required, Validators.maxLength(200)]]
+      nombre: [data.nota.nombre || '', [Validators.required, Validators.maxLength(200)]],
+      // Campos de solo lectura sin validaciones
+      idAlumno: [{value: data.nota.idAlumno || 0, disabled: true}],
+      idColegio: [{value: data.nota.idColegio || 0, disabled: true}],
+      pdf: [{value: data.nota.pdf || '', disabled: true}]
     });
   }
 
@@ -55,7 +62,7 @@ export class EditNotasComponent implements OnInit {
   }
 
   onSave(): void {
-    if (this.editForm.invalid) {
+    if (this.editForm.get('nombre')?.invalid) {
       this.snackBar.open('Por favor ingrese un nombre válido', 'Cerrar', {
         duration: 3000,
         panelClass: ['error-snackbar']
@@ -64,18 +71,21 @@ export class EditNotasComponent implements OnInit {
     }
 
     this.loading = true;
-    
-    // Payload que solo contiene el nombre a actualizar
+
+    // Payload con todos los campos, pero solo actualizamos el nombre
     const payload = {
-      nombre: this.editForm.value.nombre
+      nombre: this.editForm.value.nombre.trim(),
+      idAlumno: this.data.nota.idAlumno, // Mantener valor original
+      idColegio: this.data.nota.idColegio, // Mantener valor original
+      pdf: this.data.nota.pdf // Mantener valor original
     };
 
-    console.log('Enviando payload:', payload);
+    console.log('Enviando payload (solo editando nombre):', payload);
 
     this.http.put(
       `https://proy-back-dnivel-44j5.onrender.com/api/nota/${this.data.nota.id}`,
       payload,
-      { 
+      {
         headers: this.getHeaders(),
         observe: 'response'
       }
@@ -86,16 +96,26 @@ export class EditNotasComponent implements OnInit {
           duration: 3000,
           panelClass: ['success-snackbar']
         });
-        this.dialogRef.close(true);
+        // Retornar los datos actualizados
+        this.dialogRef.close({
+          success: true,
+          updatedNota: { ...this.data.nota, nombre: payload.nombre }
+        });
       },
       error: (error) => {
         console.error('Error completo:', error);
         let errorMessage = 'Error al actualizar el nombre de la nota';
-        
+
         if (error.status === 400) {
           errorMessage = error.error?.message || 'El nombre proporcionado no es válido';
+        } else if (error.status === 404) {
+          errorMessage = 'La nota no fue encontrada';
+        } else if (error.status === 401) {
+          errorMessage = 'No tienes autorización para editar esta nota';
+        } else if (error.status === 403) {
+          errorMessage = 'No tienes permisos para realizar esta acción';
         }
-        
+
         this.snackBar.open(errorMessage, 'Cerrar', {
           duration: 5000,
           panelClass: ['error-snackbar']
@@ -109,6 +129,6 @@ export class EditNotasComponent implements OnInit {
   }
 
   onCancel(): void {
-    this.dialogRef.close(false);
+    this.dialogRef.close({ success: false });
   }
 }

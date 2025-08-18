@@ -1,3 +1,4 @@
+// edit-nota.component.html
 <h2 mat-dialog-title>Editar Nota</h2>
 <mat-dialog-content>
   <form [formGroup]="editForm" class="edit-form">
@@ -12,14 +13,55 @@
       </mat-error>
     </mat-form-field>
 
-    <!-- Puedes agregar más campos aquí si es necesario -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>ID del Alumno</mat-label>
+      <input matInput 
+             type="number" 
+             formControlName="idAlumno" 
+             required
+             min="0">
+      <mat-error *ngIf="editForm.get('idAlumno')?.hasError('required')">
+        El ID del alumno es obligatorio
+      </mat-error>
+      <mat-error *ngIf="editForm.get('idAlumno')?.hasError('min')">
+        El ID debe ser mayor o igual a 0
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>ID del Colegio</mat-label>
+      <input matInput 
+             type="number" 
+             formControlName="idColegio" 
+             required
+             min="0">
+      <mat-error *ngIf="editForm.get('idColegio')?.hasError('required')">
+        El ID del colegio es obligatorio
+      </mat-error>
+      <mat-error *ngIf="editForm.get('idColegio')?.hasError('min')">
+        El ID debe ser mayor o igual a 0
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>PDF (URL o nombre del archivo)</mat-label>
+      <textarea matInput 
+                formControlName="pdf" 
+                required
+                rows="3"
+                placeholder="Ingrese la URL del PDF o el nombre del archivo">
+      </textarea>
+      <mat-error *ngIf="editForm.get('pdf')?.hasError('required')">
+        El campo PDF es obligatorio
+      </mat-error>
+    </mat-form-field>
   </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">Cancelar</button>
-  <button mat-raised-button 
-          color="primary" 
+  <button mat-raised-button
+          color="primary"
           (click)="onSave()"
           [disabled]="editForm.invalid || loading">
     <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
