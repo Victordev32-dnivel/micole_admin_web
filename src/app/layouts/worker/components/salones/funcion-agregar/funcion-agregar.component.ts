@@ -14,6 +14,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { CommonModule } from '@angular/common';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-funcion-agregar',
@@ -46,6 +47,7 @@ export class FuncionAgregarComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
+    private snackBar: MatSnackBar,
     public dialogRef: MatDialogRef<FuncionAgregarComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { tipo: string; idColegio: number }
   ) {
@@ -64,6 +66,11 @@ export class FuncionAgregarComponent implements OnInit {
 
   private createForm(tipo: string): FormGroup {
     switch (tipo) {
+      case 'grados':
+        return this.fb.group({
+          nombre: ['', [Validators.required, Validators.maxLength(100)]],
+          idColegio: [this.idColegio, Validators.required]
+        });
       case 'niveles':
       case 'secciones':
         return this.fb.group({
@@ -72,12 +79,13 @@ export class FuncionAgregarComponent implements OnInit {
         });
       case 'salones':
         return this.fb.group({
+          nombre: ['', Validators.required], // Añadido campo nombre para salones
           horaInicio: ['', Validators.required],
           horaFin: ['', Validators.required],
           tipo: ['', Validators.required],
-          idGrado: [0, Validators.required],
-          idSeccion: [0, Validators.required],
-          idNivel: [0, Validators.required],
+          idGrado: [0, [Validators.required, Validators.min(1)]],
+          idSeccion: [0, [Validators.required, Validators.min(1)]],
+          idNivel: [0, [Validators.required, Validators.min(1)]],
           idColegio: [this.idColegio],
         });
       default:
@@ -149,12 +157,12 @@ export class FuncionAgregarComponent implements OnInit {
       this.error = null;
       this.isSubmitting = true;
       const formData = this.addForm.value;
-      console.log(
-        'Datos enviados al submit:',
-        JSON.stringify(formData, null, 2)
-      );
+      
       let url = '';
       switch (this.tipo) {
+        case 'grados':
+          url = 'https://proy-back-dnivel-44j5.onrender.com/api/grado';
+          break;
         case 'niveles':
           url = 'https://proy-back-dnivel-44j5.onrender.com/api/nivel';
           break;
@@ -165,27 +173,54 @@ export class FuncionAgregarComponent implements OnInit {
           url = 'https://proy-back-dnivel-44j5.onrender.com/api/salon';
           break;
       }
-      console.log('URL de la petición:', url);
-      this.http.post(url, formData, { headers: this.getHeaders() }).subscribe({
+
+      this.http.post(url, formData, { 
+        headers: this.getHeaders(),
+        responseType: 'text' as 'json' // Para manejar respuestas de texto plano
+      }).subscribe({
         next: (response) => {
-          console.log('Respuesta de la API:', response);
-          this.successMessage = 'Agregado exitosamente';
-          this.loading = false;
-          this.isSubmitting = false;
-          setTimeout(() => this.dialogRef.close({ success: true }), 1000);
+          this.snackBar.open(
+            `${this.getTipoDisplayName()} creado correctamente`, 
+            'Cerrar', 
+            { duration: 3000 }
+          );
+          this.dialogRef.close({ success: true, data: response });
         },
         error: (error) => {
-          console.error('Error de la API:', error);
-          this.error = 'Error al agregar. Intente de nuevo';
+          console.error('Error:', error);
+          this.error = this.getErrorMessage(error);
+          this.snackBar.open(this.error, 'Cerrar', { duration: 5000 });
           this.loading = false;
           this.isSubmitting = false;
-        },
+        }
       });
     }
   }
 
+  private getTipoDisplayName(): string {
+    switch (this.tipo) {
+      case 'grados': return 'Grado';
+      case 'niveles': return 'Nivel';
+      case 'secciones': return 'Sección';
+      case 'salones': return 'Salón';
+      default: return 'Elemento';
+    }
+  }
+
+  private getErrorMessage(error: any): string {
+    if (error.error?.message) {
+      return error.error.message;
+    }
+    if (error.status === 400) {
+      return 'Datos inválidos';
+    }
+    if (error.status === 401) {
+      return 'No autorizado';
+    }
+    return 'Error al guardar. Intente nuevamente';
+  }
+
   onCancel() {
-    this.addForm.reset();
     this.dialogRef.close({ success: false });
   }
 }

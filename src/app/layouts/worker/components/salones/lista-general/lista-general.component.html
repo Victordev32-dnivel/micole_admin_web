@@ -6,7 +6,8 @@
         class="seg"
         [class.active]="tipoSeleccionado.value === 'niveles'"
         (click)="tipoSeleccionado.setValue('niveles')"
-        [attr.aria-pressed]="tipoSeleccionado.value === 'niveles'">
+        [attr.aria-pressed]="tipoSeleccionado.value === 'niveles'"
+      >
         <mat-icon>layers</mat-icon>
         <span>Niveles</span>
       </button>
@@ -14,15 +15,28 @@
         class="seg"
         [class.active]="tipoSeleccionado.value === 'secciones'"
         (click)="tipoSeleccionado.setValue('secciones')"
-        [attr.aria-pressed]="tipoSeleccionado.value === 'secciones'">
+        [attr.aria-pressed]="tipoSeleccionado.value === 'secciones'"
+      >
         <mat-icon>view_agenda</mat-icon>
         <span>Secciones</span>
       </button>
+
+      <button
+        class="seg"
+        [class.active]="tipoSeleccionado.value === 'grados'"
+        (click)="tipoSeleccionado.setValue('grados')"
+        [attr.aria-pressed]="tipoSeleccionado.value === 'grados'"
+      >
+        <mat-icon>school</mat-icon>
+        <span>Grados</span>
+      </button>
+
       <button
         class="seg"
         [class.active]="tipoSeleccionado.value === 'salones'"
         (click)="tipoSeleccionado.setValue('salones')"
-        [attr.aria-pressed]="tipoSeleccionado.value === 'salones'">
+        [attr.aria-pressed]="tipoSeleccionado.value === 'salones'"
+      >
         <mat-icon>meeting_room</mat-icon>
         <span>Salones</span>
       </button>
@@ -32,7 +46,9 @@
         <mat-icon>add</mat-icon>
         Agregar {{ tipoSeleccionado.value | titlecase }}
       </button>
-      <span *ngIf="!loading" style="margin-left: 12px;">Total: <strong>{{ totalResults }}</strong></span>
+      <span *ngIf="!loading" style="margin-left: 12px"
+        >Total: <strong>{{ totalResults }}</strong></span
+      >
     </div>
   </div>
 
@@ -44,7 +60,10 @@
       <span>NOMBRE</span>
       <span class="acciones">ACCIONES</span>
     </div>
-    <div class="table-header salones" *ngIf="tipoSeleccionado.value === 'salones'">
+    <div
+      class="table-header salones"
+      *ngIf="tipoSeleccionado.value === 'salones'"
+    >
       <span>ID</span>
       <span>NOMBRE</span>
       <span>HORARIO</span>
@@ -62,42 +81,89 @@
       <div
         class="row"
         *ngFor="let item of filteredData"
-        [ngClass]="{ 'row-salones': tipoSeleccionado.value === 'salones' }">
-        <ng-container *ngIf="tipoSeleccionado.value !== 'salones'; else salonesRow">
+        [ngClass]="{ 'row-salones': tipoSeleccionado.value === 'salones' }"
+      >
+        <ng-container
+          *ngIf="tipoSeleccionado.value !== 'salones'; else salonesRow"
+        >
           <span class="cell">{{ item.id }}</span>
           <span class="cell">{{ item.nombre }}</span>
           <span class="cell acciones">
-            <mat-icon class="action edit" title="Editar" (click)="abrirModalEditar(item.id, tipoSeleccionado.value)">edit</mat-icon>
-            <mat-icon class="action delete" title="Eliminar">delete</mat-icon>
+            <mat-icon
+              class="action edit"
+              title="Editar"
+              (click)="abrirModalEditar(item.id, tipoSeleccionado.value)"
+              >edit</mat-icon
+            >
+            <mat-icon
+              class="action delete"
+              title="Eliminar"
+              (click)="abrirModalEliminar(item.id, item.nombre)"
+            >
+              delete
+            </mat-icon>
             <mat-icon class="action view" title="Ver">visibility</mat-icon>
           </span>
         </ng-container>
         <ng-template #salonesRow>
           <span class="cell">{{ item.id }}</span>
           <span class="cell">{{ item.nombre }}</span>
-          <span class="cell">{{ item.horario || '-' }}</span>
-          <span class="cell">{{ item.tipo || '-' }}</span>
+          <span class="cell">{{ item.horario || "-" }}</span>
+          <span class="cell">{{ item.tipo || "-" }}</span>
           <span class="cell acciones">
-            <mat-icon class="action edit" title="Editar" (click)="abrirModalEditar(item.id, tipoSeleccionado.value)">edit</mat-icon>
-            <mat-icon class="action delete" title="Eliminar">delete</mat-icon>
-            <mat-icon class="action view" title="Ver">visibility</mat-icon>
+            <mat-icon
+              class="action edit"
+              title="Editar"
+              (click)="abrirModalEditar(item.id, tipoSeleccionado.value); $event.stopPropagation();"
+              >edit</mat-icon
+            >
+            <mat-icon 
+              class="action delete" 
+              title="Eliminar"
+              (click)="abrirModalEliminar(item.id, item.nombre); $event.stopPropagation();"
+            >
+              delete
+            </mat-icon>
+            <mat-icon 
+              class="action view" 
+              title="Ver"
+              (click)="$event.stopPropagation();"
+            >
+              visibility
+            </mat-icon>
           </span>
         </ng-template>
       </div>
-      <div *ngIf="filteredData.length === 0" class="empty">No hay elementos para mostrar</div>
+      <div *ngIf="filteredData.length === 0" class="empty">
+        No hay elementos para mostrar
+      </div>
     </div>
     <div *ngIf="error" class="error-message">{{ error }}</div>
   </div>
 
   <!-- filtros inferiores SOLO para salones -->
-  <div *ngIf="tipoSeleccionado.value === 'salones' && !loading" class="salones-filters-bottom">
+  <div
+    *ngIf="tipoSeleccionado.value === 'salones' && !loading"
+    class="salones-filters-bottom"
+  >
     <div class="salones-filters-row">
       <!-- Campo búsqueda -->
       <div class="campo-busqueda">
         <mat-form-field appearance="outline">
           <mat-label>Buscar salón</mat-label>
-          <input matInput name="searchTerm" [(ngModel)]="searchTerm" (input)="applyFilters()" placeholder="Nombre del salón" />
-          <button mat-icon-button matSuffix (click)="searchTerm=''; applyFilters()" aria-label="Limpiar">
+          <input
+            matInput
+            name="searchTerm"
+            [(ngModel)]="searchTerm"
+            (input)="applyFilters()"
+            placeholder="Nombre del salón"
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            (click)="searchTerm = ''; applyFilters()"
+            aria-label="Limpiar"
+          >
             <mat-icon>close</mat-icon>
           </button>
         </mat-form-field>
@@ -107,7 +173,11 @@
       <div class="tipo-container">
         <mat-form-field appearance="outline" class="tipo-field">
           <mat-label>Tipo</mat-label>
-          <mat-select name="tipoHorario" [(ngModel)]="tipoHorario" (selectionChange)="applyFilters()">
+          <mat-select
+            name="tipoHorario"
+            [(ngModel)]="tipoHorario"
+            (selectionChange)="applyFilters()"
+          >
             <mat-option value="" selected>Todos</mat-option>
             <mat-option value="entrada">Entrada</mat-option>
             <mat-option value="salida">Salida</mat-option>
@@ -117,8 +187,16 @@
 
       <!-- Resultados + botón limpiar -->
       <div class="acciones-filtros">
-        <small><strong>{{ filteredData.length }}</strong> resultados</small>
-        <button mat-stroked-button color="primary" (click)="searchTerm=''; tipoHorario=''; applyFilters()">Limpiar filtros</button>
+        <small
+          ><strong>{{ filteredData.length }}</strong> resultados</small
+        >
+        <button
+          mat-stroked-button
+          color="primary"
+          (click)="searchTerm = ''; tipoHorario = ''; applyFilters()"
+        >
+          Limpiar filtros
+        </button>
       </div>
     </div>
   </div>
@@ -126,17 +204,53 @@
   <!-- footer: paginación y pageSize -->
   <div class="footer">
     <div class="pagination" *ngIf="!loading && totalPages > 1">
-      <button class="page-btn" [disabled]="currentPage === 1" (click)="changePage(1)">«</button>
-      <button class="page-btn" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">‹</button>
-      <button class="page-btn" *ngFor="let p of pages" [class.active]="p === currentPage" (click)="changePage(p)">
+      <button
+        class="page-btn"
+        [disabled]="currentPage === 1"
+        (click)="changePage(1)"
+      >
+        «
+      </button>
+      <button
+        class="page-btn"
+        [disabled]="currentPage === 1"
+        (click)="changePage(currentPage - 1)"
+      >
+        ‹
+      </button>
+      <button
+        class="page-btn"
+        *ngFor="let p of pages"
+        [class.active]="p === currentPage"
+        (click)="changePage(p)"
+      >
         {{ p }}
       </button>
-      <button class="page-btn" [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">›</button>
-      <button class="page-btn" [disabled]="currentPage === totalPages" (click)="changePage(totalPages)">»</button>
+      <button
+        class="page-btn"
+        [disabled]="currentPage === totalPages"
+        (click)="changePage(currentPage + 1)"
+      >
+        ›
+      </button>
+      <button
+        class="page-btn"
+        [disabled]="currentPage === totalPages"
+        (click)="changePage(totalPages)"
+      >
+        »
+      </button>
     </div>
     <div class="page-size" *ngIf="tipoSeleccionado.value === 'salones'">
       <label for="pageSize">Resultados por página</label>
-      <input id="pageSize" type="number" min="5" max="100" [(ngModel)]="pageSize" (change)="onPageSizeChange()" />
+      <input
+        id="pageSize"
+        type="number"
+        min="5"
+        max="100"
+        [(ngModel)]="pageSize"
+        (change)="onPageSizeChange()"
+      />
     </div>
   </div>
 </div>

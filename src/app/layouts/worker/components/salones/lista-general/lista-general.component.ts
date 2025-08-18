@@ -6,13 +6,16 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { UserService } from '../../../../../services/UserData';
 import { FuncionAgregarComponent } from '../funcion-agregar/funcion-agregar.component';
 import { FuncionEditarComponent } from '../funcion-editar/funcion-editar.component';
+import { EliminarComponent } from './eliminar.component';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatOptionModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-lista-general',
@@ -28,12 +31,13 @@ import { MatInputModule } from '@angular/material/input';
     MatOptionModule,
     MatSelectModule,
     MatInputModule,
+    MatSnackBarModule,
   ],
   templateUrl: './lista-general.component.html',
   styleUrls: ['./lista-general.component.css'],
 })
 export class ListaGeneralComponent implements OnInit {
-  tipoSeleccionado = new FormControl<'niveles' | 'secciones' | 'salones'>(
+  tipoSeleccionado = new FormControl<'niveles' | 'secciones' | 'grados' | 'salones'>(
     'niveles',
     { nonNullable: true }
   );
@@ -57,12 +61,17 @@ export class ListaGeneralComponent implements OnInit {
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
     private userService: UserService,
-    private dialog: MatDialog
-  ) {}
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
+  ) {
+    console.log('🏗️ ListaGeneralComponent constructor ejecutado');
+  }
 
   ngOnInit() {
+    console.log('🚀 ListaGeneralComponent ngOnInit iniciado');
     const userData = this.userService.getUserData();
     this.colegiosId = userData?.colegio || 0;
+    console.log('🏫 ID del colegio:', this.colegiosId);
 
     if (!this.colegiosId) {
       this.error = 'No se encontró el ID del colegio';
@@ -72,6 +81,7 @@ export class ListaGeneralComponent implements OnInit {
 
     this.loadData();
     this.tipoSeleccionado.valueChanges.subscribe(() => {
+      console.log('🔄 Tipo seleccionado cambió a:', this.tipoSeleccionado.value);
       this.currentPage = 1;
       this.searchTerm = '';
       this.tipoHorario = '';
@@ -88,6 +98,7 @@ export class ListaGeneralComponent implements OnInit {
   }
 
   loadData() {
+    console.log('📊 Cargando datos para:', this.tipoSeleccionado.value);
     this.loading = true;
     this.error = null;
 
@@ -99,19 +110,26 @@ export class ListaGeneralComponent implements OnInit {
       case 'secciones':
         url = `${this.apiBase}/seccion/colegio/${this.colegiosId}?page=${this.currentPage}`;
         break;
+      case 'grados':
+        url = `${this.apiBase}/grado/colegio/${this.colegiosId}?page=${this.currentPage}`;
+        break;
       case 'salones':
         url = `${this.apiBase}/salon/colegio/${this.colegiosId}?page=${this.currentPage}&pagesize=${this.pageSize}`;
         break;
     }
 
+    console.log('🌐 URL de carga:', url);
+
     this.http.get<any>(url, { headers: this.getHeaders() }).subscribe({
       next: (response) => {
+        console.log('✅ Datos cargados exitosamente:', response);
         this.data = response.data || [];
         this.filteredData = [...this.data];
         this.totalPages = response.totalPages || 1;
         this.totalResults =
           response.totalNiveles ||
           response.totalSecciones ||
+          response.totalGrados ||
           response.totalSalones ||
           this.data.length;
         this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
@@ -121,7 +139,7 @@ export class ListaGeneralComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Error al cargar datos:', err);
+        console.error('❌ Error al cargar datos:', err);
         this.error = 'Error al cargar los datos. Intente de nuevo';
         this.loading = false;
         this.cdr.detectChanges();
@@ -129,10 +147,11 @@ export class ListaGeneralComponent implements OnInit {
     });
   }
 
-  setDisplayedColumns(tipo: 'niveles' | 'secciones' | 'salones') {
+  setDisplayedColumns(tipo: 'niveles' | 'secciones' | 'grados' | 'salones') {
     switch (tipo) {
       case 'niveles':
       case 'secciones':
+      case 'grados':
         this.displayedColumns = ['id', 'nombre', 'actions'];
         break;
       case 'salones':
@@ -167,6 +186,7 @@ export class ListaGeneralComponent implements OnInit {
   }
 
   abrirModalAgregar() {
+    console.log('➕ Abriendo modal agregar para:', this.tipoSeleccionado.value);
     const tipo = this.tipoSeleccionado.value;
     const width = tipo === 'salones' ? '820px' : '520px';
 
@@ -187,6 +207,7 @@ export class ListaGeneralComponent implements OnInit {
   }
 
   abrirModalEditar(id: number, tipo: string) {
+    console.log('✏️ Abriendo modal editar para:', tipo, 'ID:', id);
     const dialogRef = this.dialog.open(FuncionEditarComponent, {
       width: tipo === 'salones' ? '820px' : '520px',
       maxWidth: '95vw',
@@ -202,4 +223,80 @@ export class ListaGeneralComponent implements OnInit {
       }
     });
   }
+
+  // FUNCIÓN PARA ELIMINAR CON MEJOR MANEJO DE ERRORES Y DEBUG
+  abrirModalEliminar(id: number, nombre: string) {
+    console.log('🗑️ CLICK EN ELIMINAR DETECTADO!');
+    
+    if (!id || !nombre) {
+      console.error('❌ Error: ID o nombre faltantes', { id, nombre });
+      this.snackBar.open('Error: Datos incompletos para eliminar', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+
+    // Caso especial para salones
+    if (this.tipoSeleccionado.value === 'salones') {
+      import('./eliminarSalones.component').then(({ EliminarSalonesComponent }) => {
+        const dialogRef = this.dialog.open(EliminarSalonesComponent, {
+          width: '450px',
+          maxWidth: '95vw',
+          panelClass: 'custom-dialog',
+          data: { 
+            id, 
+            nombre,
+            idColegio: this.colegiosId
+          },
+          disableClose: true,
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+          if (result?.success) {
+            this.snackBar.open('Salón eliminado correctamente', 'Cerrar', {
+              duration: 3000,
+              panelClass: ['success-snackbar']
+            });
+            this.loadData();
+          } else if (result?.error) {
+            this.snackBar.open(result.error, 'Cerrar', {
+              duration: 5000,
+              panelClass: ['error-snackbar']
+            });
+          }
+        });
+      });
+      return;
+    }
+
+    // Para los demás tipos (niveles, secciones, grados)
+    const dialogRef = this.dialog.open(EliminarComponent, {
+      width: '450px',
+      maxWidth: '95vw',
+      panelClass: 'custom-dialog',
+      data: { 
+        tipo: this.tipoSeleccionado.value, 
+        id, 
+        nombre 
+      },
+      disableClose: true,
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.success) {
+        this.snackBar.open(
+          result.message || 'Elemento eliminado correctamente', 
+          'Cerrar', 
+          { duration: 3000, panelClass: ['success-snackbar'] }
+        );
+        this.loadData();
+      } else if (result?.error) {
+        this.snackBar.open(result.error, 'Cerrar', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
+}
 }
