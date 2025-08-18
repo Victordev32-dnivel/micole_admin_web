@@ -185,8 +185,8 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
       idSalon: [''], // Opcional
       idColegio: [this.data?.colegioId || ''],
     });
-    // Formulario para agregar apoderado
-    // En el constructor del componente, modificar el formulario de apoderado:
+
+    // Formulario para agregar apoderado - CORREGIDO EL ROL
     this.apoderadoForm = this.fb.group({
       nombres: ['', Validators.required],
       apellidoPaterno: ['', Validators.required],
@@ -205,7 +205,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
       parentesco: ['', Validators.required],
       // Nuevos campos
       contrasena: ['', [Validators.required, Validators.minLength(6)]],
-      tipoUsuario: ['trabajador'], // Valor fijo
+      tipoUsuario: ['apoderado'], // CORREGIDO: Cambiado de 'trabajador' a 'apoderado'
     });
   }
 
@@ -236,6 +236,9 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
 
   clearApoderadoForm(): void {
     this.apoderadoForm.reset();
+    this.apoderadoForm.patchValue({
+      tipoUsuario: 'apoderado' // CORREGIDO: Asegurar que se mantenga el rol correcto
+    });
     this.clearApoderadoMessages();
   }
 
@@ -259,7 +262,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     const apoderadoData = {
       ...this.apoderadoForm.value,
       idColegio: colegioId,
-      tipoUsuario: 'trabajador', // Asegurarnos que siempre sea trabajador
+      tipoUsuario: 'apoderado', // CORREGIDO: Asegurarnos que siempre sea 'apoderado'
     };
 
     const headers = this.getHeaders();
