@@ -37,12 +37,12 @@ import { AddTarjetaModalComponent } from '../add-tarjeta-modal/add-tarjeta-modal
 import { UserService } from '../../../../../services/UserData';
 import { catchError, throwError, forkJoin } from 'rxjs';
 
-// Interfaz actualizada para la respuesta de la API
+// Interfaz actualizada para la respuesta de la API - más flexible
 interface TarjetaApiResponse {
   id: number;
   rfid: number;
   horario: string; // Cambiado de 'codigo' a 'horario'
-  alumno: string; // Es un string con el nombre, no un ID
+  alumno: any; // Cambiado a 'any' porque puede ser string, objeto, null, etc.
 }
 
 // Interfaz para la respuesta paginada de la API
@@ -131,7 +131,8 @@ export class TarjetasComponent implements OnInit {
   totalPages: number = 0;
 
   private readonly baseUrl = 'https://proy-back-dnivel-44j5.onrender.com/api';
-  private readonly apiUrlTarjetaLista = `${this.baseUrl}/tarjeta/colegio`; // Actualizada URL
+  // URL CORREGIDA: agregado /lista en la ruta
+  private readonly apiUrlTarjetaLista = `${this.baseUrl}/tarjeta/lista/colegio`;
   private readonly apiUrlTarjeta = `${this.baseUrl}/tarjeta`;
   private readonly apiUrlAlumnos = `${this.baseUrl}/alumno/colegio`;
 
@@ -170,8 +171,6 @@ export class TarjetasComponent implements OnInit {
     try {
       const userData = this.userService.getUserData();
       
-   
-      
       if (userData) {
         // Casting para permitir acceso dinámico a propiedades
         const userDataAny = userData as any;
@@ -179,15 +178,12 @@ export class TarjetasComponent implements OnInit {
         // Verificar diferentes propiedades posibles para el ID del colegio
         this.colegioId = userData.colegio || userDataAny.idColegio || userDataAny.colegioId || userDataAny.id_colegio;
         
-      
-        
         // TEMPORAL: Para testing, usar ID 1 si no se encuentra otro
         if (!this.colegioId || this.colegioId === 0) {
           console.warn('⚠️ ColegioId no válido, usando ID 1 para testing');
           this.colegioId = 1; // Usar 1 temporalmente para testing
         }
         
-      
         this.loadData();
         
       } else {
@@ -200,16 +196,11 @@ export class TarjetasComponent implements OnInit {
       // Suscribirse a cambios en userData
       this.userService.userData$.subscribe((newUserData) => {
         if (newUserData) {
-        
-          
           const newUserDataAny = newUserData as any;
           const newColegioId = newUserData.colegio || newUserDataAny.idColegio || newUserDataAny.colegioId || newUserDataAny.id_colegio || 1;
           
-         
-          
           if (newColegioId && newColegioId !== this.colegioId) {
             this.colegioId = newColegioId;
-          
             this.loadData();
             this.cdr.detectChanges();
           }
@@ -251,6 +242,9 @@ export class TarjetasComponent implements OnInit {
         `Error ${error.status}: ${error.statusText}`;
     }
 
+    console.error('❌ Error HTTP completo:', error);
+    console.error('❌ Error message:', errorMessage);
+
     this.ngZone.run(() => {
       this.error = errorMessage;
       this.loading = false;
@@ -263,23 +257,41 @@ export class TarjetasComponent implements OnInit {
 
   // Método actualizado para mapear los datos de la API al formato interno
   private mapearTarjetasApi(tarjetasApi: TarjetaApiResponse[]): TarjetaConAlumno[] {
-
+    console.log('🔄 Mapeando tarjetas de API:', tarjetasApi);
 
     return tarjetasApi.map((tarjetaApi) => {
+      console.log('🔍 Procesando tarjeta individual:', tarjetaApi);
+      console.log('🔍 Tipo de alumno:', typeof tarjetaApi.alumno, tarjetaApi.alumno);
+      console.log('🔍 Tipo de horario:', typeof tarjetaApi.horario, tarjetaApi.horario);
+
+      // Procesar el código/horario
+      const codigo = this.procesarCodigo(tarjetaApi);
+      
       const tarjetaConAlumno: TarjetaConAlumno = {
         id: tarjetaApi.id,
         rfid: tarjetaApi.rfid,
-        codigo: tarjetaApi.horario, // Mapear horario a codigo para compatibilidad
+        codigo: codigo,
         horario: tarjetaApi.horario,
-        alumnoNombre: tarjetaApi.alumno?.replace(/\t/g, ' ').trim() || undefined
+        alumnoNombre: this.procesarNombreAlumno(tarjetaApi.alumno)
       };
 
       // Si hay un nombre de alumno, intentar encontrar el alumno completo
-      if (tarjetaApi.alumno && tarjetaApi.alumno !== 'Sin asignar') {
-        const nombreLimpio = tarjetaApi.alumno.replace(/\t/g, ' ').trim();
-        const alumnoEncontrado = this.alumnos.find(
-          (a) => a.nombre_completo.replace(/\t/g, ' ').trim() === nombreLimpio
-        );
+      const nombreAlumno = this.procesarNombreAlumno(tarjetaApi.alumno);
+      if (nombreAlumno && nombreAlumno !== 'Sin asignar' && nombreAlumno.toLowerCase() !== 'null') {
+        console.log('🔍 Buscando alumno:', nombreAlumno);
+        console.log('🔍 Alumnos disponibles:', this.alumnos.map(a => a.nombre_completo));
+        
+        const alumnoEncontrado = this.alumnos.find((a) => {
+          const nombreCompleto = a.nombre_completo.replace(/\t/g, ' ').trim().toLowerCase();
+          const nombreBuscado = nombreAlumno.toLowerCase().trim();
+          
+          // Buscar coincidencias exactas o parciales
+          return nombreCompleto === nombreBuscado || 
+                 nombreCompleto.includes(nombreBuscado) ||
+                 nombreBuscado.includes(nombreCompleto);
+        });
+
+        console.log('👤 Alumno encontrado:', alumnoEncontrado);
 
         if (alumnoEncontrado) {
           tarjetaConAlumno.alumnoData = alumnoEncontrado;
@@ -288,8 +300,95 @@ export class TarjetasComponent implements OnInit {
         }
       }
 
+      console.log('✅ Tarjeta procesada:', tarjetaConAlumno);
       return tarjetaConAlumno;
     });
+  }
+
+  // Nuevo método para procesar el código de forma segura
+  private procesarCodigo(tarjetaApi: TarjetaApiResponse): string {
+    console.log('🔍 Procesando código:', tarjetaApi);
+
+    // Intentar obtener el código de diferentes fuentes
+    let codigo = tarjetaApi.horario;
+
+    // Si horario no existe o es null/undefined, buscar otras propiedades
+    if (!codigo || codigo === null || codigo === undefined) {
+      // Verificar si existe una propiedad 'codigo' en el objeto
+      const tarjetaAny = tarjetaApi as any;
+      codigo = tarjetaAny.codigo || tarjetaAny.Code || tarjetaAny.code;
+    }
+
+    // Si aún no hay código, usar el ID como código
+    if (!codigo || codigo === null || codigo === undefined || codigo === 'null') {
+      codigo = `CARD-${tarjetaApi.id}`;
+    }
+
+    // Asegurar que sea un string
+    return String(codigo).trim();
+  }
+
+  // Nuevo método para procesar el nombre del alumno de forma segura
+  private procesarNombreAlumno(alumnoData: any): string | undefined {
+    console.log('🔍 Procesando alumno data:', typeof alumnoData, alumnoData);
+
+    // Si es null o undefined
+    if (!alumnoData || alumnoData === 'null' || alumnoData === 'undefined') {
+      return undefined;
+    }
+
+    // Si es un string
+    if (typeof alumnoData === 'string') {
+      const nombreLimpio = alumnoData.replace(/\t/g, ' ').trim();
+      return (nombreLimpio && nombreLimpio !== 'null' && nombreLimpio !== 'undefined') ? nombreLimpio : undefined;
+    }
+
+    // Si es un número (podría ser un ID)
+    if (typeof alumnoData === 'number') {
+      // Buscar por ID en la lista de alumnos
+      const alumnoEncontrado = this.alumnos.find(a => a.id === alumnoData);
+      return alumnoEncontrado ? alumnoEncontrado.nombre_completo : undefined;
+    }
+
+    // Si es un objeto con propiedades de alumno
+    if (typeof alumnoData === 'object') {
+      const nombre = alumnoData.nombre || 
+                    alumnoData.nombre_completo || 
+                    alumnoData.name || 
+                    alumnoData.fullName ||
+                    alumnoData.nombreCompleto;
+      
+      if (typeof nombre === 'string') {
+        const nombreLimpio = nombre.replace(/\t/g, ' ').trim();
+        return (nombreLimpio && nombreLimpio !== 'null' && nombreLimpio !== 'undefined') ? nombreLimpio : undefined;
+      }
+
+      // Si hay un ID en el objeto, buscar por ID
+      const id = alumnoData.id || alumnoData.alumnoId || alumnoData.idAlumno;
+      if (typeof id === 'number') {
+        const alumnoEncontrado = this.alumnos.find(a => a.id === id);
+        return alumnoEncontrado ? alumnoEncontrado.nombre_completo : undefined;
+      }
+
+      // Si el objeto se puede convertir a string de forma útil
+      try {
+        const nombreStr = String(alumnoData).replace(/\t/g, ' ').trim();
+        if (nombreStr && nombreStr !== '[object Object]' && nombreStr !== 'null' && nombreStr !== 'undefined') {
+          return nombreStr;
+        }
+      } catch (error) {
+        console.warn('⚠️ No se pudo procesar alumnoData como objeto:', alumnoData);
+      }
+    }
+
+    // Intentar convertir a string como último recurso
+    try {
+      const nombreStr = String(alumnoData).replace(/\t/g, ' ').trim();
+      return (nombreStr && nombreStr !== 'null' && nombreStr !== 'undefined' && nombreStr !== '[object Object]') ? nombreStr : undefined;
+    } catch (error) {
+      console.warn('⚠️ No se pudo convertir alumnoData a string:', alumnoData);
+      return undefined;
+    }
   }
 
   private showSnackBar(message: string, type: 'success' | 'error' = 'success'): void {
@@ -309,7 +408,7 @@ export class TarjetasComponent implements OnInit {
       return;
     }
 
-   
+    console.log('🚀 Iniciando carga de datos para colegio:', this.colegioId);
 
     this.loading = true;
     this.loadingMessage = 'Cargando tarjetas...';
@@ -320,13 +419,13 @@ export class TarjetasComponent implements OnInit {
     
     // Cargar alumnos primero
     const alumnosUrl = `${this.apiUrlAlumnos}/${this.colegioId}`;
-   
+    console.log('📡 Cargando alumnos desde:', alumnosUrl);
 
     this.http.get<ApiResponse<Alumno[]>>(alumnosUrl, { headers })
       .pipe(catchError(this.handleError))
       .subscribe({
         next: (alumnosResponse) => {
-     
+          console.log('✅ Respuesta alumnos recibida:', alumnosResponse);
           
           const alumnosData = alumnosResponse.data || [];
           this.alumnos = alumnosData.map((alumno) => ({
@@ -334,7 +433,7 @@ export class TarjetasComponent implements OnInit {
             nombre_completo: alumno.nombre_completo?.replace(/\t/g, ' ').trim() || '',
           }));
 
-      
+          console.log('👥 Alumnos procesados:', this.alumnos.length);
           
           // Ahora cargar las tarjetas
           this.loadAllTarjetas();
@@ -353,13 +452,14 @@ export class TarjetasComponent implements OnInit {
     const headers = this.getHeaders();
     const tarjetasUrl = `${this.apiUrlTarjetaLista}/${this.colegioId}`;
     
-
+    console.log('📡 Cargando tarjetas desde URL:', tarjetasUrl);
+    console.log('🔑 Headers:', headers.keys());
 
     this.http.get<TarjetasApiResponse>(tarjetasUrl, { headers })
       .pipe(catchError(this.handleError))
       .subscribe({
         next: (response) => {
-        
+          console.log('✅ Respuesta tarjetas recibida:', response);
 
           this.ngZone.run(() => {
             this.totalTarjetas = response.totalTarjetas || 0;
@@ -367,12 +467,12 @@ export class TarjetasComponent implements OnInit {
             this.currentPage = response.page || 1;
             
             const tarjetasApi = response.data || [];
-        
+            console.log('🎯 Tarjetas en la respuesta:', tarjetasApi.length);
 
             this.tarjetas = this.mapearTarjetasApi(tarjetasApi);
             this.filteredTarjetas = [...this.tarjetas];
 
-           
+            console.log('📋 Tarjetas procesadas:', this.tarjetas.length);
 
             // Si hay más páginas, cargar todas
             if (this.totalPages > 1) {
@@ -411,7 +511,7 @@ export class TarjetasComponent implements OnInit {
       .pipe(catchError(this.handleError))
       .subscribe({
         next: (responses: TarjetasApiResponse[]) => {
-        
+          console.log('✅ Páginas adicionales cargadas:', responses.length);
 
           this.ngZone.run(() => {
             // Combinar todas las tarjetas
@@ -427,7 +527,7 @@ export class TarjetasComponent implements OnInit {
             this.filteredTarjetas = [...this.tarjetas];
             this.totalTarjetas = this.tarjetas.length;
 
-         
+            console.log('📊 Total de tarjetas cargadas:', this.tarjetas.length);
 
             this.loading = false;
             this.loadingMessage = '';
@@ -473,7 +573,7 @@ export class TarjetasComponent implements OnInit {
   }
 
   // ===============================
-  // FUNCIONALIDADES CRUD (mantenidas igual)
+  // FUNCIONALIDADES CRUD
   // ===============================
 
   openAddTarjetaModal(): void {
@@ -510,7 +610,7 @@ export class TarjetasComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result?.success) {
-       
+        console.log('🔄 Resultado del modal:', result);
         
         if (result.action === 'update') {
           this.showSnackBar('Tarjeta actualizada exitosamente', 'success');
@@ -524,7 +624,7 @@ export class TarjetasComponent implements OnInit {
   }
 
   addTarjeta(tarjetaData: any): void {
- 
+    console.log('➕ Agregando tarjeta:', tarjetaData);
 
     this.loading = true;
     this.loadingMessage = 'Agregando tarjeta...';
@@ -540,7 +640,7 @@ export class TarjetasComponent implements OnInit {
 
     try {
       const cleanedData = this.validateAndCleanTarjetaData(tarjetaData);
-    
+      console.log('✅ Datos limpiados:', cleanedData);
 
       const headers = this.getHeaders();
 
@@ -549,7 +649,7 @@ export class TarjetasComponent implements OnInit {
         .pipe(catchError(this.handleError))
         .subscribe({
           next: (response: any) => {
-          
+            console.log('✅ Tarjeta agregada:', response);
             this.ngZone.run(() => {
               this.showSnackBar('Tarjeta agregada con éxito', 'success');
               this.loading = false;
@@ -570,7 +670,7 @@ export class TarjetasComponent implements OnInit {
   }
 
   updateTarjeta(tarjetaId: number, tarjetaData: any): void {
-
+    console.log('🔄 Actualizando tarjeta:', tarjetaId, tarjetaData);
 
     this.loading = true;
     this.loadingMessage = 'Actualizando tarjeta...';
@@ -586,7 +686,7 @@ export class TarjetasComponent implements OnInit {
 
     try {
       const cleanedData = this.validateAndCleanTarjetaData(tarjetaData);
-     
+      console.log('✅ Datos limpiados para actualización:', cleanedData);
 
       const headers = this.getHeaders();
       const updateUrl = `${this.apiUrlTarjeta}/${tarjetaId}`;
@@ -596,7 +696,7 @@ export class TarjetasComponent implements OnInit {
         .pipe(catchError(this.handleError))
         .subscribe({
           next: (response: any) => {
-           
+            console.log('✅ Tarjeta actualizada:', response);
             this.ngZone.run(() => {
               this.showSnackBar('Tarjeta actualizada con éxito', 'success');
               this.loading = false;
@@ -647,14 +747,14 @@ export class TarjetasComponent implements OnInit {
     const headers = this.getHeaders();
     const deleteUrl = `${this.apiUrlTarjeta}/${tarjeta.id}`;
 
-   
+    console.log('🗑️ Eliminando tarjeta:', deleteUrl);
 
     this.http
       .delete(deleteUrl, { headers })
       .pipe(catchError(this.handleError))
       .subscribe({
         next: (response: any) => {
-        
+          console.log('✅ Tarjeta eliminada:', response);
           this.ngZone.run(() => {
             this.showSnackBar(`Tarjeta ${tarjeta.codigo} eliminada con éxito`, 'success');
             this.loading = false;
@@ -669,14 +769,14 @@ export class TarjetasComponent implements OnInit {
   }
 
   private validateAndCleanTarjetaData(data: any): TarjetaUpdateData {
-   
+    console.log('🧹 Validando y limpiando datos:', data);
 
     const rfidValue = data.rfid || data.Rfid || data.RFID;
     const codigoValue = data.codigo || data.Codigo || data.code || data.horario;
     const alumnoValue =
       data.alumno || data.idAlumno || data.alumnoId || data.student;
 
-  
+    console.log('🔍 Valores extraídos:', { rfidValue, codigoValue, alumnoValue });
 
     const cleanedData: TarjetaUpdateData = {
       Rfid: 0,
@@ -713,14 +813,14 @@ export class TarjetasComponent implements OnInit {
     ) {
       const alumnoNumber = Number(alumnoValue);
       if (isNaN(alumnoNumber)) {
-     
+        console.log('⚠️ IdAlumno no es número, estableciendo a 0');
         cleanedData.IdAlumno = 0;
       } else {
         cleanedData.IdAlumno = alumnoNumber;
       }
     } else {
       cleanedData.IdAlumno = 0;
-      
+      console.log('ℹ️ No hay alumno asignado, IdAlumno = 0');
     }
 
     // Validar colegio
@@ -728,7 +828,7 @@ export class TarjetasComponent implements OnInit {
       throw new Error('ID del colegio no está disponible');
     }
 
-   
+    console.log('✅ Datos finales validados:', cleanedData);
 
     return cleanedData;
   }
