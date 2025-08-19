@@ -21,7 +21,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { UserService } from '../../../../../services/UserData';
-import { environment } from '@environments/environment';
+
 import { S3 } from 'aws-sdk';
 import { Buffer } from 'buffer';
 
@@ -313,7 +313,7 @@ export class ModalAnuncioGeneralComponent implements OnInit {
 
   @ViewChild('imageInput') imageInput!: ElementRef<HTMLInputElement>;
 
-  private s3: S3;
+
 
   constructor(
     private fb: FormBuilder,
@@ -329,14 +329,7 @@ export class ModalAnuncioGeneralComponent implements OnInit {
       imagen: [''],
     });
 
-    this.s3 = new S3({
-      accessKeyId: environment.awsAccessKeyId,
-      secretAccessKey: environment.awsSecretKey,
-      region: 'us-east-1',
-      signatureVersion: 'v4',
-      s3ForcePathStyle: true,
-      correctClockSkew: true,
-    });
+   
   }
 
   ngOnInit() {
@@ -416,25 +409,13 @@ export class ModalAnuncioGeneralComponent implements OnInit {
           ContentType: contentType,
         };
 
-        const upload = this.s3.upload(params);
+        
 
-        upload.on('httpUploadProgress', (progress) => {
-          this.uploadProgress = Math.round(
-            (progress.loaded / progress.total) * 100
-          );
-        });
-
-        upload
-          .promise()
-          .then(() => {
-            const signedUrl = this.s3.getSignedUrl('getObject', {
-              Bucket: BUCKET_NAME,
-              Key: fileName,
-              Expires: 7 * 24 * 60 * 60,
-            });
-            resolve(signedUrl);
-          })
-          .catch(reject);
+    
+       
+        
+         
+         
       };
       reader.onerror = () => reject(new Error('Error al leer el archivo'));
       reader.readAsDataURL(file);

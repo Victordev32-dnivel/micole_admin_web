@@ -31,7 +31,7 @@ import { UserService } from '../../../../../services/UserData';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { S3 } from 'aws-sdk';
 import { Buffer } from 'buffer';
-import { environment } from '@environments/environment';
+
 
 if (typeof Buffer === 'undefined') {
   (window as any).Buffer = Buffer;
@@ -71,7 +71,7 @@ export class AddNotaComponent implements OnInit {
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
-  private s3: S3;
+
 
   constructor(
     @Inject(MatDialogRef) public dialogRef: MatDialogRef<AddNotaComponent>,
@@ -89,14 +89,7 @@ export class AddNotaComponent implements OnInit {
       nombre: ['', Validators.required],
     });
 
-    this.s3 = new S3({
-      accessKeyId: environment.awsAccessKeyId,
-      secretAccessKey: environment.awsSecretKey,
-      region: 'us-east-1',
-      signatureVersion: 'v4',
-      s3ForcePathStyle: true,
-      correctClockSkew: true,
-    });
+    
   }
 
   ngOnInit(): void {
@@ -296,59 +289,7 @@ export class AddNotaComponent implements OnInit {
     this.fileInput.nativeElement.click();
   }
 
-  async uploadPdfToS3(file: File): Promise<string> {
-    try {
-      this.uploadProgress = 0;
 
-      if (!file) throw new Error('El archivo no existe');
-
-      const reader = new FileReader();
-      const base64Content = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error('Error al leer el archivo'));
-        reader.readAsDataURL(file);
-      });
-
-      const base64Data = base64Content.split(',')[1];
-      const buffer = Buffer.from(base64Data, 'base64');
-
-      const timestamp = Date.now();
-      const randomId = Math.random().toString(36).substring(2);
-      const fileName = `notes/${timestamp}_${randomId}.pdf`;
-
-      const params = {
-        Bucket: BUCKET_NAME,
-        Key: fileName,
-        Body: buffer,
-        ContentType: 'application/pdf',
-      };
-
-      const upload = this.s3.upload(params);
-
-      upload.on('httpUploadProgress', (progress) => {
-        const percent = Math.round((progress.loaded / progress.total) * 100);
-        this.ngZone.run(() => {
-          this.uploadProgress = percent;
-          this.cdr.detectChanges();
-        });
-      });
-
-      await upload.promise();
-
-      const signedUrl = this.s3.getSignedUrl('getObject', {
-        Bucket: BUCKET_NAME,
-        Key: fileName,
-        Expires: 7 * 24 * 60 * 60,
-      });
-
-      return signedUrl;
-    } catch (error: unknown) {
-      console.error('❌ Error al subir PDF de notas:', error);
-      let errorMessage = 'Error desconocido al subir PDF';
-      if (error instanceof Error) errorMessage = error.message;
-      throw new Error(errorMessage);
-    }
-  }
 
   async onSave(): Promise<void> {
     if (!this.noteForm.valid || !this.pdfFile) {
@@ -361,31 +302,14 @@ export class AddNotaComponent implements OnInit {
     this.error = null;
 
     try {
-      const pdfUrl = await this.uploadPdfToS3(this.pdfFile);
+    
 
-      const payload = {
-        IdAlumno: this.noteForm.get('idAlumno')?.value,
-        Pdf: pdfUrl,
-        IdColegio: this.data?.colegioId,
-        Nombre: this.noteForm.get('nombre')?.value.trim(),
-      };
+    
 
      
 
-      await this.http
-        .post('https://proy-back-dnivel-44j5.onrender.com/api/nota', payload, {
-          headers: this.getHeaders(),
-        })
-        .toPromise();
 
-      this.snackBar.open('Nota agregada exitosamente!', 'Cerrar', {
-        duration: 5000,
-        verticalPosition: 'top',
-        horizontalPosition: 'center',
-        panelClass: ['success-snackbar']
-      });
-
-      this.dialogRef.close(payload);
+    
     } catch (error: any) {
       console.error('❌ Error completo:', error);
       this.error = error.error?.message || error.message || 'Error de conexión';

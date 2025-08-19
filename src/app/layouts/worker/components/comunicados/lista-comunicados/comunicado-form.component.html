@@ -69,25 +69,7 @@
                   </button>
                 </div>
 
-                <!-- BOTÓN CORREGIDO PARA AGREGAR COMUNICADO -->
-                <button
-                  mat-raised-button
-                  color="primary"
-                  (click)="agregarComunicado()"
-                  [disabled]="tipoVista === 'salon' && !salonSeleccionado"
-                  matTooltip="{{
-                    tipoVista === 'salon' && !salonSeleccionado
-                      ? 'Selecciona un salón primero'
-                      : 'Agregar nuevo ' +
-                        (tipoVista === 'general'
-                          ? 'anuncio general'
-                          : 'anuncio por salón')
-                  }}"
-                  class="add-button"
-                >
-                  <mat-icon>add</mat-icon>
-                  <span class="button-text">Agregar Comunicado</span>
-                </button>
+                <!-- BOTÓN "AGREGAR COMUNICADO" ELIMINADO -->
               </div>
             </div>
           </mat-card-header>
@@ -449,12 +431,10 @@
                 disponibles
               </h3>
               <p *ngIf="tipoVista === 'general'">
-                Comienza agregando tu primer anuncio general haciendo clic en
-                "Agregar Comunicado"
+                No hay anuncios generales publicados en este momento.
               </p>
               <p *ngIf="tipoVista === 'salon'">
-                Este salón no tiene anuncios publicados aún. Puedes agregar el
-                primer anuncio haciendo clic en "Agregar Comunicado"
+                Este salón no tiene anuncios publicados aún.
               </p>
             </div>
           </mat-card-content>
