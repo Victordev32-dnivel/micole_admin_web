@@ -72,12 +72,9 @@ export class StudentListComponent implements OnInit {
   maxVisiblePages: number = 5;
 
   private apiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno';
-  private colegioApiUrl =
-    'https://proy-back-dnivel-44j5.onrender.com/api/alumno/colegio';
-  private salonApiUrl =
-    'https://proy-back-dnivel-44j5.onrender.com/api/alumno/salon';
-  private salonesListUrl =
-    'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista';
+  private colegioApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno/colegio';
+  private salonApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno/salon';
+  private salonesListUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista';
   private staticToken = '732612882';
 
   constructor(
@@ -104,10 +101,32 @@ export class StudentListComponent implements OnInit {
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
+      console.log('🚀 Iniciando StudentListComponent...');
+      
       this.checkScreenSize();
       this.loadUserData();
-      this.loadSalones();
-      this.loadStudents();
+      
+      // Verificar que tenemos los datos del usuario antes de cargar
+      const userData = this.userService.getUserData();
+      if (userData && userData.colegio) {
+        console.log('✅ Datos de usuario disponibles:', userData);
+        this.colegioId = userData.colegio;
+        this.loadSalones();
+        this.loadStudents();
+      } else {
+        console.log('⏳ Esperando datos de usuario...');
+        // Suscribirse a cambios en los datos del usuario
+        this.userService.userData$.subscribe((userData) => {
+          if (userData && userData.colegio && !this.students.length) {
+            console.log('✅ Datos de usuario recibidos:', userData);
+            this.colegioId = userData.colegio;
+            this.loadSalones();
+            this.loadStudents();
+          }
+        });
+      }
+      
+      // Configurar el filtro de búsqueda
       this.searchTermControl.valueChanges.subscribe((term) => {
         this.filterStudents(term);
       });
@@ -171,14 +190,20 @@ export class StudentListComponent implements OnInit {
 
   private loadUserData(): void {
     const userData = this.userService.getUserData();
+    console.log('📋 Datos de usuario cargados:', userData);
+    
     if (userData) {
       this.userName = userData.nombre;
       this.userType = userData.tipoUsuario;
       this.colegioId = userData.colegio;
+      console.log('🏫 ColegioId establecido:', this.colegioId);
+    } else {
+      console.log('❌ No hay datos de usuario en localStorage');
     }
 
     this.userService.userData$.subscribe((userData) => {
       if (userData) {
+        console.log('🔄 Datos de usuario actualizados via observable:', userData);
         this.userName = userData.nombre;
         this.userType = userData.tipoUsuario;
         this.colegioId = userData.colegio;
@@ -189,6 +214,8 @@ export class StudentListComponent implements OnInit {
 
   private getHeaders(): HttpHeaders {
     const jwtToken = this.userService.getJwtToken() || this.staticToken;
+    console.log('🔑 Token usado:', jwtToken ? 'Token presente' : 'Sin token');
+    
     return new HttpHeaders({
       Authorization: `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
@@ -197,16 +224,18 @@ export class StudentListComponent implements OnInit {
 
   loadSalones(): void {
     if (!this.colegioId) {
-      console.error('ID del colegio no disponible para cargar salones');
+      console.error('❌ ID del colegio no disponible para cargar salones');
       return;
     }
 
+    console.log('🏫 Cargando salones para colegio:', this.colegioId);
     this.loadingSalones = true;
     const headers = this.getHeaders();
     const salonesUrl = `${this.salonesListUrl}/${this.colegioId}`;
 
     this.http.get<any>(salonesUrl, { headers }).subscribe({
       next: (response) => {
+        console.log('📚 Respuesta de salones:', response);
         this.availableSalones = [];
 
         if (Array.isArray(response)) {
@@ -229,11 +258,12 @@ export class StudentListComponent implements OnInit {
           }
         }
 
+        console.log('✅ Salones cargados:', this.availableSalones.length);
         this.loadingSalones = false;
         this.cdr.detectChanges();
       },
       error: (error) => {
-        console.error('Error al cargar salones:', error);
+        console.error('❌ Error al cargar salones:', error);
         this.availableSalones = [];
         this.loadingSalones = false;
         this.cdr.detectChanges();
@@ -243,6 +273,7 @@ export class StudentListComponent implements OnInit {
 
   onSalonFilterChange(): void {
     const salonId = this.salonFilterControl.value;
+    console.log('🔄 Cambio de filtro de salón:', salonId);
 
     if (
       salonId === null ||
@@ -255,17 +286,24 @@ export class StudentListComponent implements OnInit {
       this.selectedSalonId = Number(salonId);
     }
 
+    console.log('🎯 Salón seleccionado:', this.selectedSalonId);
     this.currentPage = 1;
     this.loadStudents(1);
   }
 
   loadStudents(page: number = 1) {
     if (!this.colegioId) {
-      console.error('ID del colegio no disponible');
+      console.error('❌ ID del colegio no disponible');
       this.loading = false;
       return;
     }
 
+    console.log('👥 Cargando estudiantes...', { 
+      page, 
+      colegioId: this.colegioId, 
+      selectedSalonId: this.selectedSalonId 
+    });
+    
     this.loading = true;
     const headers = this.getHeaders();
 
@@ -273,55 +311,104 @@ export class StudentListComponent implements OnInit {
     if (this.selectedSalonId) {
       apiUrl = `${this.salonApiUrl}/${this.selectedSalonId}`;
     } else {
+      // CORRECCIÓN: Usar la URL correcta para obtener estudiantes por colegio
       apiUrl = `${this.colegioApiUrl}/${this.colegioId}?page=${page}&limit=${this.pageSize}`;
     }
 
+    console.log('🌐 Llamando API:', apiUrl);
+
     this.http.get<any>(apiUrl, { headers }).subscribe({
       next: (response) => {
+        console.log('📥 Respuesta completa de la API:', response);
+        console.log('📥 Tipo de respuesta:', typeof response);
+        console.log('📥 Es array?', Array.isArray(response));
+        
         this.ngZone.run(() => {
-          if (this.selectedSalonId) {
-            let studentsData = [];
-            if (Array.isArray(response)) {
-              studentsData = response;
-            } else if (response.data && Array.isArray(response.data)) {
+          let studentsData: any[] = [];
+          
+          // CORRECCIÓN: Mejorar el procesamiento de la respuesta
+          if (Array.isArray(response)) {
+            studentsData = response;
+            console.log('📊 Respuesta es array directo:', studentsData.length);
+          } else if (response && typeof response === 'object') {
+            // Priorizar 'data' que es lo que viene en tu ejemplo
+            if (response.data && Array.isArray(response.data)) {
               studentsData = response.data;
-            } else if (response.students && Array.isArray(response.students)) {
-              studentsData = response.students;
-            } else if (response.alumnos && Array.isArray(response.alumnos)) {
-              studentsData = response.alumnos;
+              console.log('📊 Datos encontrados en response.data:', studentsData.length);
+            } else {
+              // Buscar en otras propiedades posibles
+              const possibleKeys = ['students', 'alumnos', 'alumno', 'items', 'result', 'lista'];
+              for (const key of possibleKeys) {
+                if (response[key] && Array.isArray(response[key])) {
+                  studentsData = response[key];
+                  console.log(`📊 Datos encontrados en ${key}:`, studentsData.length);
+                  break;
+                }
+              }
             }
+          }
 
-            // Invertir el orden del array
-            this.students = studentsData.reverse();
+          // CORRECCIÓN: Validar que tenemos datos válidos
+          if (!Array.isArray(studentsData)) {
+            console.error('❌ Los datos no son un array válido:', studentsData);
+            studentsData = [];
+          }
+
+          console.log('👥 Estudiantes procesados:', studentsData);
+
+          if (this.selectedSalonId) {
+            // Modo filtro por salón - no invertir orden aquí
+            this.students = [...studentsData];
             this.filteredStudents = [...this.students];
             this.totalAlumnos = studentsData.length;
             this.totalPages = 1;
             this.currentPage = 1;
           } else {
-            const rawStudents = response.data || response.alumnos || [];
-            // Invertir el orden del array
-            this.students = rawStudents.reverse();
+            // Modo paginación normal - invertir orden si es necesario
+            this.students = [...studentsData].reverse();
             this.filteredStudents = [...this.students];
             this.currentPage = page;
-            this.totalAlumnos = response.totalAlumnos || response.total || 0;
-            this.totalPages =
-              response.totalPages ||
-              response.totalPaginas ||
-              Math.ceil(this.totalAlumnos / this.pageSize);
+            
+            // CORRECCIÓN: Manejar metadatos de paginación
+            if (response && typeof response === 'object' && !Array.isArray(response)) {
+              this.totalAlumnos = response.totalAlumnos || response.total || response.count || studentsData.length;
+              this.totalPages = response.totalPages || response.totalPaginas || Math.ceil(this.totalAlumnos / this.pageSize);
+            } else {
+              // Si no hay metadatos, calcular basado en los datos
+              this.totalAlumnos = studentsData.length;
+              this.totalPages = Math.ceil(this.totalAlumnos / this.pageSize);
+            }
           }
 
+          // CORRECCIÓN: Asegurar que totalPages sea al menos 1
           if (this.totalPages < 1) {
             this.totalPages = 1;
           }
 
+          console.log('📊 Estado final:', {
+            students: this.students.length,
+            filteredStudents: this.filteredStudents.length,
+            totalAlumnos: this.totalAlumnos,
+            totalPages: this.totalPages,
+            currentPage: this.currentPage
+          });
+
           this.updateVisiblePages();
           this.loading = false;
+          
+          // CORRECCIÓN: Forzar detección de cambios
           this.cdr.detectChanges();
         });
       },
       error: (error) => {
-        console.error('Error al cargar estudiantes:', error);
+        console.error('❌ Error completo al cargar estudiantes:', error);
+        console.error('Status:', error.status);
+        console.error('Message:', error.message);
+        console.error('Error body:', error.error);
+        
         this.ngZone.run(() => {
+          this.students = [];
+          this.filteredStudents = [];
           this.loading = false;
           this.cdr.detectChanges();
         });
@@ -331,36 +418,39 @@ export class StudentListComponent implements OnInit {
 
   filterStudents(term: string) {
     this.ngZone.run(() => {
-      this.loading = true;
-      setTimeout(() => {
-        if (!term || term.trim() === '') {
-          this.filteredStudents = [...this.students];
-        } else {
-          const searchTerm = term.toLowerCase().trim();
-          this.filteredStudents = this.students.filter((student) => {
-            const matchesName = student.nombre_completo
+      // CORRECCIÓN: No mostrar loading para filtros locales
+      if (!term || term.trim() === '') {
+        this.filteredStudents = [...this.students];
+      } else {
+        const searchTerm = term.toLowerCase().trim();
+        this.filteredStudents = this.students.filter((student) => {
+          const matchesName = student.nombre_completo
+            ?.toLowerCase()
+            .includes(searchTerm);
+          const matchesDNI = student.numero_documento
+            ?.toString()
+            .toLowerCase()
+            .includes(searchTerm);
+          const matchesApoderado =
+            student.nombreApoderado?.toLowerCase().includes(searchTerm) ||
+            student.apellidoPaternoApoderado
+              ?.toLowerCase()
+              .includes(searchTerm) ||
+            student.apellidoMaternoApoderado
               ?.toLowerCase()
               .includes(searchTerm);
-            const matchesDNI = student.numero_documento
-              ?.toString()
-              .toLowerCase()
-              .includes(searchTerm);
-            const matchesApoderado =
-              student.nombreApoderado?.toLowerCase().includes(searchTerm) ||
-              student.apellidoPaternoApoderado
-                ?.toLowerCase()
-                .includes(searchTerm) ||
-              student.apellidoMaternoApoderado
-                ?.toLowerCase()
-                .includes(searchTerm);
 
-            return matchesName || matchesDNI || matchesApoderado;
-          });
-        }
+          return matchesName || matchesDNI || matchesApoderado;
+        });
+      }
 
-        this.loading = false;
-        this.cdr.detectChanges();
-      }, 100);
+      console.log('🔍 Filtro aplicado:', {
+        term,
+        totalStudents: this.students.length,
+        filteredCount: this.filteredStudents.length
+      });
+
+      this.cdr.detectChanges();
     });
   }
 
@@ -375,10 +465,8 @@ export class StudentListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
+        console.log('✅ Estudiante agregado, recargando lista...');
         this.loadStudents(1);
-        // Forzar el orden inverso
-        this.students.reverse();
-        this.filteredStudents = [...this.students];
       }
     });
   }
@@ -398,10 +486,8 @@ export class StudentListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
+        console.log('✅ Estudiante editado, recargando lista...');
         this.loadStudents(this.currentPage);
-        // Forzar el orden inverso
-        this.students.reverse();
-        this.filteredStudents = [...this.students];
       }
     });
   }
@@ -426,10 +512,11 @@ export class StudentListComponent implements OnInit {
 
   deleteStudent(id: number): void {
     if (!id) {
-      console.error('ID del alumno no disponible');
+      console.error('❌ ID del alumno no disponible');
       return;
     }
 
+    console.log('🗑️ Eliminando estudiante:', id);
     this.loading = true;
     const headers = this.getHeaders();
     const deleteUrl = `${this.apiUrl}/${id}`;
@@ -438,19 +525,17 @@ export class StudentListComponent implements OnInit {
       .delete(deleteUrl, { headers, responseType: 'text' as 'json' })
       .subscribe({
         next: (response) => {
+          console.log('✅ Estudiante eliminado exitosamente');
           this.ngZone.run(() => {
             if (this.filteredStudents.length === 1 && this.currentPage > 1) {
               this.changePage(this.currentPage - 1);
             } else {
               this.loadStudents(this.currentPage);
-              // Forzar el orden inverso
-              this.students.reverse();
-              this.filteredStudents = [...this.students];
             }
           });
         },
         error: (error) => {
-          console.error('Error al eliminar alumno:', error);
+          console.error('❌ Error al eliminar alumno:', error);
           this.ngZone.run(() => {
             this.loading = false;
             this.cdr.detectChanges();
@@ -465,6 +550,7 @@ export class StudentListComponent implements OnInit {
     }
 
     if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
+      console.log('📄 Cambiando a página:', page);
       this.loadStudents(page);
     }
   }
