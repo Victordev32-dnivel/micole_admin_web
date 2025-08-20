@@ -24,7 +24,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatProgressSpinnerModule
   ],
   template: `
-    <h2 mat-dialog-title>Editar Trabajador</h2>
+    <h2 mat-dialog-title>Editar Trabajador (ID: {{trabajadorId}})</h2>
     <div mat-dialog-content>
       <form [formGroup]="trabajadorForm">
         <mat-form-field appearance="outline" class="full-width">
@@ -74,6 +74,14 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
           <mat-error *ngIf="trabajadorForm.get('idColegio')?.invalid">Este campo es requerido</mat-error>
         </mat-form-field>
       </form>
+
+      <!-- DEBUG INFO - Remover en producción -->
+      <div style="background-color: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 4px; font-size: 12px;">
+        <strong>DEBUG INFO:</strong><br>
+        ID del trabajador: {{ trabajadorId }}<br>
+        URL que se va a usar: {{ getApiUrl() }}<br>
+        Datos recibidos: {{ debugDataReceived() }}
+      </div>
     </div>
     <div mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">Cancelar</button>
@@ -115,20 +123,36 @@ export class EditTrabajadoresComponent implements OnInit {
     public dialogRef: MatDialogRef<EditTrabajadoresComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
-    this.trabajadorId = data.id;
+    // Debug: Imprimir todos los datos recibidos
+    console.log('=== DATOS RECIBIDOS EN EDIT DIALOG ===');
+    console.log('data completo:', this.data);
+    console.log('data.id:', this.data.id);
+    console.log('data.trabajador:', this.data.trabajador);
+    console.log('data.trabajador.id:', this.data.trabajador?.id);
+    
+    // Asignar el ID - usar el ID del parámetro data.id
+    this.trabajadorId = this.data.id;
+    
+    // Si por alguna razón data.id no existe, usar el del trabajador
+    if (!this.trabajadorId && this.data.trabajador?.id) {
+      this.trabajadorId = this.data.trabajador.id;
+    }
+    
+    console.log('ID final asignado:', this.trabajadorId);
+    console.log('=====================================');
     
     this.trabajadorForm = this.fb.group({
-      nombre: [data.trabajador.nombre || '', Validators.required],
-      apellidoPaterno: [data.trabajador.apellidoPaterno || '', Validators.required],
-      apellidoMaterno: [data.trabajador.apellidoMaterno || '', Validators.required],
-      dni: [data.trabajador.dni || '', Validators.required],
-      telefono: [data.trabajador.telefono || '', Validators.required],
+      nombre: [this.data.trabajador?.nombre || '', Validators.required],
+      apellidoPaterno: [this.data.trabajador?.apellidoPaterno || '', Validators.required],
+      apellidoMaterno: [this.data.trabajador?.apellidoMaterno || '', Validators.required],
+      dni: [this.data.trabajador?.dni || '', Validators.required],
+      telefono: [this.data.trabajador?.telefono || '', Validators.required],
       contrasena: ['', [Validators.minLength(6)]], // Opcional al editar
-      idColegio: [data.trabajador.idColegio || '', Validators.required],
+      idColegio: [this.data.trabajador?.idColegio || '', Validators.required],
       tipoUsuario: ['trabajador']
     });
 
-    this.colegios = data.colegios || [];
+    this.colegios = this.data.colegios || [];
   }
 
   ngOnInit() {
@@ -142,6 +166,20 @@ export class EditTrabajadoresComponent implements OnInit {
       'Authorization': 'Bearer 732612882',
       'Content-Type': 'application/json'
     });
+  }
+
+  // Método para debug - mostrar la URL que se va a usar
+  getApiUrl(): string {
+    return `https://proy-back-dnivel-44j5.onrender.com/api/Trabajador/${this.trabajadorId}`;
+  }
+
+  // Método para debug - mostrar los datos recibidos
+  debugDataReceived(): string {
+    return JSON.stringify({
+      id: this.data.id,
+      trabajador: this.data.trabajador,
+      trabajadorId: this.trabajadorId
+    }, null, 2);
   }
 
   loadColegios() {
@@ -158,28 +196,82 @@ export class EditTrabajadoresComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.trabajadorForm.valid) {
+    if (this.trabajadorForm.valid && this.trabajadorId) {
       this.loading = true;
-      const formData = this.trabajadorForm.value;
+      const formValues = this.trabajadorForm.value;
       
-      // Si no se modificó la contraseña, la eliminamos del objeto
-      if (!formData.contrasena) {
-        delete formData.contrasena;
+      // Mapear los campos al formato que espera el backend
+      const formData: any = {
+        nombres: formValues.nombre,              // Cambio: nombre -> nombres
+        apellidoMaterno: formValues.apellidoMaterno,
+        apellidoPaterno: formValues.apellidoPaterno,
+        numeroDocumento: formValues.dni,         // Cambio: dni -> numeroDocumento
+        telefono: formValues.telefono,
+        idColegio: Number(formValues.idColegio), // Asegurar que sea número
+        tipoUsuario: 'trabajador'                // Agregar tipoUsuario
+      };
+
+      // Solo agregar contraseña si se modificó
+      if (formValues.contrasena && formValues.contrasena.trim() !== '') {
+        formData.contrasena = formValues.contrasena;
       }
 
-      this.http.put(`https://proy-back-dnivel-44j5.onrender.com/api/Trabajador/${this.trabajadorId}`, formData, {
-        headers: this.getHeaders()
+      const apiUrl = `https://proy-back-dnivel-44j5.onrender.com/api/Trabajador/${this.trabajadorId}`;
+      
+      console.log('=== ENVIANDO ACTUALIZACIÓN ===');
+      console.log('URL:', apiUrl);
+      console.log('ID del trabajador:', this.trabajadorId);
+      console.log('Datos del formulario:', formValues);
+      console.log('Datos mapeados para enviar:', formData);
+      console.log('Headers:', this.getHeaders());
+      console.log('===============================');
+
+      this.http.put(apiUrl, formData, {
+        headers: this.getHeaders(),
+        responseType: 'text' as 'json'  // Cambio: tratar respuesta como texto para debug
       }).subscribe({
-        next: () => {
+        next: (response) => {
+          console.log('Respuesta del servidor (texto):', response);
           this.loading = false;
+          alert('Trabajador actualizado exitosamente');
           this.dialogRef.close(true);
         },
         error: (error) => {
-          console.error('Error al actualizar trabajador:', error);
+          console.error('=== ERROR COMPLETO ===');
+          console.error('Error object:', error);
+          console.error('Error status:', error.status);
+          console.error('Error statusText:', error.statusText);
+          console.error('Error headers:', error.headers);
+          console.error('Error body:', error.error);
+          console.error('URL utilizada:', apiUrl);
+          console.error('ID enviado:', this.trabajadorId);
+          console.error('Datos enviados:', formData);
+          console.error('=====================');
+          
           this.loading = false;
-          alert('Error al actualizar el trabajador. Por favor, intente nuevamente.');
+          
+          let errorMessage = 'Error al actualizar el trabajador.';
+          if (error.status === 404) {
+            errorMessage = 'Error: Trabajador no encontrado (404). Verifique que el ID sea correcto.';
+          } else if (error.status === 400) {
+            errorMessage = 'Error: Datos inválidos (400). Verifique los campos enviados.';
+          } else if (error.status === 401) {
+            errorMessage = 'Error: No autorizado (401). Verifique el token de autenticación.';
+          } else if (error.status === 500) {
+            errorMessage = 'Error interno del servidor (500).';
+          }
+          
+          alert(errorMessage + '\n\nRevise la consola para más detalles.');
         }
       });
+    } else {
+      if (!this.trabajadorId) {
+        alert('Error: No se puede actualizar - ID del trabajador no válido');
+        console.error('ID del trabajador no válido:', this.trabajadorId);
+      } else {
+        alert('Por favor, complete todos los campos requeridos');
+        console.error('Formulario inválido:', this.trabajadorForm.errors);
+      }
     }
   }
 

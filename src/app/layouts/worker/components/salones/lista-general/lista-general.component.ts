@@ -12,8 +12,6 @@ import { FuncionAgregarComponent } from '../funcion-agregar/funcion-agregar.comp
 import { FuncionEditarComponent } from '../funcion-editar/funcion-editar.component';
 import { EliminarComponent } from './eliminar.component';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatOptionModule } from '@angular/material/core';
-import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 
@@ -28,8 +26,6 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
     MatIconModule,
     MatProgressSpinnerModule,
     MatFormFieldModule,
-    MatOptionModule,
-    MatSelectModule,
     MatInputModule,
     MatSnackBarModule,
   ],
@@ -53,7 +49,6 @@ export class ListaGeneralComponent implements OnInit {
   totalResults = 0;
   pages: number[] = [];
   searchTerm = '';
-  tipoHorario: '' | 'entrada' | 'salida' = '';
 
   private apiBase = 'https://proy-back-dnivel-44j5.onrender.com/api';
 
@@ -63,15 +58,11 @@ export class ListaGeneralComponent implements OnInit {
     private userService: UserService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
-  ) {
-   
-  }
+  ) {}
 
   ngOnInit() {
-    
     const userData = this.userService.getUserData();
     this.colegiosId = userData?.colegio || 0;
-   
 
     if (!this.colegiosId) {
       this.error = 'No se encontró el ID del colegio';
@@ -81,10 +72,8 @@ export class ListaGeneralComponent implements OnInit {
 
     this.loadData();
     this.tipoSeleccionado.valueChanges.subscribe(() => {
-    
       this.currentPage = 1;
       this.searchTerm = '';
-      this.tipoHorario = '';
       this.loadData();
     });
   }
@@ -98,7 +87,6 @@ export class ListaGeneralComponent implements OnInit {
   }
 
   loadData() {
-   
     this.loading = true;
     this.error = null;
 
@@ -118,11 +106,8 @@ export class ListaGeneralComponent implements OnInit {
         break;
     }
 
-  
-
     this.http.get<any>(url, { headers: this.getHeaders() }).subscribe({
       next: (response) => {
-      
         this.data = response.data || [];
         this.filteredData = [...this.data];
         this.totalPages = response.totalPages || 1;
@@ -134,7 +119,7 @@ export class ListaGeneralComponent implements OnInit {
           this.data.length;
         this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
         this.setDisplayedColumns(this.tipoSeleccionado.value);
-        this.applyFilters();
+        this.applySearch();
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -160,18 +145,31 @@ export class ListaGeneralComponent implements OnInit {
     }
   }
 
-  applyFilters() {
-    if (this.tipoSeleccionado.value === 'salones') {
-      const term = (this.searchTerm || '').toLowerCase().trim();
-      this.filteredData = this.data.filter((s) => {
-        const matchesSearch =
-          !term || (s.nombre || '').toLowerCase().includes(term);
-        const matchesTipo = !this.tipoHorario || s.tipo === this.tipoHorario;
-        return matchesSearch && matchesTipo;
-      });
-    } else {
+  applySearch() {
+    const term = (this.searchTerm || '').toLowerCase().trim();
+    
+    if (!term) {
       this.filteredData = [...this.data];
+    } else {
+      this.filteredData = this.data.filter((item) => {
+        // Buscar por nombre (común para todos los tipos)
+        const matchesName = (item.nombre || '').toLowerCase().includes(term);
+        
+        // Para salones, también buscar por horario y tipo
+        if (this.tipoSeleccionado.value === 'salones') {
+          const matchesHorario = (item.horario || '').toLowerCase().includes(term);
+          const matchesTipo = (item.tipo || '').toLowerCase().includes(term);
+          return matchesName || matchesHorario || matchesTipo;
+        }
+        
+        return matchesName;
+      });
     }
+  }
+
+  clearSearch() {
+    this.searchTerm = '';
+    this.applySearch();
   }
 
   changePage(page: number) {
@@ -186,7 +184,6 @@ export class ListaGeneralComponent implements OnInit {
   }
 
   abrirModalAgregar() {
-   
     const tipo = this.tipoSeleccionado.value;
     const width = tipo === 'salones' ? '820px' : '520px';
 
@@ -207,7 +204,6 @@ export class ListaGeneralComponent implements OnInit {
   }
 
   abrirModalEditar(id: number, tipo: string) {
-   
     const dialogRef = this.dialog.open(FuncionEditarComponent, {
       width: tipo === 'salones' ? '820px' : '520px',
       maxWidth: '95vw',
@@ -224,10 +220,7 @@ export class ListaGeneralComponent implements OnInit {
     });
   }
 
-  // FUNCIÓN PARA ELIMINAR CON MEJOR MANEJO DE ERRORES Y DEBUG
   abrirModalEliminar(id: number, nombre: string) {
-  
-    
     if (!id || !nombre) {
       console.error('❌ Error: ID o nombre faltantes', { id, nombre });
       this.snackBar.open('Error: Datos incompletos para eliminar', 'Cerrar', {
@@ -298,5 +291,5 @@ export class ListaGeneralComponent implements OnInit {
         });
       }
     });
-}
+  }
 }

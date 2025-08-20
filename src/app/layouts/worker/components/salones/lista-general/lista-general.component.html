@@ -52,6 +52,49 @@
     </div>
   </div>
 
+  <!-- Buscador -->
+  <div class="search-container" *ngIf="!loading">
+    <div class="search-row">
+      <!-- Campo búsqueda -->
+      <div class="search-field">
+        <mat-form-field appearance="outline">
+          <mat-label>Buscar {{ tipoSeleccionado.value | titlecase }}</mat-label>
+          <input
+            matInput
+            name="searchTerm"
+            [(ngModel)]="searchTerm"
+            (input)="this.applySearch()"
+            placeholder="Ingresa el nombre a buscar"
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            (click)="this.clearSearch()"
+            aria-label="Limpiar"
+            *ngIf="searchTerm"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-form-field>
+      </div>
+
+      <!-- Resultados + botón limpiar -->
+      <div class="search-actions">
+        <span class="search-results">
+          <strong>{{ filteredData.length }}</strong> de <strong>{{ data.length }}</strong> resultados
+        </span>
+        <button
+          mat-stroked-button
+          color="primary"
+          (click)="this.clearSearch()"
+          *ngIf="searchTerm"
+        >
+          Limpiar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Tabla / Lista -->
   <div class="tabla-container">
     <!-- headers -->
@@ -141,66 +184,6 @@
     <div *ngIf="error" class="error-message">{{ error }}</div>
   </div>
 
-  <!-- filtros inferiores SOLO para salones -->
-  <div
-    *ngIf="tipoSeleccionado.value === 'salones' && !loading"
-    class="salones-filters-bottom"
-  >
-    <div class="salones-filters-row">
-      <!-- Campo búsqueda -->
-      <div class="campo-busqueda">
-        <mat-form-field appearance="outline">
-          <mat-label>Buscar salón</mat-label>
-          <input
-            matInput
-            name="searchTerm"
-            [(ngModel)]="searchTerm"
-            (input)="applyFilters()"
-            placeholder="Nombre del salón"
-          />
-          <button
-            mat-icon-button
-            matSuffix
-            (click)="searchTerm = ''; applyFilters()"
-            aria-label="Limpiar"
-          >
-            <mat-icon>close</mat-icon>
-          </button>
-        </mat-form-field>
-      </div>
-
-      <!-- Selector tipo -->
-      <div class="tipo-container">
-        <mat-form-field appearance="outline" class="tipo-field">
-          <mat-label>Tipo</mat-label>
-          <mat-select
-            name="tipoHorario"
-            [(ngModel)]="tipoHorario"
-            (selectionChange)="applyFilters()"
-          >
-            <mat-option value="" selected>Todos</mat-option>
-            <mat-option value="entrada">Entrada</mat-option>
-            <mat-option value="salida">Salida</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      <!-- Resultados + botón limpiar -->
-      <div class="acciones-filtros">
-        <small
-          ><strong>{{ filteredData.length }}</strong> resultados</small
-        >
-        <button
-          mat-stroked-button
-          color="primary"
-          (click)="searchTerm = ''; tipoHorario = ''; applyFilters()"
-        >
-          Limpiar filtros
-        </button>
-      </div>
-    </div>
-  </div>
-
   <!-- footer: paginación y pageSize -->
   <div class="footer">
     <div class="pagination" *ngIf="!loading && totalPages > 1">
@@ -241,7 +224,7 @@
         »
       </button>
     </div>
-    <div class="page-size" *ngIf="tipoSeleccionado.value === 'salones'">
+    <div class="page-size">
       <label for="pageSize">Resultados por página</label>
       <input
         id="pageSize"

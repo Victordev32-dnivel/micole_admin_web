@@ -191,11 +191,43 @@
   background: #f7fafc;
 }
 
+/* ----- Buscador ----- */
+.search-container {
+  padding: 12px;
+  background: #f4f6f8;
+  border-radius: 8px;
+  border: 1px solid #e6ecf5;
+  margin-bottom: 16px;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.search-field {
+  flex: 1;
+  min-width: 280px;
+}
+
+.search-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search-results {
+  font-size: 0.9rem;
+  color: #555;
+}
+
 /* ----- Footer: paginación + page size ----- */
 .footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 16px;
   margin-top: 16px;
   flex-wrap: wrap;
@@ -240,7 +272,6 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-left: auto;
 }
 
 .page-size label {
@@ -260,57 +291,6 @@
 .page-size input:focus {
   border-color: #2196f3;
   box-shadow: 0 0 0 3px rgba(33,150,243,.15);
-}
-
-/* ----- Filtros de salones ----- */
-.salones-filters-bottom {
-  padding: 12px;
-  background: #f4f6f8;
-  border-radius: 8px;
-  border: 1px solid #e6ecf5;
-  margin-top: 16px;
-}
-
-.salones-filters-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-/* Campo búsqueda */
-.salones-filters-bottom .campo-busqueda {
-  flex: 1;
-  min-width: 220px;
-}
-
-/* Campo horario */
-.salones-filters-bottom .campo-horario {
-  width: 220px;
-  flex-shrink: 0;
-}
-
-/* Acciones */
-.salones-filters-bottom .acciones-filtros {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-left: auto;
-}
-
-.salones-filters-bottom .acciones-filtros small {
-  font-size: 0.9rem;
-  color: #555;
-}
-
-.salones-filters-bottom button {
-  border-radius: 8px;
-  padding: 6px 14px;
-  transition: background-color .2s ease, box-shadow .2s ease;
-}
-
-.salones-filters-bottom button:hover {
-  box-shadow: 0 2px 8px rgba(33,150,243,.12);
 }
 
 /* ----- Responsive ----- */
@@ -376,32 +356,30 @@
     padding-top: 10px;
   }
 
+  .search-container {
+    padding: 8px;
+  }
+
+  .search-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .search-field {
+    width: 100%;
+    flex: unset;
+  }
+
+  .search-actions {
+    justify-content: flex-end;
+    width: 100%;
+  }
+
   .footer {
     flex-direction: column;
     align-items: stretch;
   }
   .page-size {
-    margin-left: 0;
-    justify-content: flex-end;
-  }
-
-  .salones-filters-bottom {
-    padding: 8px;
-  }
-
-  .salones-filters-row {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .salones-filters-bottom .campo-busqueda,
-  .salones-filters-bottom .campo-horario {
-    width: 100%;
-    flex: unset;
-  }
-
-  .salones-filters-bottom .acciones-filtros {
-    justify-content: flex-end;
-    width: 100%;
+    justify-content: center;
   }
 }

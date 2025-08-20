@@ -1,3 +1,4 @@
+// trabajadores-list.component.ts
 import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MatTableModule } from '@angular/material/table';
@@ -97,17 +98,21 @@ export class TrabajadoresListComponent implements OnInit {
       })
       .subscribe({
         next: (response) => {
-          this.trabajadores = response.map((t: any) => ({
-            id: t.idTrabajador || t.idColegio,
-            nombre: t.nombres,
-            apellidoPaterno: t.apellidoPaterno,
-            apellidoMaterno: t.apellidoMaterno,
-            dni: t.numeroDocumento,
-            telefono: t.telefono,
-            idColegio: t.idColegio,
-            tipoUsuario: t.tipoUsuario,
-            contrasena: t.contrasena
-          }));
+          console.log('Respuesta del API:', response); // Para debug
+          this.trabajadores = response.map((t: any) => {
+            console.log('ID del trabajador:', t.id); // Para debug
+            return {
+              id: t.id, // Corregido: usar t.id directamente
+              nombre: t.nombres,
+              apellidoPaterno: t.apellidoPaterno,
+              apellidoMaterno: t.apellidoMaterno,
+              dni: t.numeroDocumento,
+              telefono: t.telefono,
+              idColegio: t.idColegio,
+              tipoUsuario: t.tipoUsuario,
+              contrasena: t.contrasena
+            };
+          });
           this.filteredTrabajadores = [...this.trabajadores];
           this.loading = false;
           this.cdr.detectChanges();
@@ -159,7 +164,16 @@ export class TrabajadoresListComponent implements OnInit {
   }
 
   openEditDialog(id: number) {
+    console.log('Abriendo dialog para ID:', id); // Para debug
     const trabajador = this.trabajadores.find((t) => t.id === id);
+    console.log('Trabajador encontrado:', trabajador); // Para debug
+    
+    if (!trabajador) {
+      console.error('No se encontró el trabajador con ID:', id);
+      alert('Error: No se encontró el trabajador seleccionado');
+      return;
+    }
+
     const dialogRef = this.dialog.open(EditTrabajadoresComponent, {
       width: '25vw',
       maxWidth: '50vw',
@@ -178,6 +192,7 @@ export class TrabajadoresListComponent implements OnInit {
   }
 
   confirmDelete(id: number) {
+    console.log('Eliminando trabajador con ID:', id); // Para debug
     const dialogRef = this.dialog.open(ConfirmationDeleteComponent, {
       width: '20vw',
       maxWidth: '50vw',
@@ -192,5 +207,10 @@ export class TrabajadoresListComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) this.loadTrabajadores();
     });
+  }
+
+  // Método para mejorar el rendimiento de la lista
+  trackByTrabajadorId(index: number, trabajador: any): number {
+    return trabajador.id;
   }
 }
