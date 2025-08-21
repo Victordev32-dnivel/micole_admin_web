@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,6 +13,8 @@ import { EliminarComponent } from './eliminar.component';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { catchError, timeout, retry } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-lista-general',
@@ -50,6 +52,8 @@ export class ListaGeneralComponent implements OnInit {
   searchTerm = '';
 
   private apiBase = 'https://proy-back-dnivel-44j5.onrender.com/api';
+  private maxRetries = 3;
+  private requestTimeout = 30000; // 30 segundos
 
   constructor(
     private http: HttpClient,
@@ -69,7 +73,9 @@ export class ListaGeneralComponent implements OnInit {
       return;
     }
 
+    console.log('🏫 ID del colegio:', this.colegiosId);
     this.loadData();
+    
     this.tipoSeleccionado.valueChanges.subscribe(() => {
       this.currentPage = 1;
       this.searchTerm = '';
@@ -89,8 +95,10 @@ export class ListaGeneralComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
+    const tipo = this.tipoSeleccionado.value;
     let url = '';
-    switch (this.tipoSeleccionado.value) {
+    
+    switch (tipo) {
       case 'niveles':
         url = `${this.apiBase}/nivel/colegio/${this.colegiosId}?page=${this.currentPage}`;
         break;
@@ -105,30 +113,69 @@ export class ListaGeneralComponent implements OnInit {
         break;
     }
 
-    this.http.get<any>(url, { headers: this.getHeaders() }).subscribe({
-      next: (response) => {
-        this.data = response.data || [];
-        this.filteredData = [...this.data];
-        this.totalPages = response.totalPages || 1;
-        this.totalResults =
-          response.totalNiveles ||
-          response.totalSecciones ||
-          response.totalGrados ||
-          response.totalSalones ||
-          this.data.length;
-        this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
-        this.setDisplayedColumns(this.tipoSeleccionado.value);
-        this.applySearch();
-        this.loading = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('❌ Error al cargar datos:', err);
-        this.error = 'Error al cargar los datos. Intente de nuevo';
-        this.loading = false;
-        this.cdr.detectChanges();
-      },
-    });
+    console.log(`🔍 Cargando ${tipo}:`, url);
+
+    this.http.get<any>(url, { headers: this.getHeaders() })
+      .pipe(
+        timeout(this.requestTimeout), // Timeout de 30 segundos
+        retry(2), // Reintentar 2 veces
+        catchError((error: HttpErrorResponse) => {
+          console.error(`❌ Error al cargar ${tipo}:`, error);
+          
+          let errorMessage = 'Error al cargar los datos';
+          
+          if (error.status === 0) {
+            errorMessage = 'Sin conexión al servidor. Verifique su conexión a internet.';
+          } else if (error.status === 404) {
+            errorMessage = `No se encontraron ${tipo} para este colegio.`;
+          } else if (error.status === 403) {
+            errorMessage = 'No tiene permisos para acceder a estos datos.';
+          } else if (error.status === 401) {
+            errorMessage = 'Su sesión ha expirado. Por favor, inicie sesión nuevamente.';
+          } else if (error.status === 500) {
+            errorMessage = 'Error interno del servidor. Intente más tarde.';
+          }
+          
+          this.error = errorMessage;
+          this.loading = false;
+          this.data = [];
+          this.filteredData = [];
+          this.cdr.detectChanges();
+          
+          return of(null); // Retorna observable vacío
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          if (!response) return; // Si hubo error y se retornó null
+          
+          try {
+            console.log(`✅ Respuesta de ${tipo}:`, response);
+            
+            this.data = response.data || [];
+            this.filteredData = [...this.data];
+            this.totalPages = response.totalPages || 1;
+            this.totalResults = response.totalNiveles || 
+                              response.totalSecciones || 
+                              response.totalGrados || 
+                              response.totalSalones || 
+                              this.data.length;
+            
+            this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
+            this.setDisplayedColumns(tipo);
+            this.applySearch();
+            
+            console.log(`📊 Datos cargados: ${this.data.length} elementos`);
+            
+          } catch (parseError) {
+            console.error('❌ Error al procesar la respuesta:', parseError);
+            this.error = 'Error al procesar la respuesta del servidor';
+          }
+          
+          this.loading = false;
+          this.cdr.detectChanges();
+        }
+      });
   }
 
   setDisplayedColumns(tipo: 'niveles' | 'secciones' | 'grados' | 'salones') {
@@ -177,6 +224,12 @@ export class ListaGeneralComponent implements OnInit {
 
   onPageSizeChange() {
     this.currentPage = 1;
+    this.loadData();
+  }
+
+  // Método para reintentar manualmente
+  retryLoad() {
+    console.log('🔄 Reintentando cargar datos...');
     this.loadData();
   }
 
@@ -253,12 +306,26 @@ export class ListaGeneralComponent implements OnInit {
   }
 
   private editarSeccion(id: number) {
+    console.log('✏️ Editando sección:', { id, colegioId: this.colegiosId });
+    
+    // Verificar que tenemos los datos necesarios
+    if (!id || !this.colegiosId) {
+      this.snackBar.open('Error: Datos insuficientes para editar la sección', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+    
     import('./edit-secciones.component').then(({ EditSeccionesComponent }) => {
       const dialogRef = this.dialog.open(EditSeccionesComponent, {
         width: '520px',
         maxWidth: '95vw',
         panelClass: 'custom-dialog',
-        data: { id, idColegio: this.colegiosId },
+        data: { 
+          id: Number(id), // Asegurar que sea número
+          idColegio: Number(this.colegiosId) // Asegurar que sea número
+        },
         disableClose: true,
       });
 
