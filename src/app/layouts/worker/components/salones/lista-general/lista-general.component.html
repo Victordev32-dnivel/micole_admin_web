@@ -63,13 +63,13 @@
             matInput
             name="searchTerm"
             [(ngModel)]="searchTerm"
-            (input)="this.applySearch()"
+            (input)="applySearch()"
             placeholder="Ingresa el nombre a buscar"
           />
           <button
             mat-icon-button
             matSuffix
-            (click)="this.clearSearch()"
+            (click)="clearSearch()"
             aria-label="Limpiar"
             *ngIf="searchTerm"
           >
@@ -86,7 +86,7 @@
         <button
           mat-stroked-button
           color="primary"
-          (click)="this.clearSearch()"
+          (click)="clearSearch()"
           *ngIf="searchTerm"
         >
           Limpiar
@@ -135,7 +135,7 @@
             <mat-icon
               class="action edit"
               title="Editar"
-              (click)="abrirModalEditar(item.id, tipoSeleccionado.value)"
+              (click)="abrirModalEditar(item.id)"
               >edit</mat-icon
             >
             <mat-icon
@@ -157,7 +157,7 @@
             <mat-icon
               class="action edit"
               title="Editar"
-              (click)="abrirModalEditar(item.id, tipoSeleccionado.value); $event.stopPropagation();"
+              (click)="abrirModalEditar(item.id); $event.stopPropagation();"
               >edit</mat-icon
             >
             <mat-icon 

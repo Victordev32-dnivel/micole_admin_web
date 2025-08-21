@@ -9,7 +9,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { UserService } from '../../../../../services/UserData';
 import { FuncionAgregarComponent } from '../funcion-agregar/funcion-agregar.component';
-import { FuncionEditarComponent } from '../funcion-editar/funcion-editar.component';
 import { EliminarComponent } from './eliminar.component';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -152,10 +151,8 @@ export class ListaGeneralComponent implements OnInit {
       this.filteredData = [...this.data];
     } else {
       this.filteredData = this.data.filter((item) => {
-        // Buscar por nombre (común para todos los tipos)
         const matchesName = (item.nombre || '').toLowerCase().includes(term);
         
-        // Para salones, también buscar por horario y tipo
         if (this.tipoSeleccionado.value === 'salones') {
           const matchesHorario = (item.horario || '').toLowerCase().includes(term);
           const matchesTipo = (item.tipo || '').toLowerCase().includes(term);
@@ -203,20 +200,154 @@ export class ListaGeneralComponent implements OnInit {
     });
   }
 
-  abrirModalEditar(id: number, tipo: string) {
-    const dialogRef = this.dialog.open(FuncionEditarComponent, {
-      width: tipo === 'salones' ? '820px' : '520px',
-      maxWidth: '95vw',
-      panelClass: 'custom-dialog',
-      data: { tipo, id, idColegio: this.colegiosId },
-      disableClose: true,
-    });
+  abrirModalEditar(id: number) {
+    const tipo = this.tipoSeleccionado.value;
+    
+    switch (tipo) {
+      case 'niveles':
+        this.editarNivel(id);
+        break;
+      case 'secciones':
+        this.editarSeccion(id);
+        break;
+      case 'grados':
+        this.editarGrado(id);
+        break;
+      case 'salones':
+        this.editarSalon(id);
+        break;
+    }
+  }
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result && result.success) {
-        this.currentPage = 1;
-        this.loadData();
-      }
+  private editarNivel(id: number) {
+    import('./edit-nivel.component').then(({ EditNivelComponent }) => {
+      const dialogRef = this.dialog.open(EditNivelComponent, {
+        width: '520px',
+        maxWidth: '95vw',
+        panelClass: 'custom-dialog',
+        data: { id, idColegio: this.colegiosId },
+        disableClose: true,
+      });
+
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result && result.success) {
+          this.snackBar.open('Nivel actualizado correctamente', 'Cerrar', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+          this.loadData();
+        } else if (result?.error) {
+          this.snackBar.open(result.error, 'Cerrar', {
+            duration: 5000,
+            panelClass: ['error-snackbar']
+          });
+        }
+      });
+    }).catch((error) => {
+      console.error('❌ Error al cargar EditNivelComponent:', error);
+      this.snackBar.open('Error al cargar el componente de edición', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+    });
+  }
+
+  private editarSeccion(id: number) {
+    import('./edit-secciones.component').then(({ EditSeccionesComponent }) => {
+      const dialogRef = this.dialog.open(EditSeccionesComponent, {
+        width: '520px',
+        maxWidth: '95vw',
+        panelClass: 'custom-dialog',
+        data: { id, idColegio: this.colegiosId },
+        disableClose: true,
+      });
+
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result && result.success) {
+          this.snackBar.open('Sección actualizada correctamente', 'Cerrar', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+          this.loadData();
+        } else if (result?.error) {
+          this.snackBar.open(result.error, 'Cerrar', {
+            duration: 5000,
+            panelClass: ['error-snackbar']
+          });
+        }
+      });
+    }).catch((error) => {
+      console.error('❌ Error al cargar EditSeccionesComponent:', error);
+      this.snackBar.open('Error al cargar el componente de edición', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+    });
+  }
+
+  private editarGrado(id: number) {
+    import('./edit-grados.component').then(({ EditGradosComponent }) => {
+      const dialogRef = this.dialog.open(EditGradosComponent, {
+        width: '520px',
+        maxWidth: '95vw',
+        panelClass: 'custom-dialog',
+        data: { id, idColegio: this.colegiosId },
+        disableClose: true,
+      });
+
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result && result.success) {
+          this.snackBar.open('Grado actualizado correctamente', 'Cerrar', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+          this.loadData();
+        } else if (result?.error) {
+          this.snackBar.open(result.error, 'Cerrar', {
+            duration: 5000,
+            panelClass: ['error-snackbar']
+          });
+        }
+      });
+    }).catch((error) => {
+      console.error('❌ Error al cargar EditGradosComponent:', error);
+      this.snackBar.open('Error al cargar el componente de edición', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+    });
+  }
+
+  private editarSalon(id: number) {
+    import('./edit-salon.component').then(({ EditSalonComponent }) => {
+      const dialogRef = this.dialog.open(EditSalonComponent, {
+        width: '820px',
+        maxWidth: '95vw',
+        panelClass: 'custom-dialog',
+        data: { id, idColegio: this.colegiosId },
+        disableClose: true,
+      });
+
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result && result.success) {
+          this.snackBar.open('Salón actualizado correctamente', 'Cerrar', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+          this.loadData();
+        } else if (result?.error) {
+          this.snackBar.open(result.error, 'Cerrar', {
+            duration: 5000,
+            panelClass: ['error-snackbar']
+          });
+        }
+      });
+    }).catch((error) => {
+      console.error('❌ Error al cargar EditSalonComponent:', error);
+      this.snackBar.open('Error al cargar el componente de edición', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
     });
   }
 
