@@ -2,11 +2,12 @@ import { Injectable, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Inject } from '@angular/core';
 
+// Interface corregida - colegio es un número (ID)
 interface UserData {
-  id: number;
+ id: number;
   tipoUsuario: string;
   nombre: string;
-  colegio: number;
+  colegio: number; // Esto es un número (ID), no un objeto
   jwt: string;
 }
 
@@ -26,9 +27,7 @@ export class AuthService {
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('userData', JSON.stringify(userData));
     }
-    (
-      `Login exitoso para ${userData.nombre} con rol ${userData.tipoUsuario}`
-    );
+    console.log(`Login exitoso para ${userData.nombre} con rol ${userData.tipoUsuario}`);
   }
 
   logout() {
@@ -38,7 +37,7 @@ export class AuthService {
       localStorage.removeItem('isAuthenticated');
       localStorage.removeItem('userData');
     }
-    ('Logout ejecutado, estado de autenticación limpiado');
+    console.log('Logout ejecutado, estado de autenticación limpiado');
   }
 
   isLoggedIn(): boolean {
@@ -67,7 +66,15 @@ export class AuthService {
     return this.userData;
   }
 
+  getColegioId(): number {
+    const userData = this.getUserData();
+    return userData?.colegio || 0;
+  }
+
   getUserRole(): string {
     return this.getUserData()?.tipoUsuario || '';
   }
+
+  // Nuevo método para obtener el ID del colegio
+  
 }
