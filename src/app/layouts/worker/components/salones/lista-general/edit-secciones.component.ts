@@ -26,7 +26,9 @@ import { UserService } from '../../../../../services/UserData';
   ],
   template: `
     <div class="edit-container">
-      <h2 mat-dialog-title>Editar Sección</h2>
+      <div class="header-container">
+        <h2 mat-dialog-title class="centered-title">Editar Sección</h2>
+      </div>
 
       <mat-dialog-content>
         <div *ngIf="loading" class="loading-container">
@@ -70,24 +72,27 @@ import { UserService } from '../../../../../services/UserData';
     </div>
   `,
   styles: [`
-  h2[mat-dialog-title] {
-        background: #1f2937; /* gris oscuro */
-        color: white; /* blanco */
-        padding: 16px 24px;
-        margin: -24px -24px 20px -24px;
-        font-weight: 500;
-      },
     .edit-container {
       padding: 0 10px;
       min-width: 450px;
     }
     
-    h2 {
+    .header-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
       background: #1f2937;
-      color: white;
-      padding: 16px 24px;
       margin: -24px -24px 20px -24px;
+      padding: 0 24px;
+    }
+    
+    .centered-title {
+      color: white;
+      padding: 16px 0;
+      margin: 0;
       font-weight: 500;
+      text-align: center;
+      flex: 1;
     }
     
     .loading-container {
@@ -131,6 +136,11 @@ import { UserService } from '../../../../../services/UserData';
       .edit-container {
         min-width: unset;
         width: 100%;
+      }
+      
+      .header-container {
+        margin: -16px -16px 16px -16px;
+        padding: 0 16px;
       }
     }
   `]
