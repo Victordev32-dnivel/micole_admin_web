@@ -70,6 +70,13 @@ import { UserService } from '../../../../../services/UserData';
     </div>
   `,
   styles: [`
+  h2[mat-dialog-title] {
+        background: #1f2937; /* gris oscuro */
+        color: white; /* blanco */
+        padding: 16px 24px;
+        margin: -24px -24px 20px -24px;
+        font-weight: 500;
+      },
     .edit-container {
       padding: 0 10px;
       min-width: 450px;
