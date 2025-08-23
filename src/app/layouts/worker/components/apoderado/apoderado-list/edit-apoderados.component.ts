@@ -162,6 +162,37 @@ interface DialogData {
             </mat-error>
           </mat-form-field>
 
+          <!-- Campo Contraseña -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Contraseña</mat-label>
+            <input
+              matInput
+              [type]="hidePassword ? 'password' : 'text'"
+              formControlName="contrasena"
+              placeholder="Ingrese la nueva contraseña"
+              [disabled]="updating"
+            />
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              (click)="hidePassword = !hidePassword"
+              [attr.aria-label]="'Ocultar contraseña'"
+              [attr.aria-pressed]="hidePassword"
+            >
+              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="apoderadoForm.get('contrasena')?.hasError('required')">
+              La contraseña es obligatoria
+            </mat-error>
+            <mat-error *ngIf="apoderadoForm.get('contrasena')?.hasError('minlength')">
+              La contraseña debe tener al menos 6 caracteres
+            </mat-error>
+            <mat-error *ngIf="apoderadoForm.get('contrasena')?.hasError('pattern')">
+              La contraseña debe contener al menos una letra y un número
+            </mat-error>
+          </mat-form-field>
+
           <!-- Campo Teléfono -->
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Teléfono</mat-label>
@@ -217,9 +248,6 @@ interface DialogData {
         </mat-dialog-content>
 
         <mat-dialog-actions class="dialog-actions">
-          <!-- Debug info (temporal) -->
-         
-
           <button
             mat-button
             type="button"
@@ -368,6 +396,16 @@ interface DialogData {
         margin-right: 8px;
       }
 
+      /* Estilo especial para el campo de contraseña */
+      .mat-form-field:has(input[formControlName="contrasena"]) {
+        background-color: #fff9e6;
+        border-radius: 4px;
+      }
+
+      .mat-form-field:has(input[formControlName="contrasena"]) .mat-form-field-outline {
+        border: 2px solid #ffc107;
+      }
+
       /* Responsive */
       @media (max-width: 600px) {
         .edit-apoderado-dialog {
@@ -419,6 +457,7 @@ export class EditApoderadosComponent implements OnInit {
   loadError: string | null = null;
   apoderadoId: number;
   apoderadoCompleto: ApoderadoCompleto | null = null;
+  hidePassword = true;
 
   constructor(
     private fb: FormBuilder,
@@ -439,6 +478,11 @@ export class EditApoderadosComponent implements OnInit {
     this.apoderadoForm = this.fb.group({
       numeroDocumento: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
       tipoUsuario: ['APODERADO'], // Valor fijo
+      contrasena: ['', [
+        Validators.required, 
+        Validators.minLength(6),
+        Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,}$/) // Al menos una letra y un número
+      ]],
       nombres: ['', [Validators.required, Validators.minLength(2)]],
       apellidoPaterno: ['', [Validators.required, Validators.minLength(2)]],
       apellidoMaterno: ['', [Validators.required, Validators.minLength(2)]],
@@ -460,19 +504,17 @@ export class EditApoderadosComponent implements OnInit {
     this.loading = true;
     this.loadError = null;
 
-
     // Buscar el apoderado en la lista que se pasó desde el componente padre
     const apoderado = this.data.apoderados.find(
       (a) => a.id === this.apoderadoId
     );
 
     if (apoderado) {
-  
-
       // Mapear los datos del listado al formulario de edición
       this.apoderadoForm.patchValue({
         numeroDocumento: apoderado.dni || apoderado.numeroDocumento || '',
         tipoUsuario: apoderado.tipoUsuario || 'APODERADO',
+        contrasena: apoderado.contrasena || '', // Incluir la contraseña actual
         nombres: apoderado.nombre || apoderado.nombres || '',
         apellidoPaterno: this.extractFirstLastName(apoderado.apellidos) || apoderado.apellidoPaterno || '',
         apellidoMaterno: this.extractSecondLastName(apoderado.apellidos) || apoderado.apellidoMaterno || '',
@@ -484,7 +526,6 @@ export class EditApoderadosComponent implements OnInit {
 
       // Forzar actualización del formulario
       this.apoderadoForm.updateValueAndValidity();
-   
 
       this.loading = false;
     } else {
@@ -526,27 +567,22 @@ export class EditApoderadosComponent implements OnInit {
     const formData = this.apoderadoForm.value;
     const url = `https://proy-back-dnivel-44j5.onrender.com/api/apoderado/${this.apoderadoId}`;
 
-    // Preparar datos para actualización (SIN contraseña)
+    // Preparar datos para actualización (INCLUYENDO contraseña)
     const updateData: any = {
       numeroDocumento: formData.numeroDocumento,
       tipoUsuario: formData.tipoUsuario || 'APODERADO',
+      contrasena: formData.contrasena, // Incluir la nueva contraseña
       nombres: formData.nombres,
       apellidoPaterno: formData.apellidoPaterno,
       apellidoMaterno: formData.apellidoMaterno,
       genero: formData.genero,
       telefono: formData.telefono,
       parentesco: formData.parentesco,
-      idColegio: formData.idColegio || 1,
-      // La contraseña se mantiene igual en el backend
-      contrasena: 'KEEP_CURRENT' // Indicador para que el backend no cambie la contraseña
+      idColegio: formData.idColegio || 1
     };
-
-   
 
     this.http.put(url, updateData, { headers: this.getHeaders() }).subscribe({
       next: (response) => {
-      
-
         this.snackBar.open('✅ Apoderado actualizado correctamente', 'Cerrar', {
           duration: 3000,
           panelClass: ['success-snackbar'],
@@ -608,58 +644,9 @@ export class EditApoderadosComponent implements OnInit {
     if (field?.hasError('pattern')) {
       if (fieldName === 'numeroDocumento') return 'El DNI debe tener 8 dígitos';
       if (fieldName === 'telefono') return 'El teléfono debe tener 9 dígitos';
+      if (fieldName === 'contrasena') return 'La contraseña debe contener al menos una letra y un número';
     }
 
     return '';
-  }
-
-  // Método para debug - mostrar errores del formulario
-  getFormErrors(): any {
-    let formErrors: any = {};
-    
-    Object.keys(this.apoderadoForm.controls).forEach(key => {
-      const controlErrors = this.apoderadoForm.get(key)?.errors;
-      if (controlErrors) {
-        formErrors[key] = controlErrors;
-      }
-    });
-    
-    return formErrors;
-  }
-
-  // Método para obtener lista de errores legible
-  getFormErrorsList(): string[] {
-    const errors: string[] = [];
-    
-    Object.keys(this.apoderadoForm.controls).forEach(key => {
-      const control = this.apoderadoForm.get(key);
-      if (control && control.errors) {
-        Object.keys(control.errors).forEach(errorKey => {
-          switch(errorKey) {
-            case 'required':
-              errors.push(`${key} es obligatorio`);
-              break;
-            case 'minlength':
-              errors.push(`${key} debe tener al menos ${control.errors?.[errorKey]?.requiredLength} caracteres`);
-              break;
-            case 'pattern':
-              if (key === 'numeroDocumento') errors.push('DNI debe tener 8 dígitos');
-              else if (key === 'telefono') errors.push('Teléfono debe tener 9 dígitos');
-              else errors.push(`${key} formato inválido`);
-              break;
-            default:
-              errors.push(`${key}: ${errorKey}`);
-          }
-        });
-      }
-    });
-    
-    return errors;
-  }
-
-  // Método para verificar si un campo específico es válido
-  isFieldValid(fieldName: string): boolean {
-    const field = this.apoderadoForm.get(fieldName);
-    return field ? field.valid : false;
   }
 }
