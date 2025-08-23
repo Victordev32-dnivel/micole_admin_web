@@ -15,6 +15,7 @@
       <span data-label="NOMBRE">NOMBRE</span>
       <span data-label="APELLIDOS">APELLIDOS</span>
       <span data-label="DNI">DNI</span>
+      <span data-label="CONTRASEÑA">CONTRASEÑA</span>
       <span data-label="TELÉFONO">TELÉFONO</span>
       <span data-label="ACCIONES">ACCIONES</span>
     </div>
@@ -28,6 +29,9 @@
         <span data-label="NOMBRE">{{ apoderado.nombre }}</span>
         <span data-label="APELLIDOS">{{ apoderado.apellidos }}</span>
         <span data-label="DNI">{{ apoderado.dni }}</span>
+        <span data-label="CONTRASEÑA" class="password-field">
+          {{ apoderado.contrasena }}
+        </span>
         <span data-label="TELÉFONO">{{ apoderado.telefono }}</span>
         <span class="actions" data-label="ACCIONES">
           <mat-icon
