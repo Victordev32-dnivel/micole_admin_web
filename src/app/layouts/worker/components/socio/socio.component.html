@@ -3,15 +3,15 @@
     <mat-form-field appearance="outline" class="search-field">
       <input
         matInput
-        placeholder="Buscar por nombre, razón social, RUC, teléfono o email"
+        placeholder="Buscar por nombre, apellidos, DNI, teléfono o colegio"
         [formControl]="searchTermControl"
       />
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
     
-    <button 
-      mat-raised-button 
-      color="primary" 
+    <button
+      mat-raised-button
+      color="primary"
       (click)="openAddDialog()"
       class="add-button"
     >
@@ -23,11 +23,12 @@
   <div class="socio-table">
     <div class="table-header">
       <span data-label="NOMBRE">NOMBRE</span>
-      <span data-label="RAZÓN SOCIAL">RAZÓN SOCIAL</span>
-      <span data-label="RUC">RUC</span>
+      <span data-label="APELLIDOS">APELLIDOS</span>
+      <span data-label="DNI">DNI</span>
       <span data-label="TELÉFONO">TELÉFONO</span>
-      <span data-label="EMAIL">EMAIL</span>
-      <span data-label="ESTADO">ESTADO</span>
+      <span data-label="CONTRASEÑA">CONTRASEÑA</span>
+      <span data-label="COLEGIOS">COLEGIOS</span>
+      <span data-label="IDS_COLEGIOS">IDs COLEGIOS</span>
       <span data-label="ACCIONES">ACCIONES</span>
     </div>
 
@@ -47,30 +48,44 @@
         </div>
       </div>
 
-      <div class="socio-row" *ngFor="let socio of filteredSocios">
-        <span data-label="NOMBRE">{{ socio.nombre || 'N/A' }}</span>
-        <span data-label="RAZÓN SOCIAL">{{ socio.razonSocial || 'N/A' }}</span>
-        <span data-label="RUC" class="ruc-field">{{ socio.ruc || 'N/A' }}</span>
-        <span data-label="TELÉFONO">{{ socio.telefono || 'N/A' }}</span>
-        <span data-label="EMAIL" class="email-field">{{ socio.email || 'N/A' }}</span>
-        <span data-label="ESTADO">
-          <span class="status-badge" [class.active]="socio.activo" [class.inactive]="!socio.activo">
-            {{ socio.activo ? 'Activo' : 'Inactivo' }}
+      <div
+        class="socio-row"
+        *ngFor="let socio of filteredSocios; trackBy: trackBySocioId"
+      >
+        <span data-label="NOMBRE">{{ socio.nombre || "N/A" }}</span>
+        <span data-label="APELLIDOS">{{ socio.apellidos || "N/A" }}</span>
+        <span data-label="DNI">{{ socio.dni || "N/A" }}</span>
+        <span data-label="TELÉFONO">{{ socio.telefono || "N/A" }}</span>
+        <span data-label="CONTRASEÑA">{{ socio.contrasena || "Sin contraseña" }}</span>
+        <span data-label="COLEGIOS" class="colegios-field">
+          {{ formatColegios(socio.colegiosNombres) }}
+        </span>
+        <span data-label="IDS_COLEGIOS" class="ids-field">
+          <span 
+            *ngFor="let id of socio.idColegios; let last = last" 
+            class="id-badge"
+          >
+            {{ id }}<span *ngIf="!last">, </span>
           </span>
         </span>
+        
         <span class="actions" data-label="ACCIONES">
           <mat-icon
-            (click)="openEditDialog(socio)"
-            style="color: #ffcc00;"
+            (click)="editSocio(socio)"
+            style="color: #ffcc00; cursor: pointer"
             title="Editar"
-            >edit</mat-icon
+            matTooltip="Editar socio"
           >
+            edit
+          </mat-icon>
           <mat-icon
             (click)="confirmDelete(socio)"
-            style="color: #f44336;"
+            style="color: #f44336"
             title="Eliminar"
-            >delete</mat-icon
+            matTooltip="Eliminar socio"
           >
+            delete
+          </mat-icon>
         </span>
       </div>
 
@@ -78,22 +93,45 @@
         *ngIf="filteredSocios.length === 0 && !loading && !error"
         class="empty-state"
       >
-        <mat-icon class="empty-icon">business</mat-icon>
-        <p *ngIf="searchTermControl.value && searchTermControl.value.trim() !== ''">
-          No se encontraron socios que coincidan con
-          "<strong>{{ searchTermControl.value }}</strong>"
+        <mat-icon class="empty-icon">person</mat-icon>
+        <p
+          *ngIf="
+            searchTermControl.value && searchTermControl.value.trim() !== ''
+          "
+        >
+          No se encontraron socios que coincidan con "<strong>{{
+            searchTermControl.value
+          }}</strong
+          >"
         </p>
-        <p *ngIf="!searchTermControl.value || searchTermControl.value.trim() === ''">
+        <p
+          *ngIf="
+            !searchTermControl.value || searchTermControl.value.trim() === ''
+          "
+        >
           No hay socios registrados para este colegio
         </p>
-        <button 
-          mat-raised-button 
-          color="primary" 
+        <button
+          mat-raised-button
+          color="primary"
           (click)="openAddDialog()"
-          *ngIf="!searchTermControl.value || searchTermControl.value.trim() === ''"
+          *ngIf="
+            !searchTermControl.value || searchTermControl.value.trim() === ''
+          "
         >
           <mat-icon>add</mat-icon>
           Agregar primer socio
+        </button>
+        <button
+          mat-raised-button
+          color="basic"
+          (click)="clearSearch()"
+          *ngIf="
+            searchTermControl.value && searchTermControl.value.trim() !== ''
+          "
+        >
+          <mat-icon>clear</mat-icon>
+          Limpiar búsqueda
         </button>
       </div>
     </div>
