@@ -9,7 +9,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDialog } from '@angular/material/dialog';
-import { ConfirmationDeleteComponent } from '../confirmation-delete/confirmation-delete.component';
+import { EliminarTrabajadorComponent } from '../trabajadores-list/eliminar-trabajadores.component';
 import { AddTrabajadoresComponent } from '../trabajadores-list/add-trabajadores.component';
 import { EditTrabajadoresComponent } from '../trabajadores-list/modificar-trabajador.component';
 
@@ -221,7 +221,7 @@ export class TrabajadoresListComponent implements OnInit {
 
   confirmDelete(id: number) {
     console.log('Eliminando trabajador con ID:', id); // Para debug
-    const dialogRef = this.dialog.open(ConfirmationDeleteComponent, {
+    const dialogRef = this.dialog.open(EliminarTrabajadorComponent, {
       width: '20vw',
       maxWidth: '50vw',
       data: { 
