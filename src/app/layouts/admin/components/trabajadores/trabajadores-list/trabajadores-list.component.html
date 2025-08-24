@@ -10,7 +10,7 @@
       Agregar Trabajador
     </button>
   </div>
- 
+
   <div class="trabajador-table">
     <div class="table-header">
       <span data-label="ID">ID</span>
@@ -23,12 +23,12 @@
       <span data-label="CONTRASEÑA">CONTRASEÑA</span>
       <span data-label="ACCIONES">ACCIONES</span>
     </div>
- 
+
     <div class="table-body">
       <div *ngIf="loading" class="loading-container">
         <div class="loading">Cargando datos <span class="spinner"></span></div>
       </div>
- 
+
       <div class="student-row" *ngFor="let trabajador of filteredTrabajadores; trackBy: trackByTrabajadorId">
         <span data-label="ID">{{ trabajador.id }}</span>
         <span data-label="NOMBRE">{{ trabajador.nombre }}</span>
@@ -37,27 +37,38 @@
         <span data-label="DNI">{{ trabajador.dni }}</span>
         <span data-label="TELÉFONO">{{ trabajador.telefono }}</span>
         <span data-label="COLEGIO">{{ getNombreColegio(trabajador.idColegio) }}</span>
-        <span data-label="CONTRASEÑA" class="password-field">{{ trabajador.contrasena }}</span>
-        <span class="actions" data-label="ACCIONES">
+        
+        <!-- Campo de contraseña con ícono de ojo -->
+        <span data-label="CONTRASEÑA" class="password-container">
+          <span class="password-field">{{ getDisplayedPassword(trabajador) }}</span>
           <mat-icon 
-             (click)="openEditDialog(trabajador.id)"
-             style="color: #ffcc00;"
-             title="Editar"
+            class="password-toggle-icon" 
+            (click)="togglePasswordVisibility(trabajador.id)"
+            [title]="isPasswordVisible(trabajador.id) ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+            {{ isPasswordVisible(trabajador.id) ? 'visibility_off' : 'visibility' }}
+          </mat-icon>
+        </span>
+        
+        <span class="actions" data-label="ACCIONES">
+          <mat-icon
+            (click)="openEditDialog(trabajador.id)" 
+            style="color: #ffcc00;"
+            title="Editar"
             class="action-icon">
             edit
           </mat-icon>
-          <mat-icon 
-             (click)="confirmDelete(trabajador.id)"
-             style="color: #f44336;"
-             title="Eliminar"
+          <mat-icon
+            (click)="confirmDelete(trabajador.id)" 
+            style="color: #f44336;"
+            title="Eliminar"
             class="action-icon">
             delete
           </mat-icon>
         </span>
       </div>
- 
+
       <div *ngIf="filteredTrabajadores.length === 0 && !loading"
-            style="text-align: center; padding: 40px; color: #666;">
+           style="text-align: center; padding: 40px; color: #666;">
         <p *ngIf="searchTermControl.value && searchTermControl.value.trim() !== ''">
           No se encontraron trabajadores que coincidan con "<strong>{{ searchTermControl.value }}</strong>"
         </p>
@@ -65,7 +76,7 @@
           No hay trabajadores para mostrar
         </p>
       </div>
- 
+
       <div *ngIf="error && !loading" style="text-align: center; padding: 40px; color: #f44336;">
         <p>{{ error }}</p>
         <button mat-raised-button color="primary" (click)="loadTrabajadores()">

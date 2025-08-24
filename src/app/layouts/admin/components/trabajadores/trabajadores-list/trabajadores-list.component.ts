@@ -46,6 +46,9 @@ export class TrabajadoresListComponent implements OnInit {
     'actions',
   ];
   searchTermControl = new FormControl('');
+  
+  // Objeto para controlar la visibilidad de las contraseñas
+  passwordVisibility: { [key: number]: boolean } = {};
 
   constructor(
     private http: HttpClient,
@@ -72,6 +75,21 @@ export class TrabajadoresListComponent implements OnInit {
   getNombreColegio(idColegio: number): string {
     const colegio = this.colegios.find(c => c.id === idColegio);
     return colegio ? colegio.nombre : 'Desconocido';
+  }
+
+  // Método para alternar la visibilidad de la contraseña
+  togglePasswordVisibility(trabajadorId: number): void {
+    this.passwordVisibility[trabajadorId] = !this.passwordVisibility[trabajadorId];
+  }
+
+  // Método para verificar si la contraseña es visible
+  isPasswordVisible(trabajadorId: number): boolean {
+    return this.passwordVisibility[trabajadorId] || false;
+  }
+
+  // Método para obtener la contraseña mostrada (puntos o texto real)
+  getDisplayedPassword(trabajador: any): string {
+    return this.isPasswordVisible(trabajador.id) ? trabajador.contrasena : '•'.repeat(trabajador.contrasena.length);
   }
 
   loadColegios() {
@@ -115,6 +133,13 @@ export class TrabajadoresListComponent implements OnInit {
             };
           });
           this.filteredTrabajadores = [...this.trabajadores];
+          
+          // Inicializar la visibilidad de contraseñas para todos los trabajadores
+          this.passwordVisibility = {};
+          this.trabajadores.forEach(trabajador => {
+            this.passwordVisibility[trabajador.id] = false;
+          });
+          
           this.loading = false;
           this.cdr.detectChanges();
         },

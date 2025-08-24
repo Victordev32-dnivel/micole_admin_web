@@ -34,6 +34,9 @@ export class ApoderadoListComponent implements OnInit {
   error: string | null = null;
   searchTermControl = new FormControl('');
   colegioId: number | null = null; // Variable para almacenar el ID del colegio
+  
+  // Objeto para controlar la visibilidad de las contraseñas
+  passwordVisibility: { [key: number]: boolean } = {};
 
   constructor(
     private http: HttpClient,
@@ -82,6 +85,22 @@ export class ApoderadoListComponent implements OnInit {
     });
   }
 
+  // Método para alternar la visibilidad de la contraseña
+  togglePasswordVisibility(apoderadoId: number): void {
+    this.passwordVisibility[apoderadoId] = !this.passwordVisibility[apoderadoId];
+  }
+
+  // Método para verificar si la contraseña es visible
+  isPasswordVisible(apoderadoId: number): boolean {
+    return this.passwordVisibility[apoderadoId] || false;
+  }
+
+  // Método para obtener la contraseña mostrada (puntos o texto real)
+  getDisplayedPassword(apoderado: any): string {
+    if (!apoderado.contrasena) return '';
+    return this.isPasswordVisible(apoderado.id) ? apoderado.contrasena : '•'.repeat(apoderado.contrasena.length);
+  }
+
   loadApoderados() {
     // Validar que tengamos el ID del colegio
     if (!this.colegioId) {
@@ -97,8 +116,6 @@ export class ApoderadoListComponent implements OnInit {
 
     // Usar el colegioId dinámico en lugar del hardcodeado
     const url = `https://proy-back-dnivel-44j5.onrender.com/api/apoderado/colegio/lista/${this.colegioId}`;
-    
-  
 
     this.http
       .get<any>(url, {
@@ -106,12 +123,17 @@ export class ApoderadoListComponent implements OnInit {
       })
       .subscribe({
         next: (resp) => {
-      
           this.ngZone.run(() => {
             this.apoderados = resp?.data || resp || [];
             this.filteredApoderados = [...this.apoderados];
+            
+            // Inicializar la visibilidad de contraseñas para todos los apoderados
+            this.passwordVisibility = {};
+            this.apoderados.forEach(apoderado => {
+              this.passwordVisibility[apoderado.id] = false;
+            });
+            
             this.loading = false;
-          
             this.cdr.detectChanges();
           });
         },
@@ -223,15 +245,11 @@ export class ApoderadoListComponent implements OnInit {
   }
 
   confirmDelete(apoderado: any) {
-   
-    
     // Determinar el ID del apoderado
     const apoderadoId = typeof apoderado === 'object' ? apoderado.id : apoderado;
     
     // Buscar la información completa del apoderado
     const apoderadoCompleto = this.apoderados.find(a => a.id === apoderadoId) || apoderado;
-    
-  
     
     const dialogRef = this.dialog.open(EliminarApoderadoComponent, {
       width: '500px',
@@ -248,11 +266,8 @@ export class ApoderadoListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-     
         // El modal ya maneja el mensaje de éxito
         this.loadApoderados();
-      } else {
-      
       }
     });
   }
@@ -266,6 +281,4 @@ export class ApoderadoListComponent implements OnInit {
   refreshApoderados(): void {
     this.loadApoderados();
   }
-
-
 }

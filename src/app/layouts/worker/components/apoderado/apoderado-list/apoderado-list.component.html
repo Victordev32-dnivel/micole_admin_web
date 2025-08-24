@@ -29,9 +29,18 @@
         <span data-label="NOMBRE">{{ apoderado.nombre }}</span>
         <span data-label="APELLIDOS">{{ apoderado.apellidos }}</span>
         <span data-label="DNI">{{ apoderado.dni }}</span>
-        <span data-label="CONTRASEÑA" class="password-field">
-          {{ apoderado.contrasena }}
+        
+        <!-- Campo de contraseña con ícono de ojo -->
+        <span data-label="CONTRASEÑA" class="password-container">
+          <span class="password-field">{{ getDisplayedPassword(apoderado) }}</span>
+          <mat-icon 
+            class="password-toggle-icon" 
+            (click)="togglePasswordVisibility(apoderado.id)"
+            [title]="isPasswordVisible(apoderado.id) ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+            {{ isPasswordVisible(apoderado.id) ? 'visibility_off' : 'visibility' }}
+          </mat-icon>
         </span>
+        
         <span data-label="TELÉFONO">{{ apoderado.telefono }}</span>
         <span class="actions" data-label="ACCIONES">
           <mat-icon
