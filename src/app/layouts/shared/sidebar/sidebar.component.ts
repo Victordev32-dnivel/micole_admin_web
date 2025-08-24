@@ -32,7 +32,7 @@ import { MatButtonModule } from '@angular/material/button';
       <div class="sidebar" [class.open]="isSidebarOpen">
         <div class="sidebar-header">
           <img src="assets/Logo-Appsistencia.png" alt="Logo" class="logo" />
-          <h1>MICOLE</h1>
+          <h1>APPSISTENCIA</h1>
         </div>
         <nav class="sidebar-nav">
           <ul>
@@ -86,7 +86,13 @@ export class SidebarComponent implements OnInit {
       label: 'Trabajadores',
       icon: 'fas fa-user-plus',
     },
+    {
+      path: '/admin/socio',
+      label: 'socio',
+      icon: 'fas fa-handshake',
+    },
   ];
+  
   workerItems = [
     { path: '/worker/alumnos', label: 'Alumnos', icon: 'fas fa-users' },
     { path: '/worker/notas', label: 'Notas', icon: 'fas fa-file-alt' },

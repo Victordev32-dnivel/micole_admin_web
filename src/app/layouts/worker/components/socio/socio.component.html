@@ -1,0 +1,101 @@
+<div class="socio-container">
+  <div class="toolbar">
+    <mat-form-field appearance="outline" class="search-field">
+      <input
+        matInput
+        placeholder="Buscar por nombre, razón social, RUC, teléfono o email"
+        [formControl]="searchTermControl"
+      />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    
+    <button 
+      mat-raised-button 
+      color="primary" 
+      (click)="openAddDialog()"
+      class="add-button"
+    >
+      <mat-icon>add</mat-icon>
+      Agregar Socio
+    </button>
+  </div>
+
+  <div class="socio-table">
+    <div class="table-header">
+      <span data-label="NOMBRE">NOMBRE</span>
+      <span data-label="RAZÓN SOCIAL">RAZÓN SOCIAL</span>
+      <span data-label="RUC">RUC</span>
+      <span data-label="TELÉFONO">TELÉFONO</span>
+      <span data-label="EMAIL">EMAIL</span>
+      <span data-label="ESTADO">ESTADO</span>
+      <span data-label="ACCIONES">ACCIONES</span>
+    </div>
+
+    <div class="table-body">
+      <div *ngIf="loading" class="loading-container">
+        <div class="loading">Cargando datos <span class="spinner"></span></div>
+      </div>
+
+      <div *ngIf="error && !loading" class="error-container">
+        <div class="error-message">
+          <mat-icon class="error-icon">error_outline</mat-icon>
+          <p>{{ error }}</p>
+          <button mat-raised-button color="primary" (click)="refreshSocios()">
+            <mat-icon>refresh</mat-icon>
+            Reintentar
+          </button>
+        </div>
+      </div>
+
+      <div class="socio-row" *ngFor="let socio of filteredSocios">
+        <span data-label="NOMBRE">{{ socio.nombre || 'N/A' }}</span>
+        <span data-label="RAZÓN SOCIAL">{{ socio.razonSocial || 'N/A' }}</span>
+        <span data-label="RUC" class="ruc-field">{{ socio.ruc || 'N/A' }}</span>
+        <span data-label="TELÉFONO">{{ socio.telefono || 'N/A' }}</span>
+        <span data-label="EMAIL" class="email-field">{{ socio.email || 'N/A' }}</span>
+        <span data-label="ESTADO">
+          <span class="status-badge" [class.active]="socio.activo" [class.inactive]="!socio.activo">
+            {{ socio.activo ? 'Activo' : 'Inactivo' }}
+          </span>
+        </span>
+        <span class="actions" data-label="ACCIONES">
+          <mat-icon
+            (click)="openEditDialog(socio)"
+            style="color: #ffcc00;"
+            title="Editar"
+            >edit</mat-icon
+          >
+          <mat-icon
+            (click)="confirmDelete(socio)"
+            style="color: #f44336;"
+            title="Eliminar"
+            >delete</mat-icon
+          >
+        </span>
+      </div>
+
+      <div
+        *ngIf="filteredSocios.length === 0 && !loading && !error"
+        class="empty-state"
+      >
+        <mat-icon class="empty-icon">business</mat-icon>
+        <p *ngIf="searchTermControl.value && searchTermControl.value.trim() !== ''">
+          No se encontraron socios que coincidan con
+          "<strong>{{ searchTermControl.value }}</strong>"
+        </p>
+        <p *ngIf="!searchTermControl.value || searchTermControl.value.trim() === ''">
+          No hay socios registrados para este colegio
+        </p>
+        <button 
+          mat-raised-button 
+          color="primary" 
+          (click)="openAddDialog()"
+          *ngIf="!searchTermControl.value || searchTermControl.value.trim() === ''"
+        >
+          <mat-icon>add</mat-icon>
+          Agregar primer socio
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
