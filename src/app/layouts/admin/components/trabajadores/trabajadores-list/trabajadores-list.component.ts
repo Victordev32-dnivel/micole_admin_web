@@ -42,6 +42,7 @@ export class TrabajadoresListComponent implements OnInit {
     'dni',
     'telefono',
     'colegio',
+    'contrasena',
     'actions',
   ];
   searchTermControl = new FormControl('');
@@ -135,12 +136,14 @@ export class TrabajadoresListComponent implements OnInit {
         } else {
           const searchTerm = term.toLowerCase().trim();
           this.filteredTrabajadores = this.trabajadores.filter((trabajador) => {
+            const matchesId = trabajador.id.toString().includes(searchTerm);
             const matchesName = trabajador.nombre.toLowerCase().includes(searchTerm);
             const matchesApellidoPaterno = trabajador.apellidoPaterno.toLowerCase().includes(searchTerm);
             const matchesApellidoMaterno = trabajador.apellidoMaterno.toLowerCase().includes(searchTerm);
             const matchesDNI = trabajador.dni.toLowerCase().includes(searchTerm);
             const matchesColegio = this.getNombreColegio(trabajador.idColegio).toLowerCase().includes(searchTerm);
-            return matchesName || matchesApellidoPaterno || matchesApellidoMaterno || matchesDNI || matchesColegio;
+            const matchesContrasena = trabajador.contrasena.toLowerCase().includes(searchTerm);
+            return matchesId || matchesName || matchesApellidoPaterno || matchesApellidoMaterno || matchesDNI || matchesColegio || matchesContrasena;
           });
         }
         this.loading = false;
