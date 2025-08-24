@@ -23,6 +23,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatListModule } from '@angular/material/list';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   HttpClient,
   HttpClientModule,
@@ -45,6 +46,7 @@ import { UserService } from '../../../../../services/UserData';
     MatProgressSpinnerModule,
     MatListModule,
     MatTableModule,
+    MatTooltipModule,
     HttpClientModule,
   ],
   templateUrl: './asistencias-list.component.html',
@@ -59,6 +61,7 @@ export class AsistenciasComponent implements OnInit {
   error: string | null = null;
   successMessage: string | null = null;
   colegioId: number = 0;
+
   private salonApiUrl =
     'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista';
   private alumnoApiUrl =
@@ -145,6 +148,92 @@ export class AsistenciasComponent implements OnInit {
       });
   }
 
+  // Método para eliminar asistencia con inspección de datos
+  eliminarAsistencia(index: number): void {
+    const asistencia = this.asistencias[index];
+
+    // Debug completo de la estructura
+    console.log('=== DEBUG ASISTENCIA ===');
+    console.log('Índice:', index);
+    console.log('Asistencia completa:', asistencia);
+    console.log('Tipo de dato:', typeof asistencia);
+    console.log('Propiedades disponibles:', Object.keys(asistencia));
+    console.log('Valores:', Object.values(asistencia));
+    console.log('======================');
+
+    // Intentar encontrar el ID con diferentes nombres posibles
+    const posibleIds = [
+      asistencia.id,
+      asistencia.idAsistencia,
+      asistencia.ID,
+      asistencia.Id,
+      asistencia.asistenciaId,
+      asistencia.asistencia_id,
+      asistencia.pk,
+      asistencia.key,
+      asistencia.uuid
+    ];
+
+    const asistenciaId = posibleIds.find(id => id !== undefined && id !== null);
+
+    const confirmacion = confirm(`¿Estás seguro de que deseas eliminar esta asistencia?\n\nFecha: ${asistencia.fecha}\nHora: ${asistencia.hora}\nEstado: ${asistencia.estado}`);
+
+    if (confirmacion) {
+      if (asistenciaId) {
+        console.log('ID encontrado para eliminar:', asistenciaId);
+        this.eliminarAsistenciaDelBackend(asistenciaId, index);
+      } else {
+        // Si no hay ID, eliminar solo del frontend
+        console.warn('No se encontró ID. Eliminando solo del frontend.');
+        this.eliminarSoloDelFrontend(index);
+      }
+    }
+  }
+
+  // Método para eliminar solo del frontend (sin backend)
+  private eliminarSoloDelFrontend(index: number): void {
+    this.asistencias.splice(index, 1);
+    this.successMessage = 'Asistencia eliminada de la vista (solo frontend)';
+    this.cdr.detectChanges();
+
+    setTimeout(() => {
+      this.successMessage = null;
+      this.cdr.detectChanges();
+    }, 3000);
+  }
+
+  // Método para eliminar del backend
+  private eliminarAsistenciaDelBackend(asistenciaId: number, index: number): void {
+    const headers = this.getHeaders();
+
+    this.http.delete(`${this.asistenciaApiUrl}/${asistenciaId}`, { headers })
+      .subscribe({
+        next: (response) => {
+          // Si se elimina correctamente del backend, eliminamos del array local
+          this.asistencias.splice(index, 1);
+          this.successMessage = 'Asistencia eliminada correctamente';
+          this.cdr.detectChanges();
+
+          // Limpiar mensaje después de 3 segundos
+          setTimeout(() => {
+            this.successMessage = null;
+            this.cdr.detectChanges();
+          }, 3000);
+        },
+        error: (error) => {
+          console.error('Error al eliminar asistencia:', error);
+          this.error = 'Error al eliminar la asistencia. Intente de nuevo';
+          this.cdr.detectChanges();
+
+          // Limpiar mensaje de error después de 5 segundos
+          setTimeout(() => {
+            this.error = null;
+            this.cdr.detectChanges();
+          }, 5000);
+        }
+      });
+  }
+
   onSalonChange() {
     const salonId = this.asistenciaForm.get('idSalon')?.value;
     if (salonId) {
@@ -166,14 +255,11 @@ export class AsistenciasComponent implements OnInit {
     this.asistencias = [];
     this.asistenciaForm.get('idAlumno')?.reset();
     const headers = this.getHeaders();
-    
 
-    
     this.http
       .get<any>(`${this.alumnoApiUrl}/${salonId}`, { headers })
       .subscribe({
         next: (response) => {
-       
           this.ngZone.run(() => {
             // CORRECCIÓN: La API devuelve un array directo, no un objeto con propiedad data
             this.alumnos = Array.isArray(response) ? response : [];
@@ -181,7 +267,6 @@ export class AsistenciasComponent implements OnInit {
             if (this.alumnos.length === 0) {
               this.error = 'No se encontraron alumnos en este salón';
             }
-         
             this.cdr.detectChanges();
           });
         },
@@ -219,6 +304,13 @@ export class AsistenciasComponent implements OnInit {
           this.ngZone.run(() => {
             this.asistencias = Array.isArray(response) ? response : [];
             this.loading = false;
+
+            // Debug: Ver la estructura de los datos
+            if (this.asistencias.length > 0) {
+              console.log('Primera asistencia:', this.asistencias[0]);
+              console.log('Propiedades disponibles:', Object.keys(this.asistencias[0]));
+            }
+
             if (this.asistencias.length === 0) {
               this.error = 'No se encontraron asistencias para este alumno';
             }

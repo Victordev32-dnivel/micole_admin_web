@@ -1,7 +1,9 @@
 .asistencias-container {
   min-height: 100vh;
-  padding-left: 220px; /* Espaciado para el sidebar de 200px + 20px de margen */
-  padding-top: 100px; /* Espaciado para el header (ajusta según la altura real, asumiendo 80px + 20px) */
+  padding-left: 220px;
+  /* Espaciado para el sidebar de 200px + 20px de margen */
+  padding-top: 100px;
+  /* Espaciado para el header (ajusta según la altura real, asumiendo 80px + 20px) */
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   overflow: hidden;
   position: relative;
@@ -19,11 +21,20 @@
   animation: fadeIn 0.5s ease-in-out;
 }
 
+.mat-icon-button[color="warn"] {
+  transition: all 0.3s ease;
+}
+
+.mat-icon-button[color="warn"]:hover {
+  background-color: rgba(244, 67, 54, 0.1);
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -100,6 +111,7 @@ mat-form-field:hover mat-icon {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -220,4 +232,3 @@ mat-form-field:hover mat-icon {
     margin-top: 15px;
   }
 }
-

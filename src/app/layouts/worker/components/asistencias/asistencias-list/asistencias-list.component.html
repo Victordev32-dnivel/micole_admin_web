@@ -43,7 +43,8 @@
       </form>
 
       <!-- Información de debug (opcional, quítala en producción) -->
-      <div *ngIf="alumnos.length > 0" style="margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 4px; font-size: 12px;">
+      <div *ngIf="alumnos.length > 0"
+        style="margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 4px; font-size: 12px;">
         <strong>Debug:</strong> Se cargaron {{ alumnos.length }} alumnos
       </div>
 
@@ -67,26 +68,32 @@
           <ng-container matColumnDef="estado">
             <th mat-header-cell *matHeaderCellDef> Estado </th>
             <td mat-cell *matCellDef="let asistencia">
-              <mat-icon
-                [ngClass]="{
+              <mat-icon [ngClass]="{
                   'estado-puntual': asistencia.estado.toLowerCase() === 'puntual',
                   'estado-tarde': asistencia.estado.toLowerCase() === 'tarde'
-                }"
-              >
+                }">
                 {{
-                  asistencia.estado.toLowerCase() === 'puntual'
-                    ? 'check_circle'
-                    : asistencia.estado.toLowerCase() === 'tarde'
-                    ? 'schedule'
-                    : 'help_outline'
+                asistencia.estado.toLowerCase() === 'puntual'
+                ? 'check_circle'
+                : asistencia.estado.toLowerCase() === 'tarde'
+                ? 'schedule'
+                : 'help_outline'
                 }}
               </mat-icon>
               {{ asistencia.estado }}
             </td>
           </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="['fecha', 'hora', 'estado']"></tr>
-          <tr mat-row *matRowDef="let row; columns: ['fecha', 'hora', 'estado']"></tr>
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef> Acciones </th>
+            <td mat-cell *matCellDef="let asistencia; let i = index">
+              <button mat-icon-button color="warn" (click)="eliminarAsistencia(i)" matTooltip="Eliminar asistencia"
+                aria-label="Eliminar asistencia">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="['fecha', 'hora', 'estado','acciones']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['fecha', 'hora', 'estado','acciones']"></tr>
         </table>
       </div>
 
