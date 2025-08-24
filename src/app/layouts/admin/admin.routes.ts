@@ -9,9 +9,10 @@ export const ADMIN_ROUTES: Routes = [
     path: '', // La ruta base se define en el app-routing.module.ts
     component: AdminLayoutComponent,
     children: [
+      { path: '', redirectTo: 'colegios', pathMatch: 'full' }, // Redirección por defecto
       { path: 'colegios', component: ColegioListComponent },
       { path: 'trabajadores', component: TrabajadoresListComponent },
-       { path: 'socio', component: SocioComponent },
+      { path: 'socio', component: SocioComponent },
     ],
   },
 ];
