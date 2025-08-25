@@ -162,7 +162,7 @@
               [value]="apoderado"
             >
               <mat-icon>person</mat-icon>
-              <span>{{ apoderado.nombre }}</span>
+              <span>{{ apoderado.nombre }} {{ apoderado.apellidos }}</span>
               <small style="color: #666; margin-left: 8px"
                 >(ID: {{ apoderado.id }})</small
               >
@@ -176,7 +176,7 @@
           </mat-hint>
         </mat-form-field>
 
-        <!-- Campo de Salón con búsqueda (MOVIDO ABAJO DE APODERADO) -->
+        <!-- Campo de Salón con búsqueda -->
         <mat-form-field appearance="outline">
           <mat-label>Salón</mat-label>
           <input
@@ -241,7 +241,7 @@
           </small>
         </div>
 
-        <!-- NUEVA SECCIÓN: Agregar Apoderado (MOVIDA AL FINAL) -->
+        <!-- NUEVA SECCIÓN: Agregar Apoderado -->
         <div class="apoderado-form-section">
           <div class="section-header" (click)="toggleApoderadoForm()">
             <h4>

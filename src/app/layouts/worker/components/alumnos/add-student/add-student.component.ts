@@ -69,10 +69,14 @@ interface Salon {
   idColegio: number;
 }
 
-// Interfaz para los apoderados
+// Interfaz para los apoderados - Updated to include apellidos
 interface Apoderado {
   id: number;
   nombre: string;
+  apellidos: string; // Added apellidos field to match API response
+  dni: string;
+  contrasena: string;
+  telefono: string;
 }
 
 @Component({
@@ -165,28 +169,27 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
           Validators.maxLength(8),
         ],
       ],
-      nombres: [''], // Opcional
-      apellidoPaterno: [''], // Opcional
-      apellidoMaterno: [''], // Opcional
-      genero: [''], // Opcional - sin valor por defecto
+      nombres: [''],
+      apellidoPaterno: [''],
+      apellidoMaterno: [''],
+      genero: [''],
       telefono: [
         '',
         [
-          // Solo validar si se proporciona un valor
           Validators.pattern('^[0-9]{9}$'),
           Validators.minLength(9),
           Validators.maxLength(9),
         ],
       ],
-      fechaNacimiento: [''], // Opcional
-      direccion: [''], // Opcional
-      estado: ['Activo'], // Valor por defecto
-      idApoderado: [''], // Opcional
-      idSalon: [''], // Opcional
+      fechaNacimiento: [''],
+      direccion: [''],
+      estado: ['Activo'],
+      idApoderado: [''],
+      idSalon: [''],
       idColegio: [this.data?.colegioId || ''],
     });
 
-    // Formulario para agregar apoderado - CORREGIDO EL ROL
+    // Formulario para agregar apoderado
     this.apoderadoForm = this.fb.group({
       nombres: ['', Validators.required],
       apellidoPaterno: ['', Validators.required],
@@ -203,9 +206,8 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
       genero: ['', Validators.required],
       telefono: ['', [Validators.required, Validators.pattern('^[0-9]{9}$')]],
       parentesco: ['', Validators.required],
-      // Nuevos campos
       contrasena: ['', [Validators.required, Validators.minLength(6)]],
-      tipoUsuario: ['apoderado'], // CORREGIDO: Cambiado de 'trabajador' a 'apoderado'
+      tipoUsuario: ['apoderado'],
     });
   }
 
@@ -237,7 +239,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
   clearApoderadoForm(): void {
     this.apoderadoForm.reset();
     this.apoderadoForm.patchValue({
-      tipoUsuario: 'apoderado' // CORREGIDO: Asegurar que se mantenga el rol correcto
+      tipoUsuario: 'apoderado'
     });
     this.clearApoderadoMessages();
   }
@@ -262,7 +264,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     const apoderadoData = {
       ...this.apoderadoForm.value,
       idColegio: colegioId,
-      tipoUsuario: 'apoderado', // CORREGIDO: Asegurarnos que siempre sea 'apoderado'
+      tipoUsuario: 'apoderado',
     };
 
     const headers = this.getHeaders();
@@ -280,7 +282,8 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
               this.addForm.patchValue({ idApoderado: response.id });
               this.apoderadoSearchCtrl.setValue({
                 id: response.id,
-                nombre: `${apoderadoData.nombres} ${apoderadoData.apellidoPaterno}`,
+                nombre: apoderadoData.nombres,
+                apellidos: `${apoderadoData.apellidoPaterno} ${apoderadoData.apellidoMaterno || ''}`.trim(),
               });
             }
             setTimeout(() => {
@@ -360,20 +363,22 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     const search = searchValue.toLowerCase().trim();
     this.filteredApoderados = this.apoderados.filter((apoderado) => {
       const nombre = (apoderado.nombre || '').toLowerCase();
+      const apellidos = (apoderado.apellidos || '').toLowerCase();
       const id = apoderado.id.toString();
 
-      return nombre.includes(search) || id.includes(search);
+      return nombre.includes(search) || apellidos.includes(search) || id.includes(search);
     });
   }
 
-  // Funciones para mostrar el texto seleccionado en el input
+  // Updated to display both nombre and apellidos
   displaySalonFn = (salon: Salon): string => {
     if (!salon) return '';
     return salon.nombre || salon.descripcion || `Salón ${salon.id}`;
   };
 
   displayApoderadoFn = (apoderado: Apoderado): string => {
-    return apoderado ? apoderado.nombre : '';
+    if (!apoderado) return '';
+    return `${apoderado.nombre} ${apoderado.apellidos}`.trim();
   };
 
   // Manejadores de selección
@@ -579,49 +584,49 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
               'Token no válido. Inicia sesión nuevamente.',
               'Cerrar',
               {
-                duration: 5000,
-                verticalPosition: 'top',
-                horizontalPosition: 'center',
-              }
-            );
-          } else {
-            this.snackBar.open(
-              'Error inesperado. Intenta de nuevo.',
-              'Cerrar',
-              {
-                duration: 5000,
-                verticalPosition: 'top',
-                horizontalPosition: 'center',
-              }
-            );
-          }
-        },
-      });
-    } else {
-      this.snackBar.open(
-        'DNI es obligatorio (8 dígitos). Si ingresa teléfono, debe tener 9 dígitos.',
-        'Cerrar',
-        { duration: 4000 }
-      );
-    }
+              duration: 5000,
+              verticalPosition: 'top',
+              horizontalPosition: 'center',
+            }
+          );
+        } else {
+          this.snackBar.open(
+            'Error inesperado. Intenta de nuevo.',
+            'Cerrar',
+            {
+              duration: 5000,
+              verticalPosition: 'top',
+              horizontalPosition: 'center',
+            }
+          );
+        }
+      },
+    });
+  } else {
+    this.snackBar.open(
+      'DNI es obligatorio (8 dígitos). Si ingresa teléfono, debe tener 9 dígitos.',
+      'Cerrar',
+      { duration: 4000 }
+    );
   }
+}
 
-  onCancel(): void {
-    this.dialogRef.close();
-  }
+onCancel(): void {
+  this.dialogRef.close();
+}
 
-  openCalendar(): void {
-    if (isPlatformBrowser(this.platformId) && this.datepicker) {
-      this.datepicker.open();
-    } else {
-      console.error('Datepicker no encontrado');
-    }
+openCalendar(): void {
+  if (isPlatformBrowser(this.platformId) && this.datepicker) {
+    this.datepicker.open();
+  } else {
+    console.error('Datepicker no encontrado');
   }
+}
 
-  private formatDate(date: Date): string {
-    if (date instanceof Date && !isNaN(date.getTime())) {
-      return date.toISOString();
-    }
-    return '';
+private formatDate(date: Date): string {
+  if (date instanceof Date && !isNaN(date.getTime())) {
+    return date.toISOString();
   }
+  return '';
+}
 }
