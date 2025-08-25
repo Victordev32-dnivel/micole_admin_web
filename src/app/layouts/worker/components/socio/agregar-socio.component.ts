@@ -382,49 +382,51 @@ export class AgregarSocioComponent implements OnInit {
     });
   }
 
-  onSubmit(): void {
-    if (this.socioForm.valid) {
-      this.loading = true;
-      const formData = this.socioForm.value;
-      
-      const socioData = {
-        nombre: formData.nombres.trim(),
-        apellidos: `${formData.apellidoPaterno.trim()} ${formData.apellidoMaterno.trim()}`.trim(),
-        dni: formData.numeroDocumento.toString(),
-        telefono: formData.telefono.trim(),
-        contrasena: formData.contrasena || '',
-        idColegios: formData.idColegios
-      };
+onSubmit(): void {
+  if (this.socioForm.valid) {
+    this.loading = true;
+    const formData = this.socioForm.value;
+    
+    // Crear el objeto con la estructura que espera el backend
+    const socioData = {
+      nombres: formData.nombres.trim(),
+      apellidoPaterno: formData.apellidoPaterno.trim(),
+      apellidoMaterno: formData.apellidoMaterno.trim(),
+      numeroDocumento: formData.numeroDocumento.toString(),
+      telefono: formData.telefono.trim(),
+      contrasena: formData.contrasena || '',
+      idColegios: formData.idColegios
+    };
 
-      const url = 'https://proy-back-dnivel-44j5.onrender.com/api/socios';
-      const method = this.data?.socio ? 'put' : 'post';
-      const finalUrl = this.data?.socio ? `${url}/${this.data.socio.id}` : url;
+    const url = 'https://proy-back-dnivel-44j5.onrender.com/api/socios';
+    const method = this.data?.socio ? 'put' : 'post';
+    const finalUrl = this.data?.socio ? `${url}/${this.data.socio.id}` : url;
 
-      this.http[method](finalUrl, socioData, { headers: this.getHeaders() })
-        .subscribe({
-          next: (response) => {
-            this.loading = false;
-            const selectedColegiosNames = this.getSelectedColegios().map(c => c.nombre).join(', ');
-            const message = this.data?.socio 
-              ? `Socio actualizado correctamente en: ${selectedColegiosNames}` 
-              : `Socio creado correctamente en: ${selectedColegiosNames}`;
-            
-            this.snackBar.open(message, 'Cerrar', {
-              duration: 4000
-            });
-            this.dialogRef.close(true);
-          },
-          error: (error) => {
-            this.loading = false;
-            console.error('Error al guardar socio:', error);
-            this.snackBar.open('Error al guardar el socio', 'Cerrar', {
-              duration: 5000,
-              panelClass: ['error-snackbar']
-            });
-          }
-        });
-    }
+    this.http[method](finalUrl, socioData, { headers: this.getHeaders() })
+      .subscribe({
+        next: (response) => {
+          this.loading = false;
+          const selectedColegiosNames = this.getSelectedColegios().map(c => c.nombre).join(', ');
+          const message = this.data?.socio 
+            ? `Socio actualizado correctamente en: ${selectedColegiosNames}` 
+            : `Socio creado correctamente en: ${selectedColegiosNames}`;
+          
+          this.snackBar.open(message, 'Cerrar', {
+            duration: 4000
+          });
+          this.dialogRef.close(true);
+        },
+        error: (error) => {
+          this.loading = false;
+          console.error('Error al guardar socio:', error);
+          this.snackBar.open('Error al guardar el socio', 'Cerrar', {
+            duration: 5000,
+            panelClass: ['error-snackbar']
+          });
+        }
+      });
   }
+}
 
   onCancel(): void {
     this.dialogRef.close(false);
