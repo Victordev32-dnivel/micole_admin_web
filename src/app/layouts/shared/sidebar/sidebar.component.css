@@ -40,11 +40,11 @@
 
 .sidebar-header {
   padding: 15px;
-  text-align: center;
+  text-align: left; /* CAMBIÓ DE CENTER A LEFT */
   border-bottom: 1px solid #e9ecef;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start; /* CAMBIÓ DE CENTER A FLEX-START */
   background: #ffffff;
 }
 
@@ -131,28 +131,29 @@ a.active {
   transform: translateY(-1px);
 }
 
-.mat-dialog-container {
+/* Estilos para el diálogo */
+::ng-deep .mat-dialog-container {
   padding: 24px !important;
   max-height: 80vh !important;
   overflow-y: auto !important;
 }
 
-.mat-dialog-title {
+::ng-deep .mat-dialog-title {
   font-size: 1.5rem !important;
   margin-bottom: 16px !important;
 }
 
-.mat-dialog-content {
+::ng-deep .mat-dialog-content {
   font-size: 1.1rem !important;
   margin-bottom: 16px !important;
 }
 
-.mat-dialog-actions {
+::ng-deep .mat-dialog-actions {
   justify-content: flex-end !important;
   gap: 10px !important;
 }
 
-.mat-dialog-actions button {
+::ng-deep .mat-dialog-actions button {
   min-width: 100px !important;
 }
 
