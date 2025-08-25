@@ -8,6 +8,8 @@
   min-height:60vh;
   display: flex;
   flex-direction: column;
+  margin-left: 25vw; /* INCREMENTÉ EL MARGEN IZQUIERDO PARA MOVER MÁS A LA DERECHA */
+  padding-left: 40px; /* INCREMENTÉ EL PADDING ADICIONAL */
 }
 
 .content-container {
@@ -15,7 +17,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start; /* CAMBIÉ DE CENTER A FLEX-START */
   padding: 20px 0;
 }
 
@@ -24,7 +26,8 @@
   max-width: 1200px;
   width: 100%;
   box-sizing: border-box;
-  margin: 0 auto;
+  margin: 0; /* QUITÉ EL AUTO PARA QUE NO SE CENTRE */
+  margin-left: 50px; /* AGREGUÉ MARGEN IZQUIERDO ADICIONAL PARA MOVER MÁS A LA DERECHA */
 }
 
 /* Espaciador superior para bajar el contenido */
@@ -38,7 +41,8 @@
 .notas-card {
   width: 100%;
   max-width: 1000px;
-  margin: 0 auto;
+  margin: 0; /* QUITÉ EL AUTO PARA QUE NO SE CENTRE */
+  margin-left: 0; /* ALINEADO A LA IZQUIERDA */
 }
 
 /* Header personalizado con botón a la derecha */
@@ -92,7 +96,7 @@
 .error-container {
   padding: 20px;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start; /* CAMBIÉ DE CENTER A FLEX-START */
   align-items: center;
   background-color: #f5f5f5;
 }
@@ -267,9 +271,15 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .main-container {
+    margin-left: 0; /* QUITAR MARGEN EN MÓVIL */
+    padding-left: 0; /* QUITAR PADDING EN MÓVIL */
+  }
+  
   .container {
     padding: 15px;
     max-width: 100%;
+    margin-left: 0; /* RESETEAR MARGEN EN MÓVIL */
   }
   
   .top-spacer {
@@ -279,6 +289,7 @@
   .content-container {
     padding: 15px 0;
     background-color: #f5f5f5;
+    align-items: center; /* VOLVER A CENTER EN MÓVIL */
   }
   
   /* Header responsive */
@@ -342,11 +353,23 @@
   .empty-state p {
     font-size: 1rem;
   }
+  
+  /* Restaurar centrado en elementos específicos para móvil */
+  .loading-container,
+  .error-container,
+  .notas-card {
+    margin: 0 auto; /* VOLVER A AUTO EN MÓVIL */
+  }
+  
+  .error-container {
+    justify-content: center; /* VOLVER A CENTER EN MÓVIL */
+  }
 }
 
 @media (max-width: 480px) {
   .container {
     padding: 10px;
+    margin-left: 0; /* RESETEAR MARGEN EN MÓVILES MUY PEQUEÑOS */
   }
   
   .top-spacer {
@@ -423,8 +446,14 @@
 
 /* Tablet landscape */
 @media (min-width: 769px) and (max-width: 1024px) {
+  .main-container {
+    margin-left: 22vw; /* INCREMENTÉ EL MARGEN PARA TABLET */
+    padding-left: 25px; /* INCREMENTÉ EL PADDING */
+  }
+  
   .container {
     max-width: 1100px;
+    margin-left: 30px; /* AGREGUÉ MARGEN IZQUIERDO PARA TABLET */
   }
   
   .top-spacer {
@@ -442,6 +471,15 @@
 
 /* Desktop grande */
 @media (min-width: 1200px) {
+  .main-container {
+    margin-left: 20vw; /* INCREMENTÉ EL MARGEN PARA DESKTOP GRANDE */
+    padding-left: 50px; /* INCREMENTÉ EL PADDING PARA DESKTOP */
+  }
+  
+  .container {
+    margin-left: 80px; /* INCREMENTÉ EL MARGEN IZQUIERDO PARA DESKTOP GRANDE */
+  }
+  
   .top-spacer {
     height: 50px;
   }
