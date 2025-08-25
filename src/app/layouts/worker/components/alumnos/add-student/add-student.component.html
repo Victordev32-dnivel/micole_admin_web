@@ -6,20 +6,15 @@
       <div class="section student-section">
         <h3>Datos del Alumno</h3>
 
-        <!-- DNI - OBLIGATORIO -->
+        <!-- DNI - YA NO ES OBLIGATORIO -->
         <mat-form-field appearance="outline">
-          <mat-label>DNI *</mat-label>
+          <mat-label>DNI</mat-label>
           <input
             matInput
             formControlName="numeroDocumento"
-            placeholder="Ingrese DNI (8 dígitos)"
+            placeholder="Ingrese DNI (8 dígitos, opcional)"
             [maxlength]="8"
           />
-          <mat-error
-            *ngIf="addForm.get('numeroDocumento')?.hasError('required')"
-          >
-            El DNI es obligatorio.
-          </mat-error>
           <mat-error
             *ngIf="
               addForm.get('numeroDocumento')?.hasError('pattern') ||
@@ -27,11 +22,11 @@
               addForm.get('numeroDocumento')?.hasError('maxlength')
             "
           >
-            El DNI debe tener exactamente 8 dígitos.
+            Si ingresa DNI, debe tener exactamente 8 dígitos.
           </mat-error>
         </mat-form-field>
 
-        <!-- CAMPOS OPCIONALES -->
+        <!-- TODOS LOS CAMPOS OPCIONALES -->
         <mat-form-field appearance="outline">
           <mat-label>Nombres</mat-label>
           <input
@@ -236,8 +231,8 @@
         <!-- Información sobre campos opcionales -->
         <div class="info-section">
           <small style="color: #666; font-style: italic">
-            * Solo el DNI es obligatorio. Todos los demás campos son opcionales
-            y pueden completarse posteriormente.
+            ℹ️ Todos los campos son opcionales. Puede agregar un alumno con la información mínima disponible
+            y completar los datos posteriormente.
           </small>
         </div>
 
@@ -265,33 +260,21 @@
             <form [formGroup]="apoderadoForm" class="inline-form">
               <div class="form-row">
                 <mat-form-field appearance="outline">
-                  <mat-label>Nombres *</mat-label>
+                  <mat-label>Nombres</mat-label>
                   <input
                     matInput
                     formControlName="nombres"
-                    placeholder="Ingrese nombres del apoderado"
+                    placeholder="Ingrese nombres del apoderado (opcional)"
                   />
-                  <mat-error
-                    *ngIf="apoderadoForm.get('nombres')?.hasError('required')"
-                  >
-                    Los nombres son obligatorios
-                  </mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
-                  <mat-label>Apellido Paterno *</mat-label>
+                  <mat-label>Apellido Paterno</mat-label>
                   <input
                     matInput
                     formControlName="apellidoPaterno"
-                    placeholder="Ingrese apellido paterno"
+                    placeholder="Ingrese apellido paterno (opcional)"
                   />
-                  <mat-error
-                    *ngIf="
-                      apoderadoForm.get('apellidoPaterno')?.hasError('required')
-                    "
-                  >
-                    El apellido paterno es obligatorio
-                  </mat-error>
                 </mat-form-field>
               </div>
 
@@ -306,20 +289,13 @@
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
-                  <mat-label>DNI *</mat-label>
+                  <mat-label>DNI</mat-label>
                   <input
                     matInput
                     formControlName="numeroDocumento"
-                    placeholder="Ingrese DNI (8 dígitos)"
+                    placeholder="Ingrese DNI (8 dígitos, opcional)"
                     maxlength="8"
                   />
-                  <mat-error
-                    *ngIf="
-                      apoderadoForm.get('numeroDocumento')?.hasError('required')
-                    "
-                  >
-                    El DNI es obligatorio
-                  </mat-error>
                   <mat-error
                     *ngIf="
                       apoderadoForm
@@ -333,53 +309,45 @@
                         ?.hasError('maxlength')
                     "
                   >
-                    El DNI debe tener exactamente 8 dígitos
+                    Si ingresa DNI, debe tener exactamente 8 dígitos
                   </mat-error>
                 </mat-form-field>
               </div>
 
               <div class="form-row">
                 <mat-form-field appearance="outline">
-                  <mat-label>Género *</mat-label>
+                  <mat-label>Género</mat-label>
                   <mat-select formControlName="genero">
+                    <mat-option value="">Sin especificar</mat-option>
                     <mat-option
                       *ngFor="let gender of genders"
                       [value]="gender"
                       >{{ gender }}</mat-option
                     >
                   </mat-select>
-                  <mat-error
-                    *ngIf="apoderadoForm.get('genero')?.hasError('required')"
-                  >
-                    El género es obligatorio
-                  </mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
-                  <mat-label>Teléfono *</mat-label>
+                  <mat-label>Teléfono</mat-label>
                   <input
                     matInput
                     formControlName="telefono"
-                    placeholder="Ingrese teléfono (9 dígitos)"
+                    placeholder="Ingrese teléfono (9 dígitos, opcional)"
                     maxlength="9"
                   />
                   <mat-error
-                    *ngIf="apoderadoForm.get('telefono')?.hasError('required')"
-                  >
-                    El teléfono es obligatorio
-                  </mat-error>
-                  <mat-error
                     *ngIf="apoderadoForm.get('telefono')?.hasError('pattern')"
                   >
-                    El teléfono debe tener 9 dígitos
+                    Si ingresa teléfono, debe tener 9 dígitos
                   </mat-error>
                 </mat-form-field>
               </div>
 
               <div class="form-row">
                 <mat-form-field appearance="outline">
-                  <mat-label>Parentesco *</mat-label>
+                  <mat-label>Parentesco</mat-label>
                   <mat-select formControlName="parentesco">
+                    <mat-option value="">Sin especificar</mat-option>
                     <mat-option value="Padre">Padre</mat-option>
                     <mat-option value="Madre">Madre</mat-option>
                     <mat-option value="Abuelo">Abuelo</mat-option>
@@ -391,23 +359,16 @@
                     <mat-option value="Tutor">Tutor</mat-option>
                     <mat-option value="Otro">Otro</mat-option>
                   </mat-select>
-                  <mat-error
-                    *ngIf="
-                      apoderadoForm.get('parentesco')?.hasError('required')
-                    "
-                  >
-                    El parentesco es obligatorio
-                  </mat-error>
                 </mat-form-field>
               </div>
 
               <div class="form-row">
                 <mat-form-field appearance="outline">
-                  <mat-label>Contraseña *</mat-label>
+                  <mat-label>Contraseña</mat-label>
                   <input
                     matInput
                     formControlName="contrasena"
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder="Mínimo 6 caracteres (opcional)"
                     [type]="hidePassword ? 'password' : 'text'"
                   />
                   <button
@@ -422,19 +383,20 @@
                   </button>
                   <mat-error
                     *ngIf="
-                      apoderadoForm.get('contrasena')?.hasError('required')
-                    "
-                  >
-                    La contraseña es obligatoria
-                  </mat-error>
-                  <mat-error
-                    *ngIf="
                       apoderadoForm.get('contrasena')?.hasError('minlength')
                     "
                   >
-                    La contraseña debe tener al menos 6 caracteres
+                    Si ingresa contraseña, debe tener al menos 6 caracteres
                   </mat-error>
                 </mat-form-field>
+              </div>
+
+              <!-- Información sobre campos de apoderado -->
+              <div class="info-section">
+                <small style="color: #666; font-style: italic">
+                  ℹ️ Para crear un apoderado, complete al menos el nombre, apellido o DNI. 
+                  Todos los demás campos son opcionales.
+                </small>
               </div>
 
               <div class="form-actions">
@@ -443,7 +405,7 @@
                   type="button"
                   color="primary"
                   (click)="saveApoderado()"
-                  [disabled]="loadingApoderado || apoderadoForm.invalid"
+                  [disabled]="loadingApoderado"
                 >
                   <mat-spinner
                     *ngIf="loadingApoderado"

@@ -69,11 +69,11 @@ interface Salon {
   idColegio: number;
 }
 
-// Interfaz para los apoderados - Updated to include apellidos
+// Interfaz para los apoderados
 interface Apoderado {
   id: number;
   nombre: string;
-  apellidos: string; // Added apellidos field to match API response
+  apellidos: string;
   dni: string;
   contrasena: string;
   telefono: string;
@@ -158,12 +158,12 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {
-    // Formulario principal del estudiante
+    // Formulario principal del estudiante - TODOS LOS CAMPOS OPCIONALES
     this.addForm = this.fb.group({
       numeroDocumento: [
         '',
         [
-          Validators.required,
+          // Solo validación de formato si se ingresa algo
           Validators.pattern('^[0-9]{8}$'),
           Validators.minLength(8),
           Validators.maxLength(8),
@@ -176,6 +176,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
       telefono: [
         '',
         [
+          // Solo validación de formato si se ingresa algo
           Validators.pattern('^[0-9]{9}$'),
           Validators.minLength(9),
           Validators.maxLength(9),
@@ -189,24 +190,24 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
       idColegio: [this.data?.colegioId || ''],
     });
 
-    // Formulario para agregar apoderado
+    // Formulario para agregar apoderado - TODOS LOS CAMPOS OPCIONALES
     this.apoderadoForm = this.fb.group({
-      nombres: ['', Validators.required],
-      apellidoPaterno: ['', Validators.required],
+      nombres: [''], // Ya no es requerido
+      apellidoPaterno: [''], // Ya no es requerido
       apellidoMaterno: [''],
       numeroDocumento: [
         '',
         [
-          Validators.required,
+          // Solo validación de formato si se ingresa algo
           Validators.pattern('^[0-9]{8}$'),
           Validators.minLength(8),
           Validators.maxLength(8),
         ],
       ],
-      genero: ['', Validators.required],
-      telefono: ['', [Validators.required, Validators.pattern('^[0-9]{9}$')]],
-      parentesco: ['', Validators.required],
-      contrasena: ['', [Validators.required, Validators.minLength(6)]],
+      genero: [''], // Ya no es requerido
+      telefono: ['', [Validators.pattern('^[0-9]{9}$')]], // Ya no es requerido, solo formato
+      parentesco: [''], // Ya no es requerido
+      contrasena: ['', [Validators.minLength(6)]], // Ya no es requerido, solo longitud mínima
       tipoUsuario: ['apoderado'],
     });
   }
@@ -250,9 +251,32 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   saveApoderado(): void {
-    if (this.apoderadoForm.invalid) {
-      this.apoderadoError =
-        'Por favor, complete todos los campos correctamente.';
+    // Validación manual más flexible - solo verificar que tenga al menos algunos datos básicos
+    const formValue = this.apoderadoForm.value;
+    const hasMinimumData = formValue.nombres || formValue.apellidoPaterno || formValue.numeroDocumento;
+    
+    if (!hasMinimumData) {
+      this.apoderadoError = 'Por favor, complete al menos el nombre o apellido o DNI del apoderado.';
+      return;
+    }
+
+    // Validar formato si hay datos
+    const dniValid = !formValue.numeroDocumento || /^[0-9]{8}$/.test(formValue.numeroDocumento);
+    const telefonoValid = !formValue.telefono || /^[0-9]{9}$/.test(formValue.telefono);
+    const contrasenaValid = !formValue.contrasena || formValue.contrasena.length >= 6;
+
+    if (!dniValid) {
+      this.apoderadoError = 'Si ingresa DNI, debe tener exactamente 8 dígitos.';
+      return;
+    }
+
+    if (!telefonoValid) {
+      this.apoderadoError = 'Si ingresa teléfono, debe tener exactamente 9 dígitos.';
+      return;
+    }
+
+    if (!contrasenaValid) {
+      this.apoderadoError = 'Si ingresa contraseña, debe tener al menos 6 caracteres.';
       return;
     }
 
@@ -282,8 +306,8 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
               this.addForm.patchValue({ idApoderado: response.id });
               this.apoderadoSearchCtrl.setValue({
                 id: response.id,
-                nombre: apoderadoData.nombres,
-                apellidos: `${apoderadoData.apellidoPaterno} ${apoderadoData.apellidoMaterno || ''}`.trim(),
+                nombre: apoderadoData.nombres || '',
+                apellidos: `${apoderadoData.apellidoPaterno || ''} ${apoderadoData.apellidoMaterno || ''}`.trim(),
               });
             }
             setTimeout(() => {
@@ -370,7 +394,6 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     });
   }
 
-  // Updated to display both nombre and apellidos
   displaySalonFn = (salon: Salon): string => {
     if (!salon) return '';
     return salon.nombre || salon.descripcion || `Salón ${salon.id}`;
@@ -505,14 +528,18 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     });
   }
 
+  // Validación más flexible - ya no requiere DNI obligatorio
   private isFormValidForSave(): boolean {
     const numeroDocumento = this.addForm.get('numeroDocumento')?.value;
     const telefono = this.addForm.get('telefono')?.value;
 
-    const dniValid = numeroDocumento && /^[0-9]{8}$/.test(numeroDocumento);
+    // Si no hay DNI ni teléfono, el formulario es válido (todos opcionales)
+    // Si hay DNI, debe ser válido
+    const dniValid = !numeroDocumento || /^[0-9]{8}$/.test(numeroDocumento);
+    // Si hay teléfono, debe ser válido  
     const telefonoValid = !telefono || /^[0-9]{9}$/.test(telefono);
 
-    return Boolean(dniValid && telefonoValid);
+    return dniValid && telefonoValid;
   }
 
   onSave(): void {
@@ -520,7 +547,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
       const formValue = this.addForm.value;
 
       const payload = {
-        numeroDocumento: formValue.numeroDocumento,
+        numeroDocumento: formValue.numeroDocumento || '', // Puede estar vacío
         nombres: formValue.nombres || '',
         apellidoPaterno: formValue.apellidoPaterno || '',
         apellidoMaterno: formValue.apellidoMaterno || '',
@@ -584,49 +611,49 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
               'Token no válido. Inicia sesión nuevamente.',
               'Cerrar',
               {
-              duration: 5000,
-              verticalPosition: 'top',
-              horizontalPosition: 'center',
-            }
-          );
-        } else {
-          this.snackBar.open(
-            'Error inesperado. Intenta de nuevo.',
-            'Cerrar',
-            {
-              duration: 5000,
-              verticalPosition: 'top',
-              horizontalPosition: 'center',
-            }
-          );
-        }
-      },
-    });
-  } else {
-    this.snackBar.open(
-      'DNI es obligatorio (8 dígitos). Si ingresa teléfono, debe tener 9 dígitos.',
-      'Cerrar',
-      { duration: 4000 }
-    );
+                duration: 5000,
+                verticalPosition: 'top',
+                horizontalPosition: 'center',
+              }
+            );
+          } else {
+            this.snackBar.open(
+              'Error inesperado. Intenta de nuevo.',
+              'Cerrar',
+              {
+                duration: 5000,
+                verticalPosition: 'top',
+                horizontalPosition: 'center',
+              }
+            );
+          }
+        },
+      });
+    } else {
+      this.snackBar.open(
+        'Si ingresa DNI debe tener 8 dígitos. Si ingresa teléfono debe tener 9 dígitos.',
+        'Cerrar',
+        { duration: 4000 }
+      );
+    }
   }
-}
 
-onCancel(): void {
-  this.dialogRef.close();
-}
-
-openCalendar(): void {
-  if (isPlatformBrowser(this.platformId) && this.datepicker) {
-    this.datepicker.open();
-  } else {
-    console.error('Datepicker no encontrado');
+  onCancel(): void {
+    this.dialogRef.close();
   }
-}
 
-private formatDate(date: Date): string {
-  if (date instanceof Date && !isNaN(date.getTime())) {
-    return date.toISOString();
+  openCalendar(): void {
+    if (isPlatformBrowser(this.platformId) && this.datepicker) {
+      this.datepicker.open();
+    } else {
+      console.error('Datepicker no encontrado');
+    }
   }
-  return '';
-}
+
+  private formatDate(date: Date): string {
+    if (date instanceof Date && !isNaN(date.getTime())) {
+      return date.toISOString();
+    }
+    return '';
+  }
 }
