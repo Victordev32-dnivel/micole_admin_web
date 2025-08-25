@@ -37,7 +37,7 @@ interface SocioWithColegios {
   contrasena: string;
   idColegios: number[];
   telefono: string;
-  colegiosNombres?: string[];
+  nomColegios: string[];
 }
 
 @Component({
@@ -82,7 +82,6 @@ export class SocioComponent implements OnInit, OnDestroy {
     console.log('🚀 SocioComponent inicializado');
     this.loadUserData();
     this.setupSearch();
-    this.loadColegios();
   }
 
   ngOnDestroy(): void {
@@ -133,48 +132,7 @@ export class SocioComponent implements OnInit, OnDestroy {
     });
   }
 
-  // MÉTODO PARA CARGAR COLEGIOS
-  private loadColegios(): void {
-    console.log('🏫 Cargando lista de colegios...');
-    const url = `https://proy-back-dnivel-44j5.onrender.com/api/colegio/lista`;
-    
-    this.http
-      .get<{data: Colegio[]}>(url, { headers: this.getHeaders() })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (resp) => {
-          console.log('✅ Colegios cargados:', resp);
-          this.colegios = resp.data || [];
-          // Actualizar socios con nombres de colegios si ya están cargados
-          if (this.socios.length > 0) {
-            this.updateSociosWithColegios();
-          }
-        },
-        error: (error) => {
-          console.error('❌ Error al cargar colegios:', error);
-        },
-      });
-  }
 
-  // MÉTODO PARA ACTUALIZAR SOCIOS CON NOMBRES DE COLEGIOS
-  private updateSociosWithColegios(): void {
-    this.socios = this.socios.map(socio => ({
-      ...socio,
-      colegiosNombres: this.getColegiosNombres(socio.idColegios)
-    }));
-    this.filteredSocios = [...this.socios];
-    this.cdr.detectChanges();
-  }
-
-  // MÉTODO PARA OBTENER NOMBRES DE COLEGIOS
-  private getColegiosNombres(idColegios: number[]): string[] {
-    if (!idColegios || !Array.isArray(idColegios)) return [];
-    
-    return idColegios.map(id => {
-      const colegio = this.colegios.find(c => c.id === id);
-      return colegio ? colegio.nombre : `Colegio ID: ${id}`;
-    });
-  }
 
   // MÉTODOS DE DATOS
   public loadSocios(): void {
@@ -217,10 +175,9 @@ export class SocioComponent implements OnInit, OnDestroy {
 
             // Agregar nombres de colegios si ya tenemos la lista
             this.socios = sociosData.map(socio => ({
-              ...socio,
-              colegiosNombres: this.getColegiosNombres(socio.idColegios)
+              ...socio
             }));
-            
+
             this.filteredSocios = [...this.socios];
             this.loading = false;
             console.log(`👥 ${this.socios.length} socios cargados`);
@@ -277,7 +234,7 @@ export class SocioComponent implements OnInit, OnDestroy {
           (socio?.dni || '').toString().toLowerCase().includes(search);
         const byTelefono = socio?.telefono?.toLowerCase()?.includes(search) ||
           (socio?.telefono || '').toString().includes(search);
-        const byColegios = socio?.colegiosNombres?.some(nombre => 
+        const byColegios = socio?.nomColegios?.some(nombre =>
           nombre.toLowerCase().includes(search)) || false;
 
         return byNombre || byApellidos || byDni || byTelefono || byColegios;
@@ -314,7 +271,7 @@ export class SocioComponent implements OnInit, OnDestroy {
 
   public editSocio(socio: SocioWithColegios): void {
     console.log('✏️ Editando socio:', socio);
-    
+
     if (!this.colegioId) {
       this.snackBar.open('❌ Error: ID del colegio no disponible', 'Cerrar', {
         duration: 3000,
@@ -328,9 +285,9 @@ export class SocioComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(ModificarSocioComponent, {
       width: '600px',
       disableClose: true,
-      data: { 
+      data: {
         socio: socio,
-        colegioId: this.colegioId 
+        colegioId: this.colegioId
       },
     });
 
@@ -349,7 +306,7 @@ export class SocioComponent implements OnInit, OnDestroy {
 
   public confirmDelete(socio: SocioWithColegios): void {
     console.log('🗑️ Confirmando eliminación de socio:', socio);
-    
+
     if (confirm(`¿Está seguro de que desea eliminar a ${socio.nombre} ${socio.apellidos}?`)) {
       this.deleteSocio(socio);
     }
@@ -384,12 +341,6 @@ export class SocioComponent implements OnInit, OnDestroy {
     return socio.id || index;
   }
 
-  public formatColegios(colegiosNombres: string[] | undefined): string {
-    if (!colegiosNombres || colegiosNombres.length === 0) {
-      return 'Sin colegios';
-    }
-    return colegiosNombres.join(', ');
-  }
 
   public formatIdColegios(idColegios: number[] | undefined): string {
     if (!idColegios || idColegios.length === 0) {

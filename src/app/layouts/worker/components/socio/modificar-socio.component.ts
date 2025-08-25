@@ -1,6 +1,3 @@
-// CREA ESTE ARCHIVO: modificar-socio.component.ts
-// En la misma carpeta donde tienes socio.component.ts
-
 import {
   Component,
   OnInit,
@@ -9,13 +6,14 @@ import {
   ChangeDetectorRef,
   NgZone,
 } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
   FormGroup,
   Validators,
   ReactiveFormsModule,
+  FormControl,
 } from '@angular/forms';
 import {
   MatDialogRef,
@@ -26,8 +24,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatOptionModule } from '@angular/material/core';
 import { Subject, takeUntil } from 'rxjs';
 import { UserService } from '../../../../services/UserData';
 
@@ -41,6 +42,12 @@ interface SocioData {
   apellidoMaterno?: string;
   contrasena?: string;
   idColegios?: number[];
+  nomColegios?: string[];
+}
+
+interface Colegio {
+  id: number;
+  nombre: string;
 }
 
 @Component({
@@ -54,7 +61,10 @@ interface SocioData {
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
+    MatChipsModule,
     MatProgressSpinnerModule,
+    MatOptionModule,
   ],
   template: `
     <div class="dialog-container">
@@ -87,6 +97,9 @@ interface SocioData {
             <mat-error *ngIf="socioForm.get('nombre')?.hasError('required')">
               El nombre es requerido
             </mat-error>
+            <mat-error *ngIf="socioForm.get('nombre')?.hasError('minlength')">
+              El nombre debe tener al menos 2 caracteres
+            </mat-error>
           </mat-form-field>
 
           <!-- Apellido Paterno -->
@@ -100,6 +113,9 @@ interface SocioData {
             />
             <mat-error *ngIf="socioForm.get('apellidoPaterno')?.hasError('required')">
               El apellido paterno es requerido
+            </mat-error>
+            <mat-error *ngIf="socioForm.get('apellidoPaterno')?.hasError('minlength')">
+              El apellido paterno debe tener al menos 2 caracteres
             </mat-error>
           </mat-form-field>
 
@@ -129,7 +145,7 @@ interface SocioData {
               El DNI es requerido
             </mat-error>
             <mat-error *ngIf="socioForm.get('dni')?.hasError('pattern')">
-              El DNI debe tener exactamente 8 dígitos
+              El DNI debe tener exactamente 8 dígitos numéricos
             </mat-error>
           </mat-form-field>
 
@@ -146,6 +162,9 @@ interface SocioData {
             <mat-error *ngIf="socioForm.get('telefono')?.hasError('required')">
               El teléfono es requerido
             </mat-error>
+            <mat-error *ngIf="socioForm.get('telefono')?.hasError('minlength')">
+              El teléfono debe tener al menos 7 dígitos
+            </mat-error>
           </mat-form-field>
 
           <!-- Contraseña -->
@@ -155,10 +174,88 @@ interface SocioData {
               matInput
               formControlName="contrasena"
               placeholder="Dejar vacío para mantener la actual"
-              type="password"
+              type="text"
               maxlength="100"
             />
+            <mat-error *ngIf="socioForm.get('contrasena')?.hasError('minlength')">
+              La contraseña debe tener al menos 6 caracteres
+            </mat-error>
           </mat-form-field>
+
+          <!-- SELECTOR DE COLEGIOS -->
+          <div class="colegios-section">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Colegios Asociados</mat-label>
+              <mat-select
+                formControlName="idColegios"
+                multiple
+                placeholder="Seleccione uno o más colegios (opcional)"
+                (selectionChange)="onColegiosChange($event)"
+              >
+                <mat-option
+                  *ngFor="let colegio of colegiosDisponibles; trackBy: trackByColegio"
+                  [value]="colegio.id"
+                  [disabled]="colegiosDisponibles.length === 0"
+                >
+                  {{ colegio.nombre || 'Colegio Desconocido (ID: ' + colegio.id + ')' }}
+                </mat-option>
+              </mat-select>
+
+              <mat-error *ngIf="socioForm.get('idColegios')?.hasError('maxSelection')">
+                Máximo {{ maxColegiosPermitidos }} colegios permitidos
+              </mat-error>
+
+              <mat-hint>
+                Seleccionados: {{ getSelectedColegios().length }} de {{ maxColegiosPermitidos }}
+              </mat-hint>
+            </mat-form-field>
+
+            <!-- Botones de acción rápida -->
+            <div class="colegios-actions">
+              <button
+                mat-stroked-button
+                type="button"
+                (click)="selectAllColegios()"
+                [disabled]="colegiosDisponibles.length === 0"
+                class="action-button"
+              >
+                <mat-icon>select_all</mat-icon>
+                Seleccionar Todos
+              </button>
+
+              <button
+                mat-stroked-button
+                type="button"
+                (click)="clearSelection()"
+                [disabled]="getSelectedColegios().length === 0"
+                class="action-button"
+              >
+                <mat-icon>clear</mat-icon>
+                Limpiar
+              </button>
+            </div>
+
+            <!-- Chips de colegios seleccionados -->
+            <div class="selected-colegios-chips" *ngIf="getSelectedColegios().length > 0">
+              <h4>Colegios Seleccionados:</h4>
+              <mat-chip-set>
+                <mat-chip
+                  *ngFor="let colegio of getSelectedColegios(); trackBy: trackByColegio"
+                  [removable]="true"
+                  (removed)="removeColegioChip(colegio.id)"
+                  class="colegio-chip"
+                >
+                  {{ colegio.nombre || 'Colegio Desconocido (ID: ' + colegio.id + ')' }}
+                  <mat-icon matChipRemove>cancel</mat-icon>
+                </mat-chip>
+              </mat-chip-set>
+            </div>
+
+            <!-- Mensaje cuando no hay colegios disponibles -->
+            <div *ngIf="colegiosDisponibles.length === 0" class="no-colegios-message">
+              <p>No se pudieron cargar los colegios. Los colegios actuales del socio se mantendrán.</p>
+            </div>
+          </div>
         </form>
       </mat-dialog-content>
 
@@ -194,7 +291,9 @@ interface SocioData {
       .dialog-container {
         display: flex;
         flex-direction: column;
-        min-height: 400px;
+        min-height: 600px;
+        width: 100%;
+        max-width: 600px;
       }
 
       .dialog-header {
@@ -214,21 +313,58 @@ interface SocioData {
         font-weight: 500;
       }
 
+      .close-button {
+        color: #666;
+      }
+
       .dialog-content {
         flex: 1;
         padding: 0 24px;
         margin-bottom: 0;
+        overflow-y: auto;
       }
 
       .socio-form {
         display: flex;
         flex-direction: column;
         gap: 16px;
-        max-width: 500px;
+        max-width: 100%;
       }
 
       .full-width {
         width: 100%;
+      }
+
+      .colegios-section {
+        margin-top: 8px;
+      }
+
+      .colegios-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 8px;
+        margin-bottom: 16px;
+      }
+
+      .action-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .selected-colegios-chips {
+        margin-top: 16px;
+      }
+
+      .selected-colegios-chips h4 {
+        margin: 0 0 8px 0;
+        color: #666;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .colegio-chip {
+        margin: 4px;
       }
 
       .dialog-actions {
@@ -238,17 +374,29 @@ interface SocioData {
       }
 
       .button-spinner {
+        display: inline-block;
         margin-right: 8px;
+        vertical-align: middle;
+      }
+
+      .no-colegios-message {
+        color: #d32f2f;
+        font-size: 14px;
+        margin-top: 8px;
+        padding: 8px;
+        background-color: #ffebee;
+        border-radius: 4px;
       }
     `,
   ],
 })
 export class ModificarSocioComponent implements OnInit, OnDestroy {
   socioForm: FormGroup;
-  loading: boolean = false;
+  loading = false;
   colegioId: number;
   socioData: SocioData;
-
+  colegiosDisponibles: Colegio[] = [];
+  maxColegiosPermitidos = 5;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -263,20 +411,22 @@ export class ModificarSocioComponent implements OnInit, OnDestroy {
   ) {
     this.colegioId = data.colegioId;
     this.socioData = data.socio;
-    
+
     this.socioForm = this.fb.group({
-      nombre: ['', [Validators.required, Validators.minLength(2)]],
-      apellidoPaterno: ['', [Validators.required, Validators.minLength(2)]],
-      apellidoMaterno: [''],
+      nombre: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      apellidoPaterno: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      apellidoMaterno: ['', [Validators.maxLength(50)]],
       dni: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
-      telefono: ['', [Validators.required, Validators.minLength(7)]],
-      contrasena: [''],
+      telefono: ['', [Validators.required, Validators.minLength(7), Validators.maxLength(15)]],
+      contrasena: ['', [Validators.minLength(6)]],
+      idColegios: [[], [this.maxColegiosValidator.bind(this)]],
     });
   }
 
   ngOnInit() {
     console.log('🚀 ModificarSocioComponent inicializado');
     this.loadSocioData();
+    this.loadColegiosDisponibles();
   }
 
   ngOnDestroy() {
@@ -284,75 +434,206 @@ export class ModificarSocioComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  private maxColegiosValidator(control: FormControl) {
+    const value = control.value as number[];
+    if (value?.length > this.maxColegiosPermitidos) {
+      return { maxSelection: true };
+    }
+    return null;
+  }
+
   private loadSocioData(): void {
-    const apellidos = this.socioData.apellidos || '';
-    const apellidosArray = apellidos.trim().split(/\s+/);
-    
+    const apellidos = this.socioData.apellidos?.trim() || '';
+    const apellidosArray = apellidos.split(/\s+/).filter(part => part.length > 0);
+
+    // Handle invalid DNI
+    let dni = this.socioData.dni?.trim() || '';
+    if (!/^\d{8}$/.test(dni)) {
+      console.warn(`DNI inválido: ${dni}. Se usará un valor temporal.`);
+      dni = '';
+      this.snackBar.open('El DNI proporcionado no es válido. Por favor, ingrese un DNI de 8 dígitos.', 'Cerrar', {
+        duration: 5000,
+      });
+    }
+
+    // Initialize colegiosDisponibles with socio's colleges
+    if (this.socioData.idColegios && this.socioData.nomColegios) {
+      this.colegiosDisponibles = this.socioData.idColegios.map((id, index) => ({
+        id,
+        nombre: (this.socioData.nomColegios?.[index]?.trim() || `Colegio Desconocido (ID: ${id})`),
+      })).filter(colegio => colegio.nombre && colegio.nombre !== ',');
+      console.log('Initialized colegiosDisponibles:', this.colegiosDisponibles);
+    }
+
     this.socioForm.patchValue({
-      nombre: this.socioData.nombre || '',
-      apellidoPaterno: apellidosArray[0] || '',
-      apellidoMaterno: apellidosArray.slice(1).join(' ') || '',
-      dni: this.socioData.dni || '',
-      telefono: this.socioData.telefono || '',
-      contrasena: '',
+      nombre: this.socioData.nombre?.trim() || '',
+      apellidoPaterno: this.socioData.apellidoPaterno || apellidosArray[0] || '',
+      apellidoMaterno: this.socioData.apellidoMaterno || (apellidosArray.length > 1 ? apellidosArray.slice(1).join(' ') : ''),
+      dni:this.socioData.dni,
+      telefono: this.socioData.telefono?.trim() || '',
+      contrasena:this.socioData.contrasena,
+      idColegios: this.socioData.idColegios?.length ? this.socioData.idColegios : [],
     });
+
+    // Mark DNI as touched if invalid to show error immediately
+    if (!dni) {
+      this.socioForm.get('dni')?.markAsTouched();
+    }
+
+    this.cdr.detectChanges();
+  }
+
+  private loadColegiosDisponibles(): void {
+    const url = 'https://proy-back-dnivel-44j5.onrender.com/api/colegio/lista';
+
+    this.http
+      .get<Colegio[]>(url, { headers: this.getHeaders() })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          const newColegios = Array.isArray(response)
+            ? response
+            : response?.['data'] || response?.['colegios'] || [];
+
+          // Merge API colleges with socio's colleges
+          if (this.socioData.idColegios && this.socioData.nomColegios) {
+            this.socioData.idColegios.forEach((id, index) => {
+              if (!newColegios.some(colegio => colegio.id === id)) {
+                newColegios.push({
+                  id,
+                  nombre: (this.socioData.nomColegios?.[index]?.trim() || `Colegio Desconocido (ID: ${id})`),
+                });
+              }
+            });
+          }
+
+          // Filter out invalid entries and ensure unique IDs
+          this.colegiosDisponibles = newColegios
+            .filter(colegio => colegio.id && colegio.nombre && colegio.nombre !== ',')
+            .reduce((unique, colegio) => {
+              return unique.some(c => c.id === colegio.id) ? unique : [...unique, colegio];
+            }, [] as Colegio[]);
+
+          console.log('Loaded colegiosDisponibles from API:', this.colegiosDisponibles);
+
+          if (!this.colegiosDisponibles.length) {
+            this.snackBar.open('No se encontraron colegios disponibles. Usando colegios actuales del socio.', 'Cerrar', {
+              duration: 5000,
+            });
+          }
+
+          this.cdr.detectChanges();
+        },
+        error: (error: HttpErrorResponse) => {
+          console.error('Error loading colegios:', error);
+          this.snackBar.open(
+            `Error al cargar colegios: ${error.status === 404 ? 'Endpoint no encontrado' : 'Error del servidor'}. Usando colegios actuales del socio.`,
+            'Cerrar',
+            { duration: 5000 }
+          );
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   private getHeaders(): HttpHeaders {
-    const jwtToken = this.userService.getJwtToken();
+    const jwtToken = this.userService.getJwtToken() || '732612882';
     return new HttpHeaders({
-      Authorization: `Bearer ${jwtToken || '732612882'}`,
+      Authorization: `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
       Accept: 'application/json',
     });
   }
 
+  trackByColegio(_index: number, colegio: Colegio): number {
+    return colegio?.id ?? _index;
+  }
+
+  onColegiosChange(event: any): void {
+    const selectedIds = event.value as number[];
+    if (selectedIds.length > this.maxColegiosPermitidos) {
+      const limitedSelection = selectedIds.slice(0, this.maxColegiosPermitidos);
+      this.socioForm.patchValue({ idColegios: limitedSelection });
+      this.snackBar.open(`Máximo ${this.maxColegiosPermitidos} colegios permitidos`, 'Cerrar', { duration: 3000 });
+    }
+    console.log('Selected colegios IDs:', selectedIds);
+    console.log('Current getSelectedColegios:', this.getSelectedColegios());
+  }
+
+  getSelectedColegios(): Colegio[] {
+    const selectedIds = this.socioForm.get('idColegios')?.value as number[] || [];
+    const selected = this.colegiosDisponibles.filter(colegio => colegio && selectedIds.includes(colegio.id));
+    console.log('getSelectedColegios result:', selected);
+    return selected;
+  }
+
+  selectAllColegios(): void {
+    const allIds = this.colegiosDisponibles
+      .slice(0, this.maxColegiosPermitidos)
+      .map(c => c.id);
+    this.socioForm.patchValue({ idColegios: allIds });
+    console.log('Selected all colegios:', allIds);
+  }
+
+  clearSelection(): void {
+    this.socioForm.patchValue({ idColegios: [] });
+    console.log('Cleared colegio selection');
+  }
+
+  removeColegioChip(colegioId: number): void {
+    const currentSelection = this.socioForm.get('idColegios')?.value as number[] || [];
+    const newSelection = currentSelection.filter(id => id !== colegioId);
+    this.socioForm.patchValue({ idColegios: newSelection });
+    console.log('Removed colegio chip, new selection:', newSelection);
+  }
+
   onDniInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    input.value = input.value.replace(/\D/g, '');
-    this.socioForm.patchValue({ dni: input.value });
+    const value = input.value.replace(/\D/g, '').slice(0, 8);
+    this.socioForm.patchValue({ dni: value });
+    input.value = value;
   }
 
   onSubmit(): void {
-    if (this.socioForm.valid && !this.loading) {
-      this.updateSocio();
-    } else {
+    if (!this.socioForm.valid || this.loading) {
       this.markAllFieldsAsTouched();
+      return;
     }
+    this.updateSocio();
   }
 
   private markAllFieldsAsTouched(): void {
-    Object.keys(this.socioForm.controls).forEach((key) => {
-      this.socioForm.get(key)?.markAsTouched();
+    Object.values(this.socioForm.controls).forEach(control => {
+      control.markAsTouched();
     });
   }
 
   private updateSocio(): void {
     this.loading = true;
     const formValue = this.socioForm.value;
-    
-    const updateData: any = {
+
+    const updateData: Partial<SocioData> = {
       nombre: formValue.nombre.trim(),
+      apellidoMaterno: formValue.apellidoMaterno?.trim() || '',
       apellidoPaterno: formValue.apellidoPaterno.trim(),
-      apellidoMaterno: formValue.apellidoMaterno ? formValue.apellidoMaterno.trim() : '',
+      contrasena: formValue.contrasena?.trim() || '', // Always send contrasena, even if empty
       dni: formValue.dni.trim(),
       telefono: formValue.telefono.trim(),
-      idColegios: [this.colegioId],
+      idColegios: formValue.idColegios || [],
     };
 
-    if (formValue.contrasena && formValue.contrasena.trim()) {
-      updateData.contrasena = formValue.contrasena.trim();
-    }
+    console.log('Submitting updateData:', updateData);
 
     const url = `https://proy-back-dnivel-44j5.onrender.com/api/socios/${this.socioData.id}`;
 
     this.http
-      .put(url, updateData, { headers: this.getHeaders() })
+      .put<SocioData>(url, updateData, { headers: this.getHeaders() })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
             this.loading = false;
+            console.log('Update successful, response:', response);
             this.snackBar.open('✅ Socio actualizado correctamente', 'Cerrar', {
               duration: 3000,
               verticalPosition: 'top',
@@ -361,16 +642,17 @@ export class ModificarSocioComponent implements OnInit, OnDestroy {
             this.dialogRef.close(true);
           });
         },
-        error: (error) => {
+        error: (error: HttpErrorResponse) => {
           this.ngZone.run(() => {
             this.loading = false;
-            let errorMessage = 'Error al actualizar el socio';
-            
-            if (error.status === 400) {
-              errorMessage = 'Datos inválidos. Verifique la información';
-            } else if (error.status === 404) {
-              errorMessage = 'Socio no encontrado';
-            }
+            console.error('Update error:', error);
+            const errorMessages: { [key: number]: string } = {
+              400: 'Datos inválidos. Verifique la información ingresada.',
+              404: 'Socio no encontrado. Es posible que el socio no exista.',
+              409: 'El DNI ya existe en el sistema.',
+            };
+
+            const errorMessage = errorMessages[error.status] || 'Error al actualizar el socio. Por favor, intenta de nuevo.';
 
             this.snackBar.open(`❌ ${errorMessage}`, 'Cerrar', {
               duration: 5000,

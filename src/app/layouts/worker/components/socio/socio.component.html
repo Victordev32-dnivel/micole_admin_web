@@ -8,7 +8,7 @@
       />
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
-    
+
     <button
       mat-raised-button
       color="primary"
@@ -58,17 +58,17 @@
         <span data-label="TELÉFONO">{{ socio.telefono || "N/A" }}</span>
         <span data-label="CONTRASEÑA">{{ socio.contrasena || "Sin contraseña" }}</span>
         <span data-label="COLEGIOS" class="colegios-field">
-          {{ formatColegios(socio.colegiosNombres) }}
+          {{ socio.nomColegios }}
         </span>
         <span data-label="IDS_COLEGIOS" class="ids-field">
-          <span 
-            *ngFor="let id of socio.idColegios; let last = last" 
+          <span
+            *ngFor="let id of socio.idColegios; let last = last"
             class="id-badge"
           >
             {{ id }}<span *ngIf="!last">, </span>
           </span>
         </span>
-        
+
         <span class="actions" data-label="ACCIONES">
           <mat-icon
             (click)="editSocio(socio)"
