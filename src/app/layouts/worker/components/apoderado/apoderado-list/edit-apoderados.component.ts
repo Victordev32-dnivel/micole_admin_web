@@ -477,7 +477,7 @@ export class EditApoderadosComponent implements OnInit {
   private initializeForm() {
     this.apoderadoForm = this.fb.group({
       numeroDocumento: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
-      tipoUsuario: ['APODERADO'], // Valor fijo
+      tipoUsuario: ['apoderado'], // Valor fijo
       contrasena: ['', [
         Validators.required, 
         Validators.minLength(6),
