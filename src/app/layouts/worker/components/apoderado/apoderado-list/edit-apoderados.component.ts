@@ -105,10 +105,14 @@ interface DialogData {
               [disabled]="updating"
             />
             <mat-icon matSuffix>person</mat-icon>
-            <mat-error *ngIf="apoderadoForm.get('nombres')?.hasError('required')">
+            <mat-error
+              *ngIf="apoderadoForm.get('nombres')?.hasError('required')"
+            >
               Los nombres son obligatorios
             </mat-error>
-            <mat-error *ngIf="apoderadoForm.get('nombres')?.hasError('minlength')">
+            <mat-error
+              *ngIf="apoderadoForm.get('nombres')?.hasError('minlength')"
+            >
               Los nombres deben tener al menos 2 caracteres
             </mat-error>
           </mat-form-field>
@@ -123,7 +127,9 @@ interface DialogData {
               [disabled]="updating"
             />
             <mat-icon matSuffix>person_outline</mat-icon>
-            <mat-error *ngIf="apoderadoForm.get('apellidoPaterno')?.hasError('required')">
+            <mat-error
+              *ngIf="apoderadoForm.get('apellidoPaterno')?.hasError('required')"
+            >
               El apellido paterno es obligatorio
             </mat-error>
           </mat-form-field>
@@ -138,7 +144,9 @@ interface DialogData {
               [disabled]="updating"
             />
             <mat-icon matSuffix>person_outline</mat-icon>
-            <mat-error *ngIf="apoderadoForm.get('apellidoMaterno')?.hasError('required')">
+            <mat-error
+              *ngIf="apoderadoForm.get('apellidoMaterno')?.hasError('required')"
+            >
               El apellido materno es obligatorio
             </mat-error>
           </mat-form-field>
@@ -154,10 +162,14 @@ interface DialogData {
               [disabled]="updating"
             />
             <mat-icon matSuffix>badge</mat-icon>
-            <mat-error *ngIf="apoderadoForm.get('numeroDocumento')?.hasError('required')">
+            <mat-error
+              *ngIf="apoderadoForm.get('numeroDocumento')?.hasError('required')"
+            >
               El DNI es obligatorio
             </mat-error>
-            <mat-error *ngIf="apoderadoForm.get('numeroDocumento')?.hasError('pattern')">
+            <mat-error
+              *ngIf="apoderadoForm.get('numeroDocumento')?.hasError('pattern')"
+            >
               El DNI debe tener 8 dígitos
             </mat-error>
           </mat-form-field>
@@ -180,15 +192,23 @@ interface DialogData {
               [attr.aria-label]="'Ocultar contraseña'"
               [attr.aria-pressed]="hidePassword"
             >
-              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+              <mat-icon>{{
+                hidePassword ? 'visibility_off' : 'visibility'
+              }}</mat-icon>
             </button>
-            <mat-error *ngIf="apoderadoForm.get('contrasena')?.hasError('required')">
+            <mat-error
+              *ngIf="apoderadoForm.get('contrasena')?.hasError('required')"
+            >
               La contraseña es obligatoria
             </mat-error>
-            <mat-error *ngIf="apoderadoForm.get('contrasena')?.hasError('minlength')">
+            <mat-error
+              *ngIf="apoderadoForm.get('contrasena')?.hasError('minlength')"
+            >
               La contraseña debe tener al menos 6 caracteres
             </mat-error>
-            <mat-error *ngIf="apoderadoForm.get('contrasena')?.hasError('pattern')">
+            <mat-error
+              *ngIf="apoderadoForm.get('contrasena')?.hasError('pattern')"
+            >
               La contraseña debe contener al menos una letra y un número
             </mat-error>
           </mat-form-field>
@@ -204,10 +224,14 @@ interface DialogData {
               [disabled]="updating"
             />
             <mat-icon matSuffix>phone</mat-icon>
-            <mat-error *ngIf="apoderadoForm.get('telefono')?.hasError('required')">
+            <mat-error
+              *ngIf="apoderadoForm.get('telefono')?.hasError('required')"
+            >
               El teléfono es obligatorio
             </mat-error>
-            <mat-error *ngIf="apoderadoForm.get('telefono')?.hasError('pattern')">
+            <mat-error
+              *ngIf="apoderadoForm.get('telefono')?.hasError('pattern')"
+            >
               El teléfono debe tener 9 dígitos
             </mat-error>
           </mat-form-field>
@@ -220,7 +244,9 @@ interface DialogData {
               <mat-option value="F">Femenino</mat-option>
             </mat-select>
             <mat-icon matSuffix>person</mat-icon>
-            <mat-error *ngIf="apoderadoForm.get('genero')?.hasError('required')">
+            <mat-error
+              *ngIf="apoderadoForm.get('genero')?.hasError('required')"
+            >
               El género es obligatorio
             </mat-error>
           </mat-form-field>
@@ -241,7 +267,9 @@ interface DialogData {
               <mat-option value="OTRO">Otro</mat-option>
             </mat-select>
             <mat-icon matSuffix>family_restroom</mat-icon>
-            <mat-error *ngIf="apoderadoForm.get('parentesco')?.hasError('required')">
+            <mat-error
+              *ngIf="apoderadoForm.get('parentesco')?.hasError('required')"
+            >
               El parentesco es obligatorio
             </mat-error>
           </mat-form-field>
@@ -397,12 +425,13 @@ interface DialogData {
       }
 
       /* Estilo especial para el campo de contraseña */
-      .mat-form-field:has(input[formControlName="contrasena"]) {
+      .mat-form-field:has(input[formControlName='contrasena']) {
         background-color: #fff9e6;
         border-radius: 4px;
       }
 
-      .mat-form-field:has(input[formControlName="contrasena"]) .mat-form-field-outline {
+      .mat-form-field:has(input[formControlName='contrasena'])
+        .mat-form-field-outline {
         border: 2px solid #ffc107;
       }
 
@@ -476,20 +505,26 @@ export class EditApoderadosComponent implements OnInit {
 
   private initializeForm() {
     this.apoderadoForm = this.fb.group({
-      numeroDocumento: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
+      numeroDocumento: [
+        '',
+        [Validators.required, Validators.pattern(/^\d{8}$/)],
+      ],
       tipoUsuario: ['apoderado'], // Valor fijo
-      contrasena: ['', [
-        Validators.required, 
-        Validators.minLength(6),
-        Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,}$/) // Al menos una letra y un número
-      ]],
+      contrasena: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(6),
+          Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,}$/), // Al menos una letra y un número
+        ],
+      ],
       nombres: ['', [Validators.required, Validators.minLength(2)]],
       apellidoPaterno: ['', [Validators.required, Validators.minLength(2)]],
       apellidoMaterno: ['', [Validators.required, Validators.minLength(2)]],
       genero: ['', [Validators.required]],
       telefono: ['', [Validators.required, Validators.pattern(/^\d{9}$/)]],
       parentesco: ['', [Validators.required]],
-      idColegio: [1] // Valor fijo según tu API
+      idColegio: [1], // Valor fijo según tu API
     });
   }
 
@@ -516,12 +551,18 @@ export class EditApoderadosComponent implements OnInit {
         tipoUsuario: apoderado.tipoUsuario || 'APODERADO',
         contrasena: apoderado.contrasena || '', // Incluir la contraseña actual
         nombres: apoderado.nombre || apoderado.nombres || '',
-        apellidoPaterno: this.extractFirstLastName(apoderado.apellidos) || apoderado.apellidoPaterno || '',
-        apellidoMaterno: this.extractSecondLastName(apoderado.apellidos) || apoderado.apellidoMaterno || '',
+        apellidoPaterno:
+          this.extractFirstLastName(apoderado.apellidos) ||
+          apoderado.apellidoPaterno ||
+          '',
+        apellidoMaterno:
+          this.extractSecondLastName(apoderado.apellidos) ||
+          apoderado.apellidoMaterno ||
+          '',
         genero: apoderado.genero || 'M', // Valor por defecto
         telefono: apoderado.telefono || '',
         parentesco: apoderado.parentesco || 'PADRE', // Valor por defecto
-        idColegio: apoderado.idColegio || 1
+        idColegio: apoderado.idColegio || 1,
       });
 
       // Forzar actualización del formulario
@@ -570,7 +611,7 @@ export class EditApoderadosComponent implements OnInit {
     // Preparar datos para actualización (INCLUYENDO contraseña)
     const updateData: any = {
       numeroDocumento: formData.numeroDocumento,
-      tipoUsuario: formData.tipoUsuario || 'APODERADO',
+      tipoUsuario: 'apoderado',
       contrasena: formData.contrasena, // Incluir la nueva contraseña
       nombres: formData.nombres,
       apellidoPaterno: formData.apellidoPaterno,
@@ -578,7 +619,7 @@ export class EditApoderadosComponent implements OnInit {
       genero: formData.genero,
       telefono: formData.telefono,
       parentesco: formData.parentesco,
-      idColegio: formData.idColegio || 1
+      idColegio: formData.idColegio || 1,
     };
 
     this.http.put(url, updateData, { headers: this.getHeaders() }).subscribe({
@@ -644,7 +685,8 @@ export class EditApoderadosComponent implements OnInit {
     if (field?.hasError('pattern')) {
       if (fieldName === 'numeroDocumento') return 'El DNI debe tener 8 dígitos';
       if (fieldName === 'telefono') return 'El teléfono debe tener 9 dígitos';
-      if (fieldName === 'contrasena') return 'La contraseña debe contener al menos una letra y un número';
+      if (fieldName === 'contrasena')
+        return 'La contraseña debe contener al menos una letra y un número';
     }
 
     return '';
