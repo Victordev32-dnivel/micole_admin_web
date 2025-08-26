@@ -91,6 +91,11 @@ export class SidebarComponent implements OnInit {
       label: 'socio',
       icon: 'fas fa-handshake',
     },
+    {
+      path: '/admin/anuncios',
+      label: 'anuncioSocio',
+      icon: 'fas fa-handshake',
+    },
   ];
   
   workerItems = [
