@@ -35,7 +35,7 @@ import { UserService } from '../../../../services/UserData';
 interface SocioData {
   id: number;
   nombre: string;
-  apellidos: string;
+  apellidos: string; // ✅ CAMPO REQUERIDO PARA LA ACTUALIZACIÓN
   dni: string;
   telefono: string;
   apellidoPaterno?: string;
@@ -425,6 +425,7 @@ export class ModificarSocioComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     console.log('🚀 ModificarSocioComponent inicializado');
+    console.log('📋 Datos del socio a modificar:', this.socioData);
     this.loadSocioData();
     this.loadColegiosDisponibles();
   }
@@ -443,13 +444,15 @@ export class ModificarSocioComponent implements OnInit, OnDestroy {
   }
 
   private loadSocioData(): void {
+    console.log('📝 Cargando datos del socio en el formulario...');
+    
     const apellidos = this.socioData.apellidos?.trim() || '';
     const apellidosArray = apellidos.split(/\s+/).filter(part => part.length > 0);
 
     // Handle invalid DNI
     let dni = this.socioData.dni?.trim() || '';
     if (!/^\d{8}$/.test(dni)) {
-      console.warn(`DNI inválido: ${dni}. Se usará un valor temporal.`);
+      console.warn(`⚠️ DNI inválido: ${dni}. Se usará un valor temporal.`);
       dni = '';
       this.snackBar.open('El DNI proporcionado no es válido. Por favor, ingrese un DNI de 8 dígitos.', 'Cerrar', {
         duration: 5000,
@@ -462,18 +465,21 @@ export class ModificarSocioComponent implements OnInit, OnDestroy {
         id,
         nombre: (this.socioData.nomColegios?.[index]?.trim() || `Colegio Desconocido (ID: ${id})`),
       })).filter(colegio => colegio.nombre && colegio.nombre !== ',');
-      console.log('Initialized colegiosDisponibles:', this.colegiosDisponibles);
+      console.log('🏫 Colegios inicializados:', this.colegiosDisponibles);
     }
 
-    this.socioForm.patchValue({
+    const formData = {
       nombre: this.socioData.nombre?.trim() || '',
       apellidoPaterno: this.socioData.apellidoPaterno || apellidosArray[0] || '',
       apellidoMaterno: this.socioData.apellidoMaterno || (apellidosArray.length > 1 ? apellidosArray.slice(1).join(' ') : ''),
-      dni:this.socioData.dni,
+      dni: this.socioData.dni,
       telefono: this.socioData.telefono?.trim() || '',
-      contrasena:this.socioData.contrasena,
+      contrasena: '', // ✅ SIEMPRE VACÍO INICIALMENTE
       idColegios: this.socioData.idColegios?.length ? this.socioData.idColegios : [],
-    });
+    };
+
+    console.log('📝 Datos cargados en el formulario:', formData);
+    this.socioForm.patchValue(formData);
 
     // Mark DNI as touched if invalid to show error immediately
     if (!dni) {
@@ -484,6 +490,7 @@ export class ModificarSocioComponent implements OnInit, OnDestroy {
   }
 
   private loadColegiosDisponibles(): void {
+    console.log('🏫 Cargando lista de colegios disponibles...');
     const url = 'https://proy-back-dnivel-44j5.onrender.com/api/colegio/lista';
 
     this.http
@@ -491,6 +498,8 @@ export class ModificarSocioComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
+          console.log('✅ Respuesta de colegios:', response);
+          
           const newColegios = Array.isArray(response)
             ? response
             : response?.['data'] || response?.['colegios'] || [];
@@ -514,7 +523,7 @@ export class ModificarSocioComponent implements OnInit, OnDestroy {
               return unique.some(c => c.id === colegio.id) ? unique : [...unique, colegio];
             }, [] as Colegio[]);
 
-          console.log('Loaded colegiosDisponibles from API:', this.colegiosDisponibles);
+          console.log('🏫 Colegios disponibles procesados:', this.colegiosDisponibles);
 
           if (!this.colegiosDisponibles.length) {
             this.snackBar.open('No se encontraron colegios disponibles. Usando colegios actuales del socio.', 'Cerrar', {
@@ -525,7 +534,7 @@ export class ModificarSocioComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
         },
         error: (error: HttpErrorResponse) => {
-          console.error('Error loading colegios:', error);
+          console.error('❌ Error al cargar colegios:', error);
           this.snackBar.open(
             `Error al cargar colegios: ${error.status === 404 ? 'Endpoint no encontrado' : 'Error del servidor'}. Usando colegios actuales del socio.`,
             'Cerrar',
@@ -556,14 +565,12 @@ export class ModificarSocioComponent implements OnInit, OnDestroy {
       this.socioForm.patchValue({ idColegios: limitedSelection });
       this.snackBar.open(`Máximo ${this.maxColegiosPermitidos} colegios permitidos`, 'Cerrar', { duration: 3000 });
     }
-    console.log('Selected colegios IDs:', selectedIds);
-    console.log('Current getSelectedColegios:', this.getSelectedColegios());
+    console.log('🏫 Colegios seleccionados:', selectedIds);
   }
 
   getSelectedColegios(): Colegio[] {
     const selectedIds = this.socioForm.get('idColegios')?.value as number[] || [];
     const selected = this.colegiosDisponibles.filter(colegio => colegio && selectedIds.includes(colegio.id));
-    console.log('getSelectedColegios result:', selected);
     return selected;
   }
 
@@ -572,19 +579,19 @@ export class ModificarSocioComponent implements OnInit, OnDestroy {
       .slice(0, this.maxColegiosPermitidos)
       .map(c => c.id);
     this.socioForm.patchValue({ idColegios: allIds });
-    console.log('Selected all colegios:', allIds);
+    console.log('🏫 Seleccionados todos los colegios:', allIds);
   }
 
   clearSelection(): void {
     this.socioForm.patchValue({ idColegios: [] });
-    console.log('Cleared colegio selection');
+    console.log('🏫 Selección de colegios limpiada');
   }
 
   removeColegioChip(colegioId: number): void {
     const currentSelection = this.socioForm.get('idColegios')?.value as number[] || [];
     const newSelection = currentSelection.filter(id => id !== colegioId);
     this.socioForm.patchValue({ idColegios: newSelection });
-    console.log('Removed colegio chip, new selection:', newSelection);
+    console.log('🏫 Colegio removido, nueva selección:', newSelection);
   }
 
   onDniInput(event: Event): void {
@@ -595,7 +602,12 @@ export class ModificarSocioComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
+    console.log('📤 Intentando enviar formulario...');
+    console.log('📋 Formulario válido:', this.socioForm.valid);
+    console.log('📋 Valores del formulario:', this.socioForm.value);
+    
     if (!this.socioForm.valid || this.loading) {
+      console.log('❌ Formulario inválido o cargando, marcando campos como touched');
       this.markAllFieldsAsTouched();
       return;
     }
@@ -608,44 +620,61 @@ export class ModificarSocioComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ✅ MÉTODO CORREGIDO CON APELLIDOS COMPLETOS
   private updateSocio(): void {
+    console.log('🔄 Iniciando actualización del socio...');
     this.loading = true;
     const formValue = this.socioForm.value;
 
+    // ✅ RECONSTRUIR EL CAMPO APELLIDOS
+    const apellidoPaterno = formValue.apellidoPaterno?.trim() || '';
+    const apellidoMaterno = formValue.apellidoMaterno?.trim() || '';
+    const apellidosCompletos = apellidoMaterno 
+      ? `${apellidoPaterno} ${apellidoMaterno}`.trim()
+      : apellidoPaterno;
+
     const updateData: Partial<SocioData> = {
       nombre: formValue.nombre.trim(),
-      apellidoMaterno: formValue.apellidoMaterno?.trim() || '',
-      apellidoPaterno: formValue.apellidoPaterno.trim(),
-      contrasena: formValue.contrasena?.trim() || '', // Always send contrasena, even if empty
+      apellidos: apellidosCompletos, // ✅ CAMPO PRINCIPAL REQUERIDO
+      apellidoPaterno: apellidoPaterno,
+      apellidoMaterno: apellidoMaterno,
+      contrasena: formValue.contrasena?.trim() || '', // ✅ SIEMPRE ENVIAR, AUNQUE ESTÉ VACÍO
       dni: formValue.dni.trim(),
       telefono: formValue.telefono.trim(),
       idColegios: formValue.idColegios || [],
     };
 
-    console.log('Submitting updateData:', updateData);
+    console.log('📋 Datos originales del socio:', this.socioData);
+    console.log('📝 Valores del formulario:', formValue);
+    console.log('📤 Payload de actualización:', updateData);
 
     const url = `https://proy-back-dnivel-44j5.onrender.com/api/socios/${this.socioData.id}`;
+    console.log('🌐 URL de actualización:', url);
 
     this.http
       .put<SocioData>(url, updateData, { headers: this.getHeaders() })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
+          console.log('✅ Actualización exitosa, respuesta del servidor:', response);
           this.ngZone.run(() => {
             this.loading = false;
-            console.log('Update successful, response:', response);
             this.snackBar.open('✅ Socio actualizado correctamente', 'Cerrar', {
               duration: 3000,
               verticalPosition: 'top',
               horizontalPosition: 'center',
             });
-            this.dialogRef.close(true);
+            console.log('🔄 Cerrando diálogo con resultado: true');
+            this.dialogRef.close(true); // ✅ ESTO DEBE ACTIVAR LA RECARGA EN EL COMPONENTE PADRE
           });
         },
         error: (error: HttpErrorResponse) => {
+          console.error('❌ Error en la actualización:', error);
+          console.error('❌ Status:', error.status);
+          console.error('❌ Error body:', error.error);
+          
           this.ngZone.run(() => {
             this.loading = false;
-            console.error('Update error:', error);
             const errorMessages: { [key: number]: string } = {
               400: 'Datos inválidos. Verifique la información ingresada.',
               404: 'Socio no encontrado. Es posible que el socio no exista.',
@@ -665,6 +694,7 @@ export class ModificarSocioComponent implements OnInit, OnDestroy {
   }
 
   onCancel(): void {
+    console.log('❌ Cancelando edición del socio');
     this.dialogRef.close(false);
   }
 }

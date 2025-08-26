@@ -19,9 +19,9 @@ import { Subject, takeUntil, debounceTime, distinctUntilChanged, forkJoin } from
 import { UserData, UserService } from '../../../../services/UserData';
 
 // IMPORTACIONES DE COMPONENTES
-
 import { AgregarSocioComponent } from './agregar-socio.component';
 import { ModificarSocioComponent } from './modificar-socio.component';
+import { EliminarSocioComponent } from './eliminar-socio.component';
 
 interface Colegio {
   id: number;
@@ -132,8 +132,6 @@ export class SocioComponent implements OnInit, OnDestroy {
     });
   }
 
-
-
   // MÉTODOS DE DATOS
   public loadSocios(): void {
     console.log('📋 Cargando socios...');
@@ -157,7 +155,7 @@ export class SocioComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (resp) => {
-          console.log('✅ Respuesta exitosa:', resp);
+          console.log('✅ Respuesta exitosa al cargar socios:', resp);
           this.ngZone.run(() => {
             let sociosData: SocioWithColegios[] = [];
             if (Array.isArray(resp)) {
@@ -180,7 +178,7 @@ export class SocioComponent implements OnInit, OnDestroy {
 
             this.filteredSocios = [...this.socios];
             this.loading = false;
-            console.log(`👥 ${this.socios.length} socios cargados`);
+            console.log(`👥 ${this.socios.length} socios cargados correctamente`);
             this.cdr.detectChanges();
           });
         },
@@ -264,13 +262,16 @@ export class SocioComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
+        console.log('🆕 Socio agregado, recargando lista...');
         this.loadSocios();
       }
     });
   }
 
+  // ✅ MÉTODO EDITSO CIO CORREGIDO CON DELAY Y LOGS DETALLADOS
   public editSocio(socio: SocioWithColegios): void {
     console.log('✏️ Editando socio:', socio);
+    console.log('✏️ Datos completos del socio a editar:', JSON.stringify(socio, null, 2));
 
     if (!this.colegioId) {
       this.snackBar.open('❌ Error: ID del colegio no disponible', 'Cerrar', {
@@ -292,28 +293,78 @@ export class SocioComponent implements OnInit, OnDestroy {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      console.log('🔄 Diálogo de edición cerrado:', result);
-      if (result) {
-        this.loadSocios();
-        this.snackBar.open('🔄 Lista actualizada', 'Cerrar', {
-          duration: 2000,
+      console.log('🔄 Diálogo de edición cerrado con resultado:', result);
+      console.log('🔄 Tipo de resultado:', typeof result);
+      
+      if (result === true) {
+        console.log('✅ Resultado confirmado como TRUE, iniciando recarga con delay...');
+        
+        // ✅ MOSTRAR MENSAJE INMEDIATO
+        this.snackBar.open('🔄 Actualizando lista de socios...', '', {
+          duration: 1000,
           verticalPosition: 'top',
           horizontalPosition: 'center',
         });
+
+        // ✅ AGREGAR DELAY PARA ASEGURAR QUE EL BACKEND SE ACTUALICE
+        setTimeout(() => {
+          console.log('🔄 Ejecutando loadSocios() después del delay...');
+          this.loadSocios();
+          
+          // ✅ MENSAJE FINAL DE CONFIRMACIÓN
+          setTimeout(() => {
+            this.snackBar.open('✅ Lista actualizada correctamente', 'Cerrar', {
+              duration: 3000,
+              verticalPosition: 'top',
+              horizontalPosition: 'center',
+            });
+          }, 1000);
+          
+        }, 800); // Delay de 800ms para asegurar sincronización con el backend
+      } else {
+        console.log('❌ Edición cancelada o falló, no se recarga la lista');
       }
     });
   }
 
+  // MÉTODO PARA CONFIRMAR ELIMINACIÓN
   public confirmDelete(socio: SocioWithColegios): void {
-    console.log('🗑️ Confirmando eliminación de socio:', socio);
+    console.log('🗑️ Abriendo diálogo de eliminación para socio:', socio);
 
-    if (confirm(`¿Está seguro de que desea eliminar a ${socio.nombre} ${socio.apellidos}?`)) {
-      this.deleteSocio(socio);
-    }
+    const dialogRef = this.dialog.open(EliminarSocioComponent, {
+      width: '500px',
+      disableClose: true,
+      data: {
+        socio: socio,
+        apiUrl: `https://proy-back-dnivel-44j5.onrender.com/api/socios/${socio.id}`
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      console.log('🔄 Diálogo de eliminación cerrado:', result);
+      if (result === 'deleted') {
+        // El socio fue eliminado exitosamente, recargar la lista
+        this.loadSocios();
+        this.snackBar.open('✅ Socio eliminado correctamente', 'Cerrar', {
+          duration: 3000,
+          verticalPosition: 'top',
+          horizontalPosition: 'center',
+        });
+      } else if (result === 'error') {
+        // Hubo un error al eliminar
+        this.snackBar.open('❌ Error al eliminar el socio', 'Cerrar', {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+          verticalPosition: 'top',
+          horizontalPosition: 'center',
+        });
+      }
+      // Si result es null o 'cancelled', no hacer nada (usuario canceló)
+    });
   }
 
   public refreshSocios(): void {
-    console.log('🔄 Refrescando lista de socios');
+    console.log('🔄 Refrescando lista de socios manualmente');
     this.loadSocios();
   }
 
@@ -341,38 +392,10 @@ export class SocioComponent implements OnInit, OnDestroy {
     return socio.id || index;
   }
 
-
   public formatIdColegios(idColegios: number[] | undefined): string {
     if (!idColegios || idColegios.length === 0) {
       return 'N/A';
     }
     return idColegios.join(', ');
-  }
-
-  private deleteSocio(socio: SocioWithColegios): void {
-    const url = `https://proy-back-dnivel-44j5.onrender.com/api/socios/${socio.id}`;
-
-    this.http
-      .delete(url, { headers: this.getHeaders() })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.snackBar.open('✅ Socio eliminado correctamente', 'Cerrar', {
-            duration: 3000,
-            verticalPosition: 'top',
-            horizontalPosition: 'center',
-          });
-          this.loadSocios();
-        },
-        error: (error) => {
-          console.error('❌ Error al eliminar socio:', error);
-          this.snackBar.open('❌ Error al eliminar el socio', 'Cerrar', {
-            duration: 5000,
-            panelClass: ['error-snackbar'],
-            verticalPosition: 'top',
-            horizontalPosition: 'center',
-          });
-        },
-      });
   }
 }

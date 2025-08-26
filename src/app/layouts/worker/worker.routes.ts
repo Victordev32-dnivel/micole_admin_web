@@ -20,8 +20,7 @@ export const WORKER_ROUTES: Routes = [
       { path: 'comunicados', component: ComunicadosListadoComponent },
       { path: 'tarjetas', component: TarjetasComponent },
       { path: 'notas', component: NotasComponent },
-      { path: 'apoderado', component: ApoderadoListComponent },
-    
+      { path: 'apoderado', component: ApoderadoListComponent },  
       { path: 'salones', component: ListaGeneralComponent },
     ],
   },
