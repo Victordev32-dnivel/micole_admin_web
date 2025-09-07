@@ -1,6 +1,7 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   Inject,
   ViewChild,
   TemplateRef,
@@ -41,6 +42,7 @@ import { MatButtonModule } from '@angular/material/button';
                 [routerLink]="item.path"
                 routerLinkActive="active"
                 [routerLinkActiveOptions]="{ exact: false }"
+                (click)="onNavItemClick(item)"
               >
                 <i [class]="item.icon"></i>
                 {{ item.label }}
@@ -72,7 +74,7 @@ import { MatButtonModule } from '@angular/material/button';
   `,
   styleUrls: ['./sidebar.component.css'],
 })
-export class SidebarComponent implements OnInit {
+export class SidebarComponent implements OnInit, OnDestroy {
   navItems: any[] = [];
   userRole: string = '';
   isSidebarOpen: boolean = false;
@@ -88,13 +90,13 @@ export class SidebarComponent implements OnInit {
     },
     {
       path: '/admin/socio',
-      label: 'socio',
+      label: 'Socio',
       icon: 'fas fa-handshake',
     },
     {
       path: '/admin/anuncios',
-      label: 'anuncioSocio',
-      icon: 'fas fa-handshake',
+      label: 'Anuncios',
+      icon: 'fas fa-bullhorn',
     },
   ];
   
@@ -105,6 +107,11 @@ export class SidebarComponent implements OnInit {
       path: '/worker/asistencias',
       label: 'Asistencias',
       icon: 'fas fa-check-square',
+    },
+    {
+      path: '/worker/salidas',
+      label: 'Salidas',
+      icon: 'fas fa-sign-out-alt',
     },
     {
       path: '/worker/comunicados',
@@ -120,18 +127,22 @@ export class SidebarComponent implements OnInit {
     { path: '/worker/salones', label: 'Salones', icon: 'fas fa-chalkboard' },
   ];
 
+  private resizeListener: () => void;
+
   constructor(
     private authService: AuthService,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object,
     private dialog: MatDialog
-  ) {}
+  ) {
+    this.resizeListener = this.checkScreenSize.bind(this);
+  }
 
   ngOnInit() {
     this.loadUserRole();
     this.checkScreenSize();
     if (isPlatformBrowser(this.platformId)) {
-      window.addEventListener('resize', this.checkScreenSize.bind(this));
+      window.addEventListener('resize', this.resizeListener);
     }
   }
 
@@ -145,9 +156,11 @@ export class SidebarComponent implements OnInit {
   }
 
   checkScreenSize() {
-    this.isMobile = window.innerWidth < 768;
-    if (this.isMobile) {
-      this.isSidebarOpen = false; // Cierra el sidebar en móvil por defecto
+    if (isPlatformBrowser(this.platformId)) {
+      this.isMobile = window.innerWidth < 768;
+      if (this.isMobile) {
+        this.isSidebarOpen = false;
+      }
     }
   }
 
@@ -155,6 +168,29 @@ export class SidebarComponent implements OnInit {
     if (this.isMobile) {
       this.isSidebarOpen = !this.isSidebarOpen;
     }
+  }
+
+  // Nuevo método para manejar clics en elementos de navegación
+  onNavItemClick(item: any) {
+    console.log('Navegando a:', item.path, 'Label:', item.label);
+    
+    // Cerrar sidebar en móvil después de hacer clic
+    if (this.isMobile) {
+      this.isSidebarOpen = false;
+    }
+    
+    // Navegación manual como respaldo
+    this.router.navigate([item.path]).then(
+      (success) => {
+        if (success) {
+          console.log('Navegación exitosa a:', item.path);
+        } else {
+          console.error('Error: No se pudo navegar a:', item.path);
+        }
+      }
+    ).catch(error => {
+      console.error('Error de navegación:', error);
+    });
   }
 
   openLogoutDialog() {
@@ -167,17 +203,7 @@ export class SidebarComponent implements OnInit {
 
       dialogRef.afterClosed().subscribe((result) => {
         if (result === true) {
-          this.authService.logout();
-          this.router
-            .navigate(['/login'])
-            .then((success) => {
-              if (!success) {
-                console.error('Navegación a /login falló');
-              }
-            })
-            .catch((error) => {
-              console.error('Error en la navegación:', error);
-            });
+          this.performLogout();
         }
       });
     }
@@ -189,6 +215,10 @@ export class SidebarComponent implements OnInit {
 
   onConfirm() {
     this.dialog.closeAll();
+    this.performLogout();
+  }
+
+  private performLogout() {
     this.authService.logout();
     this.router
       .navigate(['/login'])
@@ -204,7 +234,7 @@ export class SidebarComponent implements OnInit {
 
   ngOnDestroy() {
     if (isPlatformBrowser(this.platformId)) {
-      window.removeEventListener('resize', this.checkScreenSize.bind(this));
+      window.removeEventListener('resize', this.resizeListener);
     }
   }
 }
