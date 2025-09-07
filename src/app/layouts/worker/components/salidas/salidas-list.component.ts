@@ -32,7 +32,7 @@ import {
 import { UserService } from '../../../../services/UserData';
 
 @Component({
-  selector: 'app-salidas',
+  selector: 'app-salidas-list',
   standalone: true,
   imports: [
     CommonModule,
@@ -52,7 +52,7 @@ import { UserService } from '../../../../services/UserData';
   templateUrl: './salidas-list.component.html',
   styleUrls: ['./salidas-list.component.css'],
 })
-export class SalidasComponent implements OnInit {
+export class SalidasListComponent implements OnInit {
   salidaForm: FormGroup;
   salones: any[] = [];
   alumnos: any[] = [];
@@ -67,7 +67,7 @@ export class SalidasComponent implements OnInit {
   private alumnoApiUrl =
     'https://proy-back-dnivel-44j5.onrender.com/api/alumno/salon';
   private salidaApiUrl =
-    'https://proy-back-dnivel-44j5.onrender.com/api/salida';
+    'https://proy-back-dnivel-44j5.onrender.com/api/asistencia/salida';
   private staticToken = '732612882';
 
   constructor(
@@ -82,9 +82,12 @@ export class SalidasComponent implements OnInit {
       idSalon: ['', Validators.required],
       idAlumno: ['', Validators.required],
     });
+    
+    console.log('🎯 SalidasListComponent constructor llamado');
   }
 
   ngOnInit() {
+    console.log('🚀 SalidasListComponent inicializado');
     if (isPlatformBrowser(this.platformId)) {
       this.loadUserData();
       this.loadSalones();
@@ -267,6 +270,7 @@ export class SalidasComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
+            // CORRECCIÓN: La API devuelve un array directo, no un objeto con propiedad data
             this.alumnos = Array.isArray(response) ? response : [];
             this.loading = false;
             if (this.alumnos.length === 0) {
