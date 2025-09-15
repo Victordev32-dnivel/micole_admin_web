@@ -67,7 +67,7 @@ export class AsistenciasComponent implements OnInit {
   private alumnoApiUrl =
     'https://proy-back-dnivel-44j5.onrender.com/api/alumno/salon';
   private asistenciaApiUrl =
-    'https://proy-back-dnivel-44j5.onrender.com/api/asistencia/entrada';
+    'https://proy-back-dnivel-44j5.onrender.com/api/asistencia';
   private staticToken = '732612882';
 
   constructor(
