@@ -24,6 +24,49 @@
           </mat-error>
         </mat-form-field>
 
+        <!-- NUEVO: Botón de descarga Excel con filtros de mes y año -->
+        <div class="excel-download-section" *ngIf="canDownloadExcel">
+          <!-- Selectores de mes y año -->
+          <div class="filter-selectors">
+            <mat-form-field appearance="outline" class="month-selector">
+              <mat-label>Mes</mat-label>
+              <mat-select [(value)]="selectedMonth">
+                <mat-option *ngFor="let mes of availableMonths" [value]="mes.value">
+                  {{ mes.name }}
+                </mat-option>
+              </mat-select>
+              <mat-icon matPrefix>calendar_month</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="year-selector">
+              <mat-label>Año</mat-label>
+              <mat-select [(value)]="selectedYear">
+                <mat-option *ngFor="let year of availableYears" [value]="year">
+                  {{ year }}
+                </mat-option>
+              </mat-select>
+              <mat-icon matPrefix>calendar_today</mat-icon>
+            </mat-form-field>
+          </div>
+
+          <!-- Botón de descarga -->
+          <button 
+            mat-raised-button 
+            color="accent" 
+            (click)="downloadExcel()" 
+            [disabled]="downloadingExcel || loading || !selectedMonth || !selectedYear"
+            class="excel-download-btn">
+            <mat-icon *ngIf="!downloadingExcel">download</mat-icon>
+            <mat-spinner *ngIf="downloadingExcel" diameter="20"></mat-spinner>
+            {{ downloadingExcel ? 'Generando Excel...' : 'Descargar Excel del Salón' }}
+          </button>
+          
+          <p class="excel-info">
+            <mat-icon>info</mat-icon>
+            Se generará un registro de asistencias de <strong>{{ selectedMonthName }} {{ selectedYear }}</strong> (fechas como columnas)
+          </p>
+        </div>
+
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Alumno</mat-label>
           <mat-select formControlName="idAlumno" (selectionChange)="onAlumnoChange()">

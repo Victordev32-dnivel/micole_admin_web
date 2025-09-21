@@ -97,6 +97,116 @@ mat-form-field:hover mat-icon {
   color: #42a5f5;
 }
 
+/* NUEVOS ESTILOS PARA LA SECCIÓN DE DESCARGA EXCEL */
+.excel-download-section {
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+  border: 2px solid #4caf50;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  text-align: center;
+  animation: slideInFromTop 0.6s ease-out;
+}
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.excel-download-btn {
+  background: linear-gradient(45deg, #2e7d32, #4caf50) !important;
+  color: white !important;
+  font-weight: 600 !important;
+  padding: 12px 24px !important;
+  font-size: 16px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3) !important;
+  transition: all 0.3s ease !important;
+  min-width: 250px !important;
+  height: 48px !important;
+}
+
+.excel-download-btn:hover:not(:disabled) {
+  background: linear-gradient(45deg, #1b5e20, #388e3c) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4) !important;
+}
+
+.excel-download-btn:disabled {
+  background: linear-gradient(45deg, #9e9e9e, #bdbdbd) !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+}
+
+.excel-download-btn mat-icon {
+  margin-right: 8px !important;
+  font-size: 20px !important;
+}
+
+.excel-download-btn mat-spinner {
+  margin-right: 8px !important;
+}
+
+.excel-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 15px;
+  font-size: 14px;
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.excel-info mat-icon {
+  color: #4caf50;
+  font-size: 18px;
+}
+
+/* NUEVOS ESTILOS PARA LOS FILTROS DE MES Y AÑO */
+.filter-selectors {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.month-selector,
+.year-selector {
+  min-width: 140px !important;
+  flex: 1;
+  max-width: 200px;
+}
+
+.month-selector mat-icon,
+.year-selector mat-icon {
+  color: #4caf50 !important;
+}
+
+.filter-selectors .mat-mdc-form-field {
+  width: auto !important;
+}
+
+@media (max-width: 600px) {
+  .filter-selectors {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .month-selector,
+  .year-selector {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
 .asistencias-table-container {
   margin-top: 24px;
   overflow-x: auto;
@@ -230,5 +340,14 @@ mat-form-field:hover mat-icon {
 
   .asistencias-table-container {
     margin-top: 15px;
+  }
+
+  .excel-download-btn {
+    min-width: 200px !important;
+    font-size: 14px !important;
+  }
+
+  .excel-info {
+    font-size: 12px;
   }
 }
