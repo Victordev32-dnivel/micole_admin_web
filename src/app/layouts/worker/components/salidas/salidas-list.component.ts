@@ -68,6 +68,9 @@ export class SalidasListComponent implements OnInit {
     'https://proy-back-dnivel-44j5.onrender.com/api/alumno/salon';
   private salidaApiUrl =
     'https://proy-back-dnivel-44j5.onrender.com/api/asistencia/salida';
+  // URL para eliminar - usando la que me proporcionaste
+  private deleteApiUrl =
+    'https://proy-back-dnivel-44j5.onrender.com/api/asistencia';
   private staticToken = '732612882';
 
   constructor(
@@ -82,12 +85,9 @@ export class SalidasListComponent implements OnInit {
       idSalon: ['', Validators.required],
       idAlumno: ['', Validators.required],
     });
-    
-    console.log('🎯 SalidasListComponent constructor llamado');
   }
 
   ngOnInit() {
-    console.log('🚀 SalidasListComponent inicializado');
     if (isPlatformBrowser(this.platformId)) {
       this.loadUserData();
       this.loadSalones();
@@ -117,7 +117,6 @@ export class SalidasListComponent implements OnInit {
 
   loadSalones() {
     if (!this.colegioId) {
-      console.error('ID del colegio no disponible');
       this.error =
         'No se pudo cargar los salones: ID del colegio no disponible';
       this.loading = false;
@@ -143,103 +142,10 @@ export class SalidasListComponent implements OnInit {
           });
         },
         error: (error) => {
-          console.error('Error al cargar salones:', error);
           this.error = 'Error al cargar los salones. Intente de nuevo';
           this.loading = false;
           this.cdr.detectChanges();
         },
-      });
-  }
-
-  // Método para eliminar salida con inspección de datos
-  eliminarSalida(index: number): void {
-    const salida = this.salidas[index];
-
-    // Debug completo de la estructura
-    console.log('=== DEBUG SALIDA ===');
-    console.log('Índice:', index);
-    console.log('Salida completa:', salida);
-    console.log('Tipo de dato:', typeof salida);
-    console.log('Propiedades disponibles:', Object.keys(salida));
-    console.log('Valores:', Object.values(salida));
-    console.log('===================');
-
-    // Intentar encontrar el ID con diferentes nombres posibles
-    const posibleIds = [
-      salida.id,
-      salida.idSalida,
-      salida.ID,
-      salida.Id,
-      salida.salidaId,
-      salida.salida_id,
-      salida.pk,
-      salida.key,
-      salida.uuid
-    ];
-
-    const salidaId = posibleIds.find(id => id !== undefined && id !== null);
-
-    const confirmacion = confirm(
-      `¿Estás seguro de que deseas eliminar esta salida?\n\n` +
-      `Fecha: ${salida.fecha || 'No especificada'}\n` +
-      `Hora: ${salida.hora_salida || 'No especificada'}\n` +
-      `Estado: ${salida.estado || 'Sin estado'}\n` +
-      `Persona Autorizada: ${salida.persona_autorizada || 'No especificada'}`
-    );
-
-    if (confirmacion) {
-      if (salidaId) {
-        console.log('ID encontrado para eliminar:', salidaId);
-        this.eliminarSalidaDelBackend(salidaId, index);
-      } else {
-        // Si no hay ID, eliminar solo del frontend
-        console.warn('No se encontró ID. Eliminando solo del frontend.');
-        this.eliminarSoloDelFrontend(index);
-      }
-    }
-  }
-
-  // Método para eliminar solo del frontend (sin backend)
-  private eliminarSoloDelFrontend(index: number): void {
-    this.salidas.splice(index, 1);
-    this.successMessage = 'Salida eliminada de la vista (solo frontend)';
-    this.cdr.detectChanges();
-
-    setTimeout(() => {
-      this.successMessage = null;
-      this.cdr.detectChanges();
-    }, 3000);
-  }
-
-  // Método para eliminar del backend
-  private eliminarSalidaDelBackend(salidaId: number, index: number): void {
-    const headers = this.getHeaders();
-
-    this.http.delete(`${this.salidaApiUrl}/${salidaId}`, { headers })
-      .subscribe({
-        next: (response) => {
-          // Si se elimina correctamente del backend, eliminamos del array local
-          this.salidas.splice(index, 1);
-          this.successMessage = 'Salida eliminada correctamente';
-          this.cdr.detectChanges();
-
-          // Limpiar mensaje después de 3 segundos
-          setTimeout(() => {
-            this.successMessage = null;
-            this.cdr.detectChanges();
-          }, 3000);
-        },
-        error: (error) => {
-          console.error('Error al eliminar salida:', error);
-          this.error = 'Error al eliminar la salida. Intente de nuevo';
-          this.cdr.detectChanges();
-
-          // Limpiar mensaje de error después de 5 segundos
-          setTimeout(() => {
-            this.error = null;
-            this.cdr.detectChanges();
-          }, 5000);
-        }
       });
   }
 
@@ -270,7 +176,6 @@ export class SalidasListComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-            // CORRECCIÓN: La API devuelve un array directo, no un objeto con propiedad data
             this.alumnos = Array.isArray(response) ? response : [];
             this.loading = false;
             if (this.alumnos.length === 0) {
@@ -280,7 +185,6 @@ export class SalidasListComponent implements OnInit {
           });
         },
         error: (error) => {
-          console.error('Error al cargar alumnos:', error);
           this.error = 'Error al cargar los alumnos. Intente de nuevo';
           this.loading = false;
           this.cdr.detectChanges();
@@ -290,8 +194,8 @@ export class SalidasListComponent implements OnInit {
 
   onAlumnoChange() {
     const alumnoId = this.salidaForm.get('idAlumno')?.value;
-    this.salidas = []; // Limpiar la tabla explícitamente al cambiar de alumno
-    this.error = null; // Limpiar el mensaje de error al cambiar de alumno
+    this.salidas = [];
+    this.error = null;
     if (alumnoId) {
       this.loadSalidas(alumnoId);
     } else {
@@ -304,7 +208,7 @@ export class SalidasListComponent implements OnInit {
     this.loading = true;
     this.error = null;
     this.successMessage = null;
-    this.salidas = []; // Limpiar la tabla antes de cargar nuevas salidas
+    this.salidas = [];
     const headers = this.getHeaders();
     this.http
       .get<any>(`${this.salidaApiUrl}/${alumnoId}`, { headers })
@@ -314,12 +218,6 @@ export class SalidasListComponent implements OnInit {
             this.salidas = Array.isArray(response) ? response : [];
             this.loading = false;
 
-            // Debug: Ver la estructura de los datos
-            if (this.salidas.length > 0) {
-              console.log('Primera salida:', this.salidas[0]);
-              console.log('Propiedades disponibles:', Object.keys(this.salidas[0]));
-            }
-
             if (this.salidas.length === 0) {
               this.error = 'No se encontraron salidas para este alumno';
             }
@@ -327,11 +225,106 @@ export class SalidasListComponent implements OnInit {
           });
         },
         error: (error) => {
-          console.error('Error al cargar salidas:', error);
           this.error = 'Error al cargar las salidas. Intente de nuevo';
           this.loading = false;
           this.cdr.detectChanges();
         },
       });
+  }
+
+  // Método para eliminar salida
+  eliminarSalida(index: number): void {
+    const salida = this.salidas[index];
+
+    // Buscar el ID de la salida con diferentes posibles nombres
+    const posibleIds = [
+      salida.id,
+      salida.idAsistencia,
+      salida.idSalida,
+      salida.ID,
+      salida.Id,
+      salida.asistencia_id,
+      salida.salida_id,
+      salida.pk,
+      salida.key
+    ];
+
+    const salidaId = posibleIds.find(id => id !== undefined && id !== null && id !== '');
+
+    // Mostrar información de la salida en el diálogo de confirmación
+    const fechaTexto = salida.fecha || salida.fecha_salida || 'No especificada';
+    const horaTexto = salida.hora || salida.hora_salida || 'No especificada';
+    const estadoTexto = salida.estado || 'Sin estado';
+    const personaTexto = salida.persona_autorizada || 'No especificada';
+
+    
+   
+
+    if (salidaId) {
+      this.eliminarSalidaDelBackend(salidaId, index);
+    } else {
+      this.eliminarSoloDelFrontend(index);
+    }
+  }
+
+  // Eliminar solo del frontend (cuando no hay ID)
+  private eliminarSoloDelFrontend(index: number): void {
+    this.salidas.splice(index, 1);
+    this.successMessage = 'Salida eliminada de la vista';
+    this.error = null;
+    this.cdr.detectChanges();
+
+    this.limpiarMensajeDespuesDe(3000);
+  }
+
+  // Método para eliminar del backend
+  private eliminarSalidaDelBackend(salidaId: number | string, index: number): void {
+    this.loading = true;
+    this.error = null;
+    this.successMessage = null;
+    
+    const headers = this.getHeaders();
+    const deleteUrl = `${this.deleteApiUrl}/${salidaId}`;
+
+    this.http.delete(deleteUrl, { headers }).subscribe({
+      next: (response) => {
+        // Eliminar del array local
+        this.salidas.splice(index, 1);
+        this.loading = false;
+        this.successMessage = 'Salida eliminada correctamente';
+        this.error = null;
+        this.cdr.detectChanges();
+
+        this.limpiarMensajeDespuesDe(4000);
+      },
+      error: (error) => {
+        this.loading = false;
+        
+        // Mostrar error más específico según el código de respuesta
+        if (error.status === 404) {
+          this.error = 'No se encontró la salida en el servidor';
+        } else if (error.status === 403) {
+          this.error = 'No tienes permisos para eliminar esta salida';
+        } else if (error.status === 500) {
+          this.error = 'Error interno del servidor. Intenta de nuevo';
+        } else {
+          this.error = 'Error al eliminar la salida. Intente de nuevo';
+        }
+        
+        this.successMessage = null;
+        this.cdr.detectChanges();
+
+        this.limpiarMensajeDespuesDe(6000);
+      }
+    });
+  }
+
+  // Método auxiliar para limpiar mensajes después de un tiempo
+  private limpiarMensajeDespuesDe(milisegundos: number): void {
+    setTimeout(() => {
+      this.successMessage = null;
+      this.error = null;
+      this.cdr.detectChanges();
+    }, milisegundos);
   }
 }

@@ -41,11 +41,7 @@
         </mat-form-field>
       </form>
 
-      <!-- Información de debug (opcional, quítala en producción) -->
-      <div *ngIf="alumnos.length > 0"
-        style="margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 4px; font-size: 12px;">
-        <strong>Debug:</strong> Se cargaron {{ alumnos.length }} alumnos
-      </div>
+
 
       <!-- Tabla de salidas -->
       <div *ngIf="salidas.length > 0" class="salidas-table-container">
@@ -54,13 +50,17 @@
           <!-- Fecha -->
           <ng-container matColumnDef="fecha">
             <th mat-header-cell *matHeaderCellDef> Fecha </th>
-            <td mat-cell *matCellDef="let salida"> {{ salida.fecha }} </td>
+            <td mat-cell *matCellDef="let salida"> 
+              {{ salida.fecha || salida.fecha_salida || 'N/A' }} 
+            </td>
           </ng-container>
 
           <!-- Hora -->
           <ng-container matColumnDef="hora">
             <th mat-header-cell *matHeaderCellDef> Hora </th>
-            <td mat-cell *matCellDef="let salida"> {{ salida.hora }} </td>
+            <td mat-cell *matCellDef="let salida"> 
+              {{ salida.hora || salida.hora_salida || 'N/A' }} 
+            </td>
           </ng-container>
 
           <!-- Estado -->
@@ -79,18 +79,43 @@
                 : 'help_outline'
                 }}
               </mat-icon>
-              {{ salida.estado }}
+              {{ salida.estado || 'Sin estado' }}
             </td>
           </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="['fecha', 'hora', 'estado']"></tr>
-          <tr mat-row *matRowDef="let row; columns: ['fecha', 'hora', 'estado']"></tr>
+          <!-- Persona Autorizada -->
+          <ng-container matColumnDef="persona">
+            <th mat-header-cell *matHeaderCellDef> Persona Autorizada </th>
+            <td mat-cell *matCellDef="let salida"> 
+              {{ salida.persona_autorizada || 'No especificada' }} 
+            </td>
+          </ng-container>
+
+          <!-- Columna de Acciones -->
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef> Acciones </th>
+            <td mat-cell *matCellDef="let salida; let i = index">
+              <button 
+                mat-icon-button 
+                color="warn" 
+                (click)="eliminarSalida(i)"
+                matTooltip="Eliminar salida"
+                [disabled]="loading">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <!-- Definir las columnas que se mostrarán -->
+          <tr mat-header-row *matHeaderRowDef="['fecha', 'hora', 'estado', 'persona', 'acciones']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['fecha', 'hora', 'estado', 'persona', 'acciones']"></tr>
         </table>
       </div>
 
       <!-- Cargando -->
       <div *ngIf="loading" class="loading">
-        <mat-spinner diameter="24"></mat-spinner> Cargando datos...
+        <mat-spinner diameter="24"></mat-spinner> 
+        Cargando datos...
       </div>
 
       <!-- Error -->
