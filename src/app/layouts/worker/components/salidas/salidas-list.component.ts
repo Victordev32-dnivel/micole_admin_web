@@ -133,7 +133,7 @@ export class SalidasListComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-            this.salones = response.data || [];
+            this.salones = Array.isArray(response) ? response : (response.data || []);
             this.loading = false;
             if (this.salones.length === 0) {
               this.error = 'No se encontraron salones para este colegio';
@@ -141,7 +141,7 @@ export class SalidasListComponent implements OnInit {
             this.cdr.detectChanges();
           });
         },
-        error: (error) => {
+        error: (error: any) => {
           this.error = 'Error al cargar los salones. Intente de nuevo';
           this.loading = false;
           this.cdr.detectChanges();
@@ -176,7 +176,7 @@ export class SalidasListComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-            this.alumnos = Array.isArray(response) ? response : [];
+            this.alumnos = Array.isArray(response) ? response : (response.data || []);
             this.loading = false;
             if (this.alumnos.length === 0) {
               this.error = 'No se encontraron alumnos en este salón';
@@ -184,7 +184,7 @@ export class SalidasListComponent implements OnInit {
             this.cdr.detectChanges();
           });
         },
-        error: (error) => {
+        error: (error: any) => {
           this.error = 'Error al cargar los alumnos. Intente de nuevo';
           this.loading = false;
           this.cdr.detectChanges();
@@ -215,7 +215,7 @@ export class SalidasListComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-            this.salidas = Array.isArray(response) ? response : [];
+            this.salidas = Array.isArray(response) ? response : (response.data || []);
             this.loading = false;
 
             if (this.salidas.length === 0) {
@@ -224,7 +224,7 @@ export class SalidasListComponent implements OnInit {
             this.cdr.detectChanges();
           });
         },
-        error: (error) => {
+        error: (error: any) => {
           this.error = 'Error al cargar las salidas. Intente de nuevo';
           this.loading = false;
           this.cdr.detectChanges();
@@ -257,8 +257,8 @@ export class SalidasListComponent implements OnInit {
     const estadoTexto = salida.estado || 'Sin estado';
     const personaTexto = salida.persona_autorizada || 'No especificada';
 
-    
-   
+
+
 
     if (salidaId) {
       this.eliminarSalidaDelBackend(salidaId, index);
@@ -282,7 +282,7 @@ export class SalidasListComponent implements OnInit {
     this.loading = true;
     this.error = null;
     this.successMessage = null;
-    
+
     const headers = this.getHeaders();
     const deleteUrl = `${this.deleteApiUrl}/${salidaId}`;
 
@@ -297,9 +297,9 @@ export class SalidasListComponent implements OnInit {
 
         this.limpiarMensajeDespuesDe(4000);
       },
-      error: (error) => {
+      error: (error: any) => {
         this.loading = false;
-        
+
         // Mostrar error más específico según el código de respuesta
         if (error.status === 404) {
           this.error = 'No se encontró la salida en el servidor';
@@ -310,7 +310,7 @@ export class SalidasListComponent implements OnInit {
         } else {
           this.error = 'Error al eliminar la salida. Intente de nuevo';
         }
-        
+
         this.successMessage = null;
         this.cdr.detectChanges();
 
