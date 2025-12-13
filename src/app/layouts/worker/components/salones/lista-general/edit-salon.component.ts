@@ -229,7 +229,7 @@ export class EditSalonComponent implements OnInit {
   grados: any[] = [];
   secciones: any[] = [];
 
-  private apiBase = 'https://proy-back-dnivel-44j5.onrender.com/api';
+  private apiBase = '/api';
 
   constructor(
     private fb: FormBuilder,
@@ -255,9 +255,8 @@ export class EditSalonComponent implements OnInit {
   }
 
   private getHeaders(): HttpHeaders {
-    const token = this.userService.getJwtToken() || '732612882';
     return new HttpHeaders({
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${this.userService.getJwtToken()}`,
       'Content-Type': 'application/json',
     });
   }
@@ -265,18 +264,18 @@ export class EditSalonComponent implements OnInit {
   // Función para formatear automáticamente la hora
   formatTime(event: any, fieldName: string): void {
     let value = event.target.value.replace(/\D/g, ''); // Remover caracteres no numéricos
-    
+
     if (value.length > 6) {
       value = value.substring(0, 6); // Limitar a 6 dígitos
     }
-    
+
     // Formatear como HH:MM:SS
     if (value.length > 4) {
       value = value.substring(0, 2) + ':' + value.substring(2, 4) + ':' + value.substring(4);
     } else if (value.length > 2) {
       value = value.substring(0, 2) + ':' + value.substring(2);
     }
-    
+
     this.editForm.patchValue({ [fieldName]: value });
   }
 
@@ -353,7 +352,7 @@ export class EditSalonComponent implements OnInit {
         .subscribe({
           next: (response) => {
             console.log('Datos del salón:', response);
-            
+
             if (response) {
               this.editForm.patchValue({
                 nombre: response.nombre || '',
@@ -383,7 +382,7 @@ export class EditSalonComponent implements OnInit {
           next: (response) => {
             if (response && response.data && Array.isArray(response.data)) {
               const salon = response.data.find((s: any) => s.id === this.data.id);
-              
+
               if (salon) {
                 this.editForm.patchValue({
                   nombre: salon.nombre || '',
@@ -435,86 +434,86 @@ export class EditSalonComponent implements OnInit {
 
     console.log('Datos a enviar:', datos);
 
-    this.http.put(`${this.apiBase}/salon/${this.data.id}`, datos, { 
+    this.http.put(`${this.apiBase}/salon/${this.data.id}`, datos, {
       headers: this.getHeaders(),
       responseType: 'text'
     }).subscribe({
       next: (response: string) => {
         this.saving = false;
-        
+
         this.snackBar.open('✅ Salón actualizado correctamente', 'Cerrar', {
           duration: 3000,
           panelClass: ['success-snackbar']
         });
-        
-        this.dialogRef.close({ 
-      success: true, 
-      data: { 
-        id: this.data.id,
-        message: response 
-      } 
-    });
-  },
-  error: (err) => {
-    console.error('❌ Error al actualizar salón:', err);
-    this.saving = false;
-    
-    // Mostrar detalles completos del error en consola para debugging
-    console.error('Detalles completos del error:', err);
-    
-    if (err.status === 400) {
-      this.error = 'Datos inválidos. Verifique la información.';
-      // Mostrar detalles específicos del error 400
-      if (err.error && err.error.errors) {
-        const errorDetails = Object.entries(err.error.errors)
-          .map(([field, messages]) => `${field}: ${(messages as string[]).join(', ')}`)
-          .join('; ');
-        this.error += ` Detalles: ${errorDetails}`;
-      } else if (err.error) {
-        this.error += ` Error: ${JSON.stringify(err.error)}`;
+
+        this.dialogRef.close({
+          success: true,
+          data: {
+            id: this.data.id,
+            message: response
+          }
+        });
+      },
+      error: (err) => {
+        console.error('❌ Error al actualizar salón:', err);
+        this.saving = false;
+
+        // Mostrar detalles completos del error en consola para debugging
+        console.error('Detalles completos del error:', err);
+
+        if (err.status === 400) {
+          this.error = 'Datos inválidos. Verifique la información.';
+          // Mostrar detalles específicos del error 400
+          if (err.error && err.error.errors) {
+            const errorDetails = Object.entries(err.error.errors)
+              .map(([field, messages]) => `${field}: ${(messages as string[]).join(', ')}`)
+              .join('; ');
+            this.error += ` Detalles: ${errorDetails}`;
+          } else if (err.error) {
+            this.error += ` Error: ${JSON.stringify(err.error)}`;
+          }
+        } else if (err.status === 404) {
+          this.error = 'El salón no existe o ha sido eliminado.';
+        } else if (err.status === 409) {
+          this.error = 'Ya existe un salón con esa configuración.';
+        } else if (err.status === 403) {
+          this.error = 'No tiene permisos para realizar esta acción.';
+        } else if (err.status === 0) {
+          this.error = 'Sin conexión al servidor. Verifique su conexión.';
+        } else {
+          this.error = 'Error al actualizar el salón. Intente nuevamente.';
+        }
+
+        // Mostrar mensaje específico del servidor si está disponible
+        if (err.error && typeof err.error === 'string') {
+          this.error = err.error;
+        } else if (err.error && err.error.message) {
+          this.error = err.error.message;
+        }
       }
-    } else if (err.status === 404) {
-      this.error = 'El salón no existe o ha sido eliminado.';
-    } else if (err.status === 409) {
-      this.error = 'Ya existe un salón con esa configuración.';
-    } else if (err.status === 403) {
-      this.error = 'No tiene permisos para realizar esta acción.';
-    } else if (err.status === 0) {
-      this.error = 'Sin conexión al servidor. Verifique su conexión.';
-    } else {
-      this.error = 'Error al actualizar el salón. Intente nuevamente.';
-    }
-    
-    // Mostrar mensaje específico del servidor si está disponible
-    if (err.error && typeof err.error === 'string') {
-      this.error = err.error;
-    } else if (err.error && err.error.message) {
-      this.error = err.error.message;
-    }
-  }
-});
+    });
   }
 
   // Función para asegurar el formato HH:MM:SS
   private ensureTimeFormat(time: string): string {
     if (!time) return '00:00:00';
-    
+
     // Si ya tiene el formato correcto, retornarlo
     if (/^([0-1][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/.test(time)) {
       return time;
     }
-    
+
     // Si tiene formato HH:MM, agregar :00
     if (/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
       return time + ':00';
     }
-    
+
     // Si es solo números, formatear
     const numbers = time.replace(/\D/g, '');
     if (numbers.length >= 4) {
       return numbers.substring(0, 2) + ':' + numbers.substring(2, 4) + ':' + (numbers.substring(4, 6) || '00');
     }
-    
+
     return '00:00:00';
   }
 

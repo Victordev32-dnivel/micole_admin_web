@@ -1,0 +1,8 @@
+{
+    "/api": {
+        "target": "https://proy-back-dnivel-44j5.onrender.com",
+        "secure": true,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    }
+}

@@ -99,7 +99,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       icon: 'fas fa-bullhorn',
     },
   ];
-  
+
   workerItems = [
     { path: '/worker/alumnos', label: 'Alumnos', icon: 'fas fa-users' },
     { path: '/worker/notas', label: 'Notas', icon: 'fas fa-file-alt' },
@@ -125,6 +125,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     },
     { path: '/worker/tarjetas', label: 'Tarjetas', icon: 'fas fa-id-card' },
     { path: '/worker/salones', label: 'Salones', icon: 'fas fa-chalkboard' },
+    { path: '/worker/cursos', label: 'Cursos', icon: 'fas fa-book' },
   ];
 
   private resizeListener: () => void;
@@ -173,12 +174,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
   // Nuevo método para manejar clics en elementos de navegación
   onNavItemClick(item: any) {
     console.log('Navegando a:', item.path, 'Label:', item.label);
-    
+
     // Cerrar sidebar en móvil después de hacer clic
     if (this.isMobile) {
       this.isSidebarOpen = false;
     }
-    
+
     // Navegación manual como respaldo
     this.router.navigate([item.path]).then(
       (success) => {

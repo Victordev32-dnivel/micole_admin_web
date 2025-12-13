@@ -1,0 +1,69 @@
+<div class="page-container">
+    <div class="content-wrapper">
+        <div class="header-section">
+            <h1>Gestión de Cursos</h1>
+        </div>
+
+        <div class="filter-section">
+            <mat-form-field appearance="outline" class="salon-selector">
+                <mat-label>Filtrar por Salón</mat-label>
+                <mat-select [(value)]="selectedSalonId" (selectionChange)="onSalonChange($event)">
+                    <mat-option *ngFor="let salon of salones" [value]="salon.id">
+                        {{ salon.nombre }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <button mat-raised-button color="primary" (click)="crearCurso()" class="add-button">
+                <mat-icon>add</mat-icon> Nuevo Curso
+            </button>
+        </div>
+
+        <mat-card class="list-card">
+            <div class="table-container" *ngIf="!loading; else loadingTemplate">
+                <table mat-table [dataSource]="cursos" class="full-width-table">
+
+                    <ng-container matColumnDef="titulo">
+                        <th mat-header-cell *matHeaderCellDef> Título </th>
+                        <td mat-cell *matCellDef="let element"> {{element.titulo}} </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="descripcion">
+                        <th mat-header-cell *matHeaderCellDef> Descripción </th>
+                        <td mat-cell *matCellDef="let element"> {{element.descripcion}} </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="salon">
+                        <th mat-header-cell *matHeaderCellDef> Salón ID </th>
+                        <td mat-cell *matCellDef="let element"> {{element.salonId}} </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="acciones">
+                        <th mat-header-cell *matHeaderCellDef> Acciones </th>
+                        <td mat-cell *matCellDef="let element">
+                            <button mat-icon-button color="accent" (click)="editarCurso(element)" matTooltip="Editar">
+                                <mat-icon>edit</mat-icon>
+                            </button>
+                            <button mat-icon-button color="warn" (click)="eliminarCurso(element)" matTooltip="Eliminar">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+                    <tr class="mat-row" *matNoDataRow>
+                        <td class="mat-cell" colspan="4">No hay cursos registrados</td>
+                    </tr>
+                </table>
+            </div>
+
+            <ng-template #loadingTemplate>
+                <div class="loading-container">
+                    <p>Cargando cursos...</p>
+                </div>
+            </ng-template>
+        </mat-card>
+    </div>
+</div>

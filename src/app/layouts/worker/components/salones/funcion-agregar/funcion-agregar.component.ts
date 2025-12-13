@@ -15,6 +15,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { CommonModule } from '@angular/common';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { UserService } from '../../../../../services/UserData';
 
 @Component({
   selector: 'app-funcion-agregar',
@@ -43,11 +44,13 @@ export class FuncionAgregarComponent implements OnInit {
   grados: { id: number; nombre: string }[] = [];
   secciones: { id: number; nombre: string }[] = [];
   niveles: { id: number; nombre: string }[] = [];
+  private apiBase = '/api';
 
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
     private snackBar: MatSnackBar,
+    private userService: UserService,
     public dialogRef: MatDialogRef<FuncionAgregarComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { tipo: string; idColegio: number }
   ) {
@@ -79,7 +82,7 @@ export class FuncionAgregarComponent implements OnInit {
         });
       case 'salones':
         return this.fb.group({
-          nombre: ['', Validators.required], // Añadido campo nombre para salones
+          nombre: [''], // Optional based on User feedback, but keeping as form control
           horaInicio: ['', Validators.required],
           horaFin: ['', Validators.required],
           tipo: ['', Validators.required],
@@ -95,7 +98,7 @@ export class FuncionAgregarComponent implements OnInit {
 
   private getHeaders(): HttpHeaders {
     return new HttpHeaders({
-      Authorization: `Bearer 732612882`,
+      Authorization: `Bearer ${this.userService.getJwtToken()}`,
       'Content-Type': 'application/json',
     });
   }
@@ -103,7 +106,7 @@ export class FuncionAgregarComponent implements OnInit {
   private loadGrados() {
     this.http
       .get<any>(
-        `https://proy-back-dnivel-44j5.onrender.com/api/grado/colegio/${this.idColegio}`,
+        `${this.apiBase}/grado/colegio/${this.idColegio}`,
         { headers: this.getHeaders() }
       )
       .subscribe({
@@ -120,7 +123,7 @@ export class FuncionAgregarComponent implements OnInit {
   private loadSecciones() {
     this.http
       .get<any>(
-        `https://proy-back-dnivel-44j5.onrender.com/api/seccion/colegio/${this.idColegio}`,
+        `${this.apiBase}/seccion/colegio/${this.idColegio}`,
         { headers: this.getHeaders() }
       )
       .subscribe({
@@ -137,7 +140,7 @@ export class FuncionAgregarComponent implements OnInit {
   private loadNiveles() {
     this.http
       .get<any>(
-        `https://proy-back-dnivel-44j5.onrender.com/api/nivel/colegio/${this.idColegio}`,
+        `${this.apiBase}/nivel/colegio/${this.idColegio}`,
         { headers: this.getHeaders() }
       )
       .subscribe({
@@ -157,31 +160,32 @@ export class FuncionAgregarComponent implements OnInit {
       this.error = null;
       this.isSubmitting = true;
       const formData = this.addForm.value;
-      
+
       let url = '';
       switch (this.tipo) {
         case 'grados':
-          url = 'https://proy-back-dnivel-44j5.onrender.com/api/grado';
+          url = `${this.apiBase}/grado`;
           break;
         case 'niveles':
-          url = 'https://proy-back-dnivel-44j5.onrender.com/api/nivel';
+          url = `${this.apiBase}/nivel`;
           break;
         case 'secciones':
-          url = 'https://proy-back-dnivel-44j5.onrender.com/api/seccion';
+          url = `${this.apiBase}/seccion`;
           break;
         case 'salones':
-          url = 'https://proy-back-dnivel-44j5.onrender.com/api/salon';
+          url = `${this.apiBase}/salon`;
           break;
       }
 
-      this.http.post(url, formData, { 
+      this.http.post(url, formData, {
         headers: this.getHeaders(),
-        responseType: 'text' as 'json' // Para manejar respuestas de texto plano
+        responseType: 'text' as 'json'
+        // Para manejar respuestas de texto plano
       }).subscribe({
         next: (response) => {
           this.snackBar.open(
-            `${this.getTipoDisplayName()} creado correctamente`, 
-            'Cerrar', 
+            `${this.getTipoDisplayName()} creado correctamente`,
+            'Cerrar',
             { duration: 3000 }
           );
           this.dialogRef.close({ success: true, data: response });

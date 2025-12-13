@@ -89,7 +89,6 @@ interface ComunicadoDisplay {
     MatFormFieldModule,
     MatTooltipModule,
     EliminarComunicadoComponent,
-    EditarComunicadoComponent,
   ],
 })
 export class ComunicadosListadoComponent implements OnInit {
@@ -117,7 +116,7 @@ export class ComunicadosListadoComponent implements OnInit {
     private userService: UserService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
-  ) {}
+  ) { }
 
   ngOnInit() {
     // CONFIGURAR COLUMNAS INICIALES ANTES DE CARGAR DATOS
@@ -284,7 +283,7 @@ export class ComunicadosListadoComponent implements OnInit {
     } else {
       this.displayedColumns = ['nombre', 'horario', 'url', 'acciones'];
     }
-  
+
   }
 
   private loadSalones(): void {
@@ -303,7 +302,7 @@ export class ComunicadosListadoComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-        
+
             this.salones = response.data || [];
             this.loadingSalones = false;
             this.cdr.detectChanges();
@@ -333,7 +332,7 @@ export class ComunicadosListadoComponent implements OnInit {
 
   // MÉTODO loadComunicados MEJORADO - SOLUCIONA EL PROBLEMA PRINCIPAL
   loadComunicados() {
-   
+
 
     if (!this.colegioId) {
       console.error('❌ ID del colegio no disponible');
@@ -348,15 +347,15 @@ export class ComunicadosListadoComponent implements OnInit {
     // SOLO CARGAR ANUNCIOS GENERALES CUANDO ESTAMOS EN VISTA GENERAL
     if (this.tipoVista === 'general') {
       const endpoint = `https://proy-back-dnivel-44j5.onrender.com/api/anuncio/general/colegio/${this.colegioId}`;
-      
-   
+
+
 
       this.http
         .get<AnuncioGeneral[]>(endpoint, { headers: this.getHeaders() })
         .subscribe({
           next: (response) => {
             this.ngZone.run(() => {
-        
+
 
               if (Array.isArray(response)) {
                 this.comunicados = response.map((anuncio: AnuncioGeneral) => {
@@ -368,11 +367,11 @@ export class ComunicadosListadoComponent implements OnInit {
                     url: anuncio.url,
                     tipo: 'general' as const,
                   };
-                
+
                   return comunicado;
                 });
-                
-              
+
+
               } else {
                 console.warn('⚠️ La respuesta no es un array:', response);
                 this.comunicados = [];
@@ -380,9 +379,9 @@ export class ComunicadosListadoComponent implements OnInit {
 
               this.totalComunicados = this.comunicados.length;
               this.loadingComunicados = false;
-              
-          
-              
+
+
+
               this.cdr.detectChanges();
             });
           },
@@ -391,7 +390,7 @@ export class ComunicadosListadoComponent implements OnInit {
             this.ngZone.run(() => {
               this.loadingComunicados = false;
               this.error = 'Error al cargar los comunicados. Intente de nuevo';
-              
+
               // MOSTRAR MENSAJE DE ERROR MÁS DETALLADO
               let errorMsg = 'Error desconocido';
               if (error.status === 404) {
@@ -403,14 +402,14 @@ export class ComunicadosListadoComponent implements OnInit {
               } else if (error.status === 0) {
                 errorMsg = 'Error de conexión con el servidor';
               }
-              
+
               if (this.error) {
                 this.snackBar.open(`❌ ${errorMsg}`, 'Cerrar', {
                   duration: 5000,
                   panelClass: ['error-snackbar'],
                 });
               }
-              
+
               this.cdr.detectChanges();
             });
           },
@@ -420,7 +419,7 @@ export class ComunicadosListadoComponent implements OnInit {
       this.loadingComunicados = false;
       this.comunicados = [];
       this.totalComunicados = 0;
-   
+
     }
   }
 
@@ -441,7 +440,7 @@ export class ComunicadosListadoComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.ngZone.run(() => {
-         
+
 
             const salonInfo = this.salones.find(
               (s) => s.id === this.salonSeleccionado
@@ -455,9 +454,9 @@ export class ComunicadosListadoComponent implements OnInit {
                 pdf: anuncio.pdf,
                 salon: salonInfo
                   ? {
-                      id: salonInfo.id,
-                      nombre: salonInfo.nombre,
-                    }
+                    id: salonInfo.id,
+                    nombre: salonInfo.nombre,
+                  }
                   : undefined,
                 tipo: 'salon' as const,
               }));
@@ -557,7 +556,7 @@ export class ComunicadosListadoComponent implements OnInit {
           );
         }
       } catch (error) {
-    
+
       }
     }, 2000);
   }
@@ -585,7 +584,7 @@ export class ComunicadosListadoComponent implements OnInit {
       return;
     }
 
- 
+
 
     const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
 
@@ -672,7 +671,7 @@ export class ComunicadosListadoComponent implements OnInit {
 
     this.http.delete(endpoint, { headers: this.getHeaders() }).subscribe({
       next: (response) => {
-    
+
         const tipoTexto =
           comunicado.tipo === 'general'
             ? 'Anuncio general'
@@ -717,6 +716,6 @@ export class ComunicadosListadoComponent implements OnInit {
   }
 
   toggleMenu() {
-    
+
   }
 }

@@ -51,7 +51,7 @@ export class ListaGeneralComponent implements OnInit {
   pages: number[] = [];
   searchTerm = '';
 
-  private apiBase = 'https://proy-back-dnivel-44j5.onrender.com/api';
+  private apiBase = '/api';
   private maxRetries = 3;
   private requestTimeout = 30000; // 30 segundos
 
@@ -61,21 +61,23 @@ export class ListaGeneralComponent implements OnInit {
     private userService: UserService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
-  ) {}
+  ) { }
 
   ngOnInit() {
-    const userData = this.userService.getUserData();
-    this.colegiosId = userData?.colegio || 0;
+    this.userService.userData$.subscribe(userData => {
+      if (userData) {
+        this.colegiosId = userData.colegio;
+        this.loadData();
+      }
+    });
 
-    if (!this.colegiosId) {
-      this.error = 'No se encontró el ID del colegio';
-      this.cdr.detectChanges();
-      return;
+    // Fallback if subscription doesn't fire immediately (though BehaviorSubject should)
+    const userData = this.userService.getUserData();
+    if (userData && !this.colegiosId) {
+      this.colegiosId = userData.colegio;
+      this.loadData();
     }
 
-    console.log('🏫 ID del colegio:', this.colegiosId);
-    this.loadData();
-    
     this.tipoSeleccionado.valueChanges.subscribe(() => {
       this.currentPage = 1;
       this.searchTerm = '';
@@ -84,7 +86,7 @@ export class ListaGeneralComponent implements OnInit {
   }
 
   private getHeaders(): HttpHeaders {
-    const token = this.userService.getJwtToken() || '732612882';
+    const token = this.userService.getJwtToken();
     return new HttpHeaders({
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -97,7 +99,7 @@ export class ListaGeneralComponent implements OnInit {
 
     const tipo = this.tipoSeleccionado.value;
     let url = '';
-    
+
     switch (tipo) {
       case 'niveles':
         url = `${this.apiBase}/nivel/colegio/${this.colegiosId}?page=${this.currentPage}`;
@@ -121,9 +123,9 @@ export class ListaGeneralComponent implements OnInit {
         retry(2), // Reintentar 2 veces
         catchError((error: HttpErrorResponse) => {
           console.error(`❌ Error al cargar ${tipo}:`, error);
-          
+
           let errorMessage = 'Error al cargar los datos';
-          
+
           if (error.status === 0) {
             errorMessage = 'Sin conexión al servidor. Verifique su conexión a internet.';
           } else if (error.status === 404) {
@@ -135,43 +137,43 @@ export class ListaGeneralComponent implements OnInit {
           } else if (error.status === 500) {
             errorMessage = 'Error interno del servidor. Intente más tarde.';
           }
-          
+
           this.error = errorMessage;
           this.loading = false;
           this.data = [];
           this.filteredData = [];
           this.cdr.detectChanges();
-          
+
           return of(null); // Retorna observable vacío
         })
       )
       .subscribe({
         next: (response) => {
           if (!response) return; // Si hubo error y se retornó null
-          
+
           try {
             console.log(`✅ Respuesta de ${tipo}:`, response);
-            
+
             this.data = response.data || [];
             this.filteredData = [...this.data];
             this.totalPages = response.totalPages || 1;
-            this.totalResults = response.totalNiveles || 
-                              response.totalSecciones || 
-                              response.totalGrados || 
-                              response.totalSalones || 
-                              this.data.length;
-            
+            this.totalResults = response.totalNiveles ||
+              response.totalSecciones ||
+              response.totalGrados ||
+              response.totalSalones ||
+              this.data.length;
+
             this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
             this.setDisplayedColumns(tipo);
             this.applySearch();
-            
+
             console.log(`📊 Datos cargados: ${this.data.length} elementos`);
-            
+
           } catch (parseError) {
             console.error('❌ Error al procesar la respuesta:', parseError);
             this.error = 'Error al procesar la respuesta del servidor';
           }
-          
+
           this.loading = false;
           this.cdr.detectChanges();
         }
@@ -193,19 +195,19 @@ export class ListaGeneralComponent implements OnInit {
 
   applySearch() {
     const term = (this.searchTerm || '').toLowerCase().trim();
-    
+
     if (!term) {
       this.filteredData = [...this.data];
     } else {
       this.filteredData = this.data.filter((item) => {
         const matchesName = (item.nombre || '').toLowerCase().includes(term);
-        
+
         if (this.tipoSeleccionado.value === 'salones') {
           const matchesHorario = (item.horario || '').toLowerCase().includes(term);
           const matchesTipo = (item.tipo || '').toLowerCase().includes(term);
           return matchesName || matchesHorario || matchesTipo;
         }
-        
+
         return matchesName;
       });
     }
@@ -255,7 +257,7 @@ export class ListaGeneralComponent implements OnInit {
 
   abrirModalEditar(id: number) {
     const tipo = this.tipoSeleccionado.value;
-    
+
     switch (tipo) {
       case 'niveles':
         this.editarNivel(id);
@@ -307,7 +309,7 @@ export class ListaGeneralComponent implements OnInit {
 
   private editarSeccion(id: number) {
     console.log('✏️ Editando sección:', { id, colegioId: this.colegiosId });
-    
+
     // Verificar que tenemos los datos necesarios
     if (!id || !this.colegiosId) {
       this.snackBar.open('Error: Datos insuficientes para editar la sección', 'Cerrar', {
@@ -316,13 +318,13 @@ export class ListaGeneralComponent implements OnInit {
       });
       return;
     }
-    
+
     import('./edit-secciones.component').then(({ EditSeccionesComponent }) => {
       const dialogRef = this.dialog.open(EditSeccionesComponent, {
         width: '520px',
         maxWidth: '95vw',
         panelClass: 'custom-dialog',
-        data: { 
+        data: {
           id: Number(id), // Asegurar que sea número
           idColegio: Number(this.colegiosId) // Asegurar que sea número
         },
@@ -435,8 +437,8 @@ export class ListaGeneralComponent implements OnInit {
           width: '450px',
           maxWidth: '95vw',
           panelClass: 'custom-dialog',
-          data: { 
-            id, 
+          data: {
+            id,
             nombre,
             idColegio: this.colegiosId
           },
@@ -466,10 +468,10 @@ export class ListaGeneralComponent implements OnInit {
       width: '450px',
       maxWidth: '95vw',
       panelClass: 'custom-dialog',
-      data: { 
-        tipo: this.tipoSeleccionado.value, 
-        id, 
-        nombre 
+      data: {
+        tipo: this.tipoSeleccionado.value,
+        id,
+        nombre
       },
       disableClose: true,
     });
@@ -477,8 +479,8 @@ export class ListaGeneralComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result?.success) {
         this.snackBar.open(
-          result.message || 'Elemento eliminado correctamente', 
-          'Cerrar', 
+          result.message || 'Elemento eliminado correctamente',
+          'Cerrar',
           { duration: 3000, panelClass: ['success-snackbar'] }
         );
         this.loadData();

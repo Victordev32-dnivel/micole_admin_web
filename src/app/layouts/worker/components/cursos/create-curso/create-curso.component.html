@@ -1,0 +1,54 @@
+<div class="modal-container">
+    <div mat-dialog-title class="modal-header">
+        <h2 class="title">{{ isEditing ? 'Editar Curso' : 'Crear Nuevo Curso' }}</h2>
+        <button mat-icon-button (click)="onClose()" class="close-btn" type="button">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+
+    <mat-dialog-content class="modal-content">
+        <form [formGroup]="cursoForm" class="course-form">
+
+            <p class="subtitle" *ngIf="!isEditing">Complete la información para registrar un nuevo curso.</p>
+
+            <div class="form-grid">
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Título del Curso</mat-label>
+                    <input matInput formControlName="titulo" placeholder="Ej. Biología Avanzada" autocomplete="off">
+                    <mat-icon matSuffix>school</mat-icon>
+                    <mat-error *ngIf="cursoForm.get('titulo')?.hasError('required')">Requerido</mat-error>
+                    <mat-error *ngIf="cursoForm.get('titulo')?.hasError('minlength')">Mínimo 3 caracteres</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Asignar a Salón</mat-label>
+                    <mat-select formControlName="salonId" placeholder="Seleccione un salón">
+                        <mat-option *ngFor="let salon of salones" [value]="salon.id">
+                            {{ salon.nombre }}
+                        </mat-option>
+                    </mat-select>
+                    <mat-icon matSuffix>meeting_room</mat-icon>
+                    <mat-error *ngIf="cursoForm.get('salonId')?.hasError('required')">Requerido</mat-error>
+                </mat-form-field>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Descripción</mat-label>
+                <textarea matInput formControlName="descripcion" rows="4"
+                    placeholder="Descripción breve del curso..."></textarea>
+                <mat-error *ngIf="cursoForm.get('descripcion')?.hasError('required')">Requerido</mat-error>
+                <mat-error *ngIf="cursoForm.get('descripcion')?.hasError('minlength')">Mínimo 10 caracteres</mat-error>
+            </mat-form-field>
+
+        </form>
+    </mat-dialog-content>
+
+    <mat-dialog-actions class="modal-actions" align="end">
+        <button mat-button (click)="onClose()" [disabled]="loading" class="cancel-btn">Cancelar</button>
+        <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="cursoForm.invalid || loading"
+            class="submit-btn">
+            <mat-spinner diameter="20" *ngIf="loading" class="spinner"></mat-spinner>
+            <span *ngIf="!loading">{{ isEditing ? 'Actualizar' : 'Crear Curso' }}</span>
+        </button>
+    </mat-dialog-actions>
+</div>
