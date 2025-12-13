@@ -43,6 +43,15 @@ import { FormsModule } from '@angular/forms';
                     </mat-option>
                 </mat-select>
             </mat-form-field>
+
+            <mat-form-field appearance="outline" class="ml-2" style="margin-left: 16px;">
+                <mat-label>Seleccionar Salón Academia Destino</mat-label>
+                <mat-select [(value)]="selectedAcademiaSalonId">
+                    <mat-option *ngFor="let salon of academiaSalones" [value]="salon.id">
+                        {{ salon.nombre }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
         </div>
 
         <div class="table-container" *ngIf="alumnos.length > 0; else noData">
@@ -71,11 +80,21 @@ import { FormsModule } from '@angular/forms';
                     <td mat-cell *matCellDef="let element"> {{element.salon}} </td>
                 </ng-container>
 
+                <!-- Academia Column -->
+                <ng-container matColumnDef="academia">
+                    <th mat-header-cell *matHeaderCellDef> Academia </th>
+                    <td mat-cell *matCellDef="let element">
+                        <span [style.color]="element.academia ? 'green' : 'red'" [style.fontWeight]="'bold'">
+                            {{element.academia ? 'SÍ' : 'NO'}}
+                        </span>
+                    </td>
+                </ng-container>
+
                 <!-- Actions Column -->
                 <ng-container matColumnDef="actions">
                     <th mat-header-cell *matHeaderCellDef> Acciones </th>
                     <td mat-cell *matCellDef="let element">
-                        <button mat-raised-button color="accent" (click)="matricular(element)">
+                        <button mat-raised-button color="accent" (click)="matricular(element)" [disabled]="!selectedAcademiaSalonId">
                             <mat-icon>school</mat-icon> Matricular en Academia
                         </button>
                     </td>
@@ -106,7 +125,7 @@ import { FormsModule } from '@angular/forms';
     styles: [`
     .page-container { padding: 20px; }
     .header { margin-bottom: 20px; }
-    .filters { margin-bottom: 20px; }
+    .filters { margin-bottom: 20px; display: flex; align-items: center; } /* added flex for inline inputs */
     .full-width-table { width: 100%; }
     .no-data { text-align: center; padding: 20px; color: #666; }
     .loading-overlay { 
@@ -120,9 +139,11 @@ import { FormsModule } from '@angular/forms';
 export class AcademiaMatriculaComponent implements OnInit {
     colegios: any[] = [];
     alumnos: any[] = [];
+    academiaSalones: any[] = []; // List of academy classrooms
     selectedColegioId: number | null = null;
+    selectedAcademiaSalonId: number | null = null; // Selected academy classroom
     loading = false;
-    displayedColumns: string[] = ['nombre', 'dni', 'grado', 'salon', 'actions'];
+    displayedColumns: string[] = ['nombre', 'dni', 'grado', 'salon', 'academia', 'actions'];
     private apiBase = '/api';
 
     constructor(
@@ -133,6 +154,7 @@ export class AcademiaMatriculaComponent implements OnInit {
 
     ngOnInit() {
         this.loadColegios();
+        this.loadAcademiaSalones();
     }
 
     getHeaders(): HttpHeaders {
@@ -149,6 +171,22 @@ export class AcademiaMatriculaComponent implements OnInit {
                     this.colegios = res.data || [];
                 },
                 error: (err) => console.error('Error loading colleges', err)
+            });
+    }
+
+    loadAcademiaSalones() {
+        // ID 7 is hardcoded for Academia as per requirement
+        const academiaId = 7;
+        this.http.get<any>(`${this.apiBase}/salon/colegio/lista/${academiaId}`, { headers: this.getHeaders() })
+            .subscribe({
+                next: (res) => {
+                    // The API returns the array directly, not inside a 'data' property based on the user's curl response
+                    this.academiaSalones = res || [];
+                },
+                error: (err) => {
+                    console.error('Error loading academy salons', err);
+                    this.snackBar.open('Error al cargar salones de academia', 'Cerrar', { duration: 3000 });
+                }
             });
     }
 
@@ -172,29 +210,40 @@ export class AcademiaMatriculaComponent implements OnInit {
     }
 
     matricular(alumno: any) {
-        if (!confirm(`¿Seguro que deseas matricular a ${alumno.nombre_completo} en la Academia (Salón 7)?`)) {
+        if (!this.selectedAcademiaSalonId) {
+            this.snackBar.open('Por favor seleccione un salón de academia destino', 'Cerrar', { duration: 3000 });
+            return;
+        }
+
+        const selectedSalon = this.academiaSalones.find(s => s.id === this.selectedAcademiaSalonId);
+        const salonName = selectedSalon ? selectedSalon.nombre : 'el salón seleccionado';
+
+        if (!confirm(`¿Seguro que deseas matricular a ${alumno.nombre_completo} en ${salonName}?`)) {
             return;
         }
 
         this.loading = true;
-        // As requested: PATCH /api/alumno/matricula  body: { idAlumno: 0, idSalon: 7 }
+
         const body = {
             idAlumno: alumno.id,
-            idSalon: 7 // Hardcoded as per user request "idSalon 7 que es la academia"
+            idSalon: this.selectedAcademiaSalonId
         };
 
-        this.http.patch(`${this.apiBase}/alumno/matricula`, body, { headers: this.getHeaders() })
+        this.http.patch(`${this.apiBase}/alumno/matricula`, body, { headers: this.getHeaders(), responseType: 'text' })
             .subscribe({
                 next: () => {
-                    this.snackBar.open('Alumno matriculado en Academia exitosamente', 'Cerrar', { duration: 3000, panelClass: ['success-snackbar'] });
+                    this.snackBar.open(`Alumno matriculado en ${salonName} exitosamente`, 'Cerrar', { duration: 3000, panelClass: ['success-snackbar'] });
                     this.loading = false;
-                    // Optionally refresh list or remove student? 
-                    // Keeping them listed but user knows they are done.
+                    // Update the local state to reflect the change immediately
+                    alumno.academia = true;
                 },
                 error: (err) => {
                     console.error('Error matriculating', err);
                     this.loading = false;
-                    this.snackBar.open('Error al matricular alumno', 'Cerrar', { duration: 3000, panelClass: ['error-snackbar'] });
+                    // If responseType is text, err.error should be the text body. 
+                    // Fallback to a generic message if empty.
+                    const errorMessage = err.error || 'Error al matricular alumno';
+                    this.snackBar.open(errorMessage, 'Cerrar', { duration: 3000, panelClass: ['error-snackbar'] });
                 }
             });
     }
