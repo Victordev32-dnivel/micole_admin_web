@@ -4,13 +4,14 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatButtonModule } from '@angular/material/button';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { UserService } from '../../../../services/UserData';
 import { FormsModule } from '@angular/forms';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
     selector: 'app-academia-matricula',
@@ -25,7 +26,8 @@ import { FormsModule } from '@angular/forms';
         MatCardModule,
         MatSnackBarModule,
         MatProgressSpinnerModule,
-        FormsModule
+        FormsModule,
+        MatInputModule
     ],
     template: `
     <div class="page-container">
@@ -52,10 +54,16 @@ import { FormsModule } from '@angular/forms';
                     </mat-option>
                 </mat-select>
             </mat-form-field>
+
+            <mat-form-field appearance="outline" class="ml-2" style="margin-left: 16px; min-width: 250px;">
+                <mat-label>Buscar (Nombre/DNI)</mat-label>
+                <input matInput (keyup)="applyFilter($event)" placeholder="Filtrar alumnos..." #input>
+                <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
         </div>
 
-        <div class="table-container" *ngIf="alumnos.length > 0; else noData">
-            <table mat-table [dataSource]="alumnos" class="full-width-table">
+        <div class="table-container" *ngIf="dataSource.data.length > 0; else noData">
+            <table mat-table [dataSource]="dataSource" class="full-width-table">
                 <!-- Nombre Column -->
                 <ng-container matColumnDef="nombre">
                     <th mat-header-cell *matHeaderCellDef> Nombre Completo </th>
@@ -128,7 +136,7 @@ import { FormsModule } from '@angular/forms';
     styles: [`
     .page-container { padding: 20px; }
     .header { margin-bottom: 20px; }
-    .filters { margin-bottom: 20px; display: flex; align-items: center; } /* added flex for inline inputs */
+    .filters { margin-bottom: 20px; display: flex; align-items: center; flex-wrap: wrap; } /* added flexwrap for mobile safety */
     .full-width-table { width: 100%; }
     .no-data { text-align: center; padding: 20px; color: #666; }
     .loading-overlay { 
@@ -141,7 +149,7 @@ import { FormsModule } from '@angular/forms';
 })
 export class AcademiaMatriculaComponent implements OnInit {
     colegios: any[] = [];
-    alumnos: any[] = [];
+    dataSource = new MatTableDataSource<any>([]);
     academiaSalones: any[] = []; // List of academy classrooms
     selectedColegioId: number | null = null;
     selectedAcademiaSalonId: number | null = null; // Selected academy classroom
@@ -158,6 +166,12 @@ export class AcademiaMatriculaComponent implements OnInit {
     ngOnInit() {
         this.loadColegios();
         this.loadAcademiaSalones();
+
+        // Custom filter predicate to filter by multiple fields
+        this.dataSource.filterPredicate = (data: any, filter: string) => {
+            const dataStr = (data.nombre_completo + data.numero_documento).toLowerCase();
+            return dataStr.indexOf(filter) !== -1;
+        };
     }
 
     getHeaders(): HttpHeaders {
@@ -196,11 +210,11 @@ export class AcademiaMatriculaComponent implements OnInit {
     onColegioChange() {
         if (this.selectedColegioId) {
             this.loading = true;
-            this.alumnos = []; // Clear previous
+            this.dataSource.data = []; // Clear previous
             this.http.get<any>(`${this.apiBase}/alumno/colegio/${this.selectedColegioId}`, { headers: this.getHeaders() })
                 .subscribe({
                     next: (res) => {
-                        this.alumnos = res.data || [];
+                        this.dataSource.data = res.data || [];
                         this.loading = false;
                     },
                     error: (err) => {
@@ -210,6 +224,11 @@ export class AcademiaMatriculaComponent implements OnInit {
                     }
                 });
         }
+    }
+
+    applyFilter(event: Event) {
+        const filterValue = (event.target as HTMLInputElement).value;
+        this.dataSource.filter = filterValue.trim().toLowerCase();
     }
 
     matricular(alumno: any) {
