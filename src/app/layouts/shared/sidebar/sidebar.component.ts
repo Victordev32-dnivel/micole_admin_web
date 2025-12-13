@@ -151,8 +151,16 @@ export class SidebarComponent implements OnInit, OnDestroy {
     const userData = this.authService.getUserData();
     if (userData) {
       this.userRole = userData.tipoUsuario;
-      this.navItems =
-        this.userRole === 'admin' ? this.adminItems : this.workerItems;
+      this.navItems = this.userRole === 'admin' ? this.adminItems : [...this.workerItems];
+
+      // Feature request: "7 EN EL COLEGIO 7 COMO INGRESE COMO TRABAJADOR 7 SOLO AHÍ VAMOS A AÑADIR UN NUEVO APARTADO"
+      if (this.userRole === 'trabajador' && userData.colegio === 7) {
+        this.navItems.push({
+          path: '/worker/academia-matricula',
+          label: 'Matrícula Academia',
+          icon: 'fas fa-graduation-cap'
+        });
+      }
     }
   }
 

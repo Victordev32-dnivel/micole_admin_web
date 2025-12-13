@@ -25,6 +25,7 @@ export const WORKER_ROUTES: Routes = [
       { path: 'salones', component: ListaGeneralComponent },
       { path: 'salidas', component: SalidasListComponent },
       { path: 'cursos', loadComponent: () => import('./components/cursos/curso-list/curso-list.component').then(m => m.CursoListComponent) },
+      { path: 'academia-matricula', loadComponent: () => import('./components/academia-matricula/academia-matricula.component').then(m => m.AcademiaMatriculaComponent) },
     ],
   },
 ];

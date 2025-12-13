@@ -6,13 +6,13 @@
 
 /* Contenedor principal - MÁS ESPECÍFICO */
 :host .apoderado-container {
-  margin: 80px 0 20px 15vw;
+  margin: 0 auto 20px auto;
   padding: 20px;
   background: #ffffff;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: margin-left 0.3s ease;
-  max-width: calc(100vw - 15vw - 40px);
+  max-width: 100%;
 }
 
 /* Barra superior con buscador y botón */
@@ -107,8 +107,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Fila de datos - MÁS ESPECÍFICO */
@@ -204,7 +209,7 @@
     margin: 80px 10px 20px 10px;
     padding: 15px;
   }
-  
+
   :host .search-field {
     width: 250px;
   }
@@ -216,33 +221,33 @@
     padding: 10px;
     max-width: calc(100vw - 10px);
   }
-  
+
   :host .toolbar {
     flex-direction: column;
     gap: 15px;
     padding: 15px;
     align-items: stretch;
   }
-  
+
   :host .search-field {
     width: 100%;
     margin-bottom: 0;
   }
-  
+
   :host .toolbar button {
     width: 100%;
     min-width: unset;
     padding: 12px;
   }
-  
+
   :host .apoderado-table {
     overflow-x: auto;
   }
-  
+
   :host .table-header {
     display: none;
   }
-  
+
   :host .student-row {
     display: block;
     border: 1px solid #e9ecef;
@@ -252,7 +257,7 @@
     background-color: #fff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
-  
+
   :host .student-row span {
     display: block;
     text-align: left;
@@ -260,11 +265,11 @@
     border-bottom: 1px solid #f1f1f1;
     word-break: break-word;
   }
-  
+
   :host .student-row span:last-child {
     border-bottom: none;
   }
-  
+
   :host .student-row span::before {
     content: attr(data-label) ": ";
     font-weight: bold;
@@ -274,7 +279,7 @@
     font-size: 0.85rem;
     text-transform: uppercase;
   }
-  
+
   /* Estilos responsivos para el contenedor de contraseña */
   :host .password-container {
     display: flex !important;
@@ -283,7 +288,7 @@
     gap: 8px !important;
     padding: 8px 0 !important;
   }
-  
+
   :host .password-container::before {
     content: "CONTRASEÑA: ";
     font-weight: bold;
@@ -293,17 +298,17 @@
     text-transform: uppercase;
     font-size: 0.85rem;
   }
-  
+
   :host .password-field::before {
     content: none !important;
   }
-  
+
   :host .actions {
     justify-content: flex-start;
     margin-top: 10px;
     padding-top: 10px;
   }
-  
+
   :host .actions::before {
     content: "ACCIONES: ";
     font-weight: bold;
@@ -318,32 +323,32 @@
     margin: 60px 2px 20px 2px;
     padding: 8px;
   }
-  
+
   :host .toolbar {
     padding: 10px;
     gap: 10px;
   }
-  
+
   :host .toolbar button {
     padding: 10px;
     font-size: 0.9rem;
   }
-  
+
   :host .student-row {
     padding: 12px;
     margin-bottom: 12px;
   }
-  
+
   :host .student-row span {
     padding: 6px 0;
     font-size: 0.9rem;
   }
-  
+
   :host .student-row span::before {
     min-width: 80px;
     font-size: 0.8rem;
   }
-  
+
   :host .password-toggle-icon {
     font-size: 16px !important;
   }

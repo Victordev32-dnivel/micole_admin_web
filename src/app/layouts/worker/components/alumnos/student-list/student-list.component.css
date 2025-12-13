@@ -1,11 +1,11 @@
 .student-container {
-  margin: 80px 0 20px 15vw;
+  margin: 0 auto 20px auto;
   padding: 20px;
   background: #ffffff;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: margin-left 0.3s ease;
-  max-width: calc(100vw - 15vw - 40px);
+  max-width: 100%;
 }
 
 .toolbar {
@@ -314,25 +314,25 @@
     margin: 80px 10px 20px 10px;
     padding: 15px;
   }
-  
+
   .search-filters {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
   }
-  
+
   .search-field {
     width: 250px;
   }
-  
+
   .salon-filter {
     width: 180px;
   }
-  
+
   .pagination-buttons {
     gap: 6px;
   }
-  
+
   .page-button {
     min-width: 35px;
     height: 35px;
@@ -421,7 +421,8 @@
     gap: 4px;
   }
 
-  .parent-icon, .phone-icon {
+  .parent-icon,
+  .phone-icon {
     margin-right: 5px;
   }
 
@@ -511,13 +512,18 @@
 
 /* Animaciones */
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Ajuste para cuando el sidebar está abierto en móvil */
 @media (max-width: 767px) {
-  .sidebar.open ~ .student-container {
+  .sidebar.open~.student-container {
     margin-left: 70vw;
     max-width: 30vw;
   }

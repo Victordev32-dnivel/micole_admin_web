@@ -1,16 +1,14 @@
 .asistencias-container {
   min-height: 100vh;
-  padding-left: 220px;
-  /* Espaciado para el sidebar de 200px + 20px de margen */
-  padding-top: 100px;
-  /* Espaciado para el header (ajusta según la altura real, asumiendo 80px + 20px) */
+  /* padding handled by layout */
+  padding: 20px;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   overflow: hidden;
   position: relative;
 }
 
 .asistencias-card {
-  max-width: 900px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 24px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
@@ -113,6 +111,7 @@ mat-form-field:hover mat-icon {
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -199,7 +198,7 @@ mat-form-field:hover mat-icon {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .month-selector,
   .year-selector {
     max-width: 100%;

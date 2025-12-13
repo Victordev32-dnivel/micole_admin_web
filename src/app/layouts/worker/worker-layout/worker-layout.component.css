@@ -1,14 +1,28 @@
-.app-layout {
-  display: flex;
+.layout-container {
+  position: relative;
   min-height: 100vh;
+  background-color: #f5f7fa;
 }
 
-app-sidebar {
-  flex: 0 0 200px; /* Ancho fijo del sidebar */
+.content {
+  margin-left: 260px;
+  padding-top: 80px;
+  /* Header height (60px) + spacing */
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 20px;
+  min-height: 100vh;
+  box-sizing: border-box;
+  transition: margin-left 0.3s ease;
 }
 
-.main-content {
-  flex: 1;
-  padding: 20px;
-  background-color: #f9f9f9;
+/* Mobile Responsive */
+@media (max-width: 767px) {
+  .content {
+    margin-left: 0;
+    padding-top: 70px;
+    /* Header height (50px) + spacing */
+    padding-left: 10px;
+    padding-right: 10px;
+  }
 }

@@ -22,7 +22,8 @@
 }
 
 .sidebar {
-  width: 15vw; /* 25% del ancho de la ventana, ajustable */
+  width: 260px;
+  /* Ancho fijo para consistencia */
   height: 100vh;
   position: fixed;
   top: 0;
@@ -40,11 +41,13 @@
 
 .sidebar-header {
   padding: 15px;
-  text-align: left; /* CAMBIÓ DE CENTER A LEFT */
+  text-align: left;
+  /* CAMBIÓ DE CENTER A LEFT */
   border-bottom: 1px solid #e9ecef;
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* CAMBIÓ DE CENTER A FLEX-START */
+  justify-content: flex-start;
+  /* CAMBIÓ DE CENTER A FLEX-START */
   background: #ffffff;
 }
 
@@ -164,7 +167,8 @@ a.active {
   }
 
   .sidebar {
-    width: 70vw; /* 70% del ancho en móvil, más manejable */
+    width: 70vw;
+    /* 70% del ancho en móvil, más manejable */
     transform: translateX(-100%);
   }
 

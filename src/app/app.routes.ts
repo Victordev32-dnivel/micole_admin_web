@@ -8,14 +8,12 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   {
     path: 'worker',
-    component: WorkerLayoutComponent,
     canActivate: [authGuard],
     loadChildren: () =>
       import('./layouts/worker/worker.routes').then((m) => m.WORKER_ROUTES),
   },
   {
     path: 'admin',
-    component: AdminLayoutComponent,
     canActivate: [authGuard],
     loadChildren: () =>
       import('./layouts/admin/admin.routes').then((m) => m.ADMIN_ROUTES),

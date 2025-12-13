@@ -88,7 +88,7 @@ interface ComunicadoDisplay {
     MatSelectModule,
     MatFormFieldModule,
     MatTooltipModule,
-    EliminarComunicadoComponent,
+
   ],
 })
 export class ComunicadosListadoComponent implements OnInit {
