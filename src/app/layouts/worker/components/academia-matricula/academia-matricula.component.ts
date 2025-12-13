@@ -94,8 +94,11 @@ import { FormsModule } from '@angular/forms';
                 <ng-container matColumnDef="actions">
                     <th mat-header-cell *matHeaderCellDef> Acciones </th>
                     <td mat-cell *matCellDef="let element">
-                        <button mat-raised-button color="accent" (click)="matricular(element)" [disabled]="!selectedAcademiaSalonId">
-                            <mat-icon>school</mat-icon> Matricular en Academia
+                        <button mat-raised-button color="accent" *ngIf="!element.academia" (click)="matricular(element)" [disabled]="!selectedAcademiaSalonId">
+                            <mat-icon>school</mat-icon> Matricular
+                        </button>
+                        <button mat-raised-button color="warn" *ngIf="element.academia" (click)="desmatricular(element)">
+                            <mat-icon>person_remove</mat-icon> Desmatricular
                         </button>
                     </td>
                 </ng-container>
@@ -243,6 +246,30 @@ export class AcademiaMatriculaComponent implements OnInit {
                     // If responseType is text, err.error should be the text body. 
                     // Fallback to a generic message if empty.
                     const errorMessage = err.error || 'Error al matricular alumno';
+                    this.snackBar.open(errorMessage, 'Cerrar', { duration: 3000, panelClass: ['error-snackbar'] });
+                }
+            });
+    }
+
+    desmatricular(alumno: any) {
+        if (!confirm(`¿Seguro que deseas desmatricular a ${alumno.nombre_completo} de la Academia?`)) {
+            return;
+        }
+
+        this.loading = true;
+
+        this.http.delete(`${this.apiBase}/alumno/matricula/${alumno.id}`, { headers: this.getHeaders(), responseType: 'text' })
+            .subscribe({
+                next: () => {
+                    this.snackBar.open('Alumno desmatriculado de Academia exitosamente', 'Cerrar', { duration: 3000, panelClass: ['success-snackbar'] });
+                    this.loading = false;
+                    // Update the local state
+                    alumno.academia = false;
+                },
+                error: (err) => {
+                    console.error('Error un-matriculating', err);
+                    this.loading = false;
+                    const errorMessage = err.error || 'Error al desmatricular alumno';
                     this.snackBar.open(errorMessage, 'Cerrar', { duration: 3000, panelClass: ['error-snackbar'] });
                 }
             });
