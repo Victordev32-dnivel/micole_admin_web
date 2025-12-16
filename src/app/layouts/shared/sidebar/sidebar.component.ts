@@ -126,6 +126,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     { path: '/worker/tarjetas', label: 'Tarjetas', icon: 'fas fa-id-card' },
     { path: '/worker/salones', label: 'Salones', icon: 'fas fa-chalkboard' },
     { path: '/worker/cursos', label: 'Cursos', icon: 'fas fa-book' },
+    { path: '/worker/profesores', label: 'Profesores', icon: 'fas fa-chalkboard-teacher' },
   ];
 
   private resizeListener: () => void;

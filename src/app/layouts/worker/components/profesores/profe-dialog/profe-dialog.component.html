@@ -1,0 +1,66 @@
+<h2 mat-dialog-title>
+    {{ data.mode === 'create' ? 'Agregar Profesor' : (data.mode === 'edit' ? 'Editar Profesor' : 'Detalles del
+    Profesor') }}
+</h2>
+<mat-dialog-content [formGroup]="profeForm">
+    <div class="form-grid">
+        <mat-form-field appearance="outline">
+            <mat-label>Nombres</mat-label>
+            <input matInput formControlName="nombres">
+            <mat-error *ngIf="profeForm.get('nombres')?.hasError('required')">Este campo es requerido</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Apellido Paterno</mat-label>
+            <input matInput formControlName="apellidoPaterno">
+            <mat-error *ngIf="profeForm.get('apellidoPaterno')?.hasError('required')">Este campo es
+                requerido</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Apellido Materno</mat-label>
+            <input matInput formControlName="apellidoMaterno">
+            <mat-error *ngIf="profeForm.get('apellidoMaterno')?.hasError('required')">Este campo es
+                requerido</mat-error>
+        </mat-form-field>
+
+        <!-- Documento only visible/enabled in certain modes? Always visible, but read-only in edit/view? -->
+        <!-- Based on API, update payload doesn't include it, but view does. Create needs it. -->
+        <mat-form-field appearance="outline">
+            <mat-label>Número Documento</mat-label>
+            <input matInput formControlName="numeroDocumento">
+            <mat-error *ngIf="profeForm.get('numeroDocumento')?.hasError('required')">Este campo es
+                requerido</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Teléfono</mat-label>
+            <input matInput formControlName="telefono">
+            <mat-error *ngIf="profeForm.get('telefono')?.hasError('required')">Este campo es requerido</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Género</mat-label>
+            <mat-select formControlName="genero">
+                <mat-option value="Masculino">Masculino</mat-option>
+                <mat-option value="Femenino">Femenino</mat-option>
+            </mat-select>
+            <mat-error *ngIf="profeForm.get('genero')?.hasError('required')">Este campo es requerido</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Contraseña</mat-label>
+            <input matInput formControlName="contrasena" [type]="hidePassword ? 'password' : 'text'">
+            <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword"
+                [attr.aria-label]="'Ocultar contraseña'" [disabled]="false">
+                <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+            </button>
+            <mat-error *ngIf="profeForm.get('contrasena')?.hasError('required')">Este campo es requerido</mat-error>
+        </mat-form-field>
+    </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">{{ data.mode === 'view' ? 'Cerrar' : 'Cancelar' }}</button>
+    <button mat-raised-button color="primary" (click)="onSave()" *ngIf="data.mode !== 'view'"
+        [disabled]="profeForm.invalid">Guardar</button>
+</mat-dialog-actions>
