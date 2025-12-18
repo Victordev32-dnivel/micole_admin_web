@@ -155,7 +155,7 @@ export class AcademiaMatriculaComponent implements OnInit {
     selectedAcademiaSalonId: number | null = null; // Selected academy classroom
     loading = false;
     displayedColumns: string[] = ['nombre', 'dni', 'grado', 'salon', 'academia', 'actions'];
-    private apiBase = '/api';
+    private apiBase = 'https://proy-back-dnivel-44j5.onrender.com/api';
 
     constructor(
         private http: HttpClient,
