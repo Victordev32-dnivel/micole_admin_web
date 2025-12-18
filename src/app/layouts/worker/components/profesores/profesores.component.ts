@@ -168,4 +168,29 @@ export class ProfesoresComponent implements OnInit {
             verticalPosition: 'top'
         });
     }
+
+    openAssignCoursesDialog(profe: any): void {
+        import('./assign-courses-dialog/assign-courses-dialog.component').then(component => {
+            const dialogRef = this.dialog.open(component.AssignCoursesDialogComponent, {
+                width: '600px',
+                data: { profe: profe, colegioId: this.colegioId }
+            });
+
+            dialogRef.afterClosed().subscribe(result => {
+                if (result) {
+                    this.profeService.assignCoursesToProfe(profe.id, result).subscribe({
+                        next: () => {
+                            this.showSnackBar('Cursos asignados exitosamente');
+                        },
+                        error: (err) => {
+                            console.error('Error asignando cursos', err);
+                            this.showSnackBar('Error al asignar cursos');
+                        }
+                    });
+                }
+            });
+        });
+
+    }
 }
+

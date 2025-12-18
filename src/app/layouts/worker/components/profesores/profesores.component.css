@@ -74,6 +74,7 @@ th.mat-header-cell {
 }
 
 .mat-column-actions {
-    width: 160px;
+    width: 200px;
     text-align: center;
+    white-space: nowrap;
 }

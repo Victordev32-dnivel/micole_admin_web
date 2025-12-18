@@ -1,0 +1,25 @@
+<h2 mat-dialog-title>Asignar Cursos - {{data.profe.nombreCompleto}}</h2>
+
+<mat-dialog-content>
+    <div *ngIf="loading" class="loading-container">
+        <p>Cargando cursos...</p>
+    </div>
+
+    <div *ngIf="!loading && cursos.length === 0" class="empty-state">
+        <p>No se encontraron cursos disponibles.</p>
+    </div>
+
+    <mat-selection-list *ngIf="!loading && cursos.length > 0">
+        <mat-list-option *ngFor="let curso of cursos" [selected]="isCourseSelected(curso)"
+            (click)="toggleSelection(curso)">
+            {{curso.displayName}}
+        </mat-list-option>
+    </mat-selection-list>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="saving">Cancelar</button>
+    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="saving || selectedCourses.length === 0">
+        {{ saving ? 'Guardando...' : 'Guardar' }}
+    </button>
+</mat-dialog-actions>

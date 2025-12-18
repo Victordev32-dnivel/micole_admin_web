@@ -1,0 +1,11 @@
+.loading-container,
+.empty-state {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+}
+
+mat-selection-list {
+    max-height: 400px;
+    overflow-y: auto;
+}

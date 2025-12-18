@@ -67,4 +67,12 @@ export class ProfeService {
             headers: this.getHeaders()
         });
     }
+
+    // POST /ProfeCurso/{usuarioId}
+    assignCoursesToProfe(usuarioId: number, listaCursoId: number[]): Observable<any> {
+        const payload = { listaCursoId };
+        return this.http.post<any>(`${this.apiBase}/ProfeCurso/${usuarioId}`, payload, {
+            headers: this.getHeaders()
+        });
+    }
 }
