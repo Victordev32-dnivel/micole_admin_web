@@ -9,19 +9,13 @@
         <!-- DNI - YA NO ES OBLIGATORIO -->
         <mat-form-field appearance="outline">
           <mat-label>DNI</mat-label>
-          <input
-            matInput
-            formControlName="numeroDocumento"
-            placeholder="Ingrese DNI (8 dígitos, opcional)"
-            [maxlength]="8"
-          />
-          <mat-error
-            *ngIf="
+          <input matInput formControlName="numeroDocumento" placeholder="Ingrese DNI (8 dígitos, opcional)"
+            [maxlength]="8" />
+          <mat-error *ngIf="
               addForm.get('numeroDocumento')?.hasError('pattern') ||
               addForm.get('numeroDocumento')?.hasError('minlength') ||
               addForm.get('numeroDocumento')?.hasError('maxlength')
-            "
-          >
+            ">
             Si ingresa DNI, debe tener exactamente 8 dígitos.
           </mat-error>
         </mat-form-field>
@@ -29,29 +23,17 @@
         <!-- TODOS LOS CAMPOS OPCIONALES -->
         <mat-form-field appearance="outline">
           <mat-label>Nombres</mat-label>
-          <input
-            matInput
-            formControlName="nombres"
-            placeholder="Ingrese nombres (opcional)"
-          />
+          <input matInput formControlName="nombres" placeholder="Ingrese nombres (opcional)" />
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Apellido Paterno</mat-label>
-          <input
-            matInput
-            formControlName="apellidoPaterno"
-            placeholder="Ingrese apellido paterno (opcional)"
-          />
+          <input matInput formControlName="apellidoPaterno" placeholder="Ingrese apellido paterno (opcional)" />
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Apellido Materno</mat-label>
-          <input
-            matInput
-            formControlName="apellidoMaterno"
-            placeholder="Ingrese apellido materno (opcional)"
-          />
+          <input matInput formControlName="apellidoMaterno" placeholder="Ingrese apellido materno (opcional)" />
         </mat-form-field>
 
         <mat-form-field appearance="outline">
@@ -60,53 +42,47 @@
             <mat-option value="">Sin especificar</mat-option>
             <mat-option *ngFor="let gender of genders" [value]="gender">{{
               gender
-            }}</mat-option>
+              }}</mat-option>
           </mat-select>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Teléfono</mat-label>
-          <input
-            matInput
-            formControlName="telefono"
-            placeholder="Ingrese teléfono (9 dígitos, opcional)"
-            [maxlength]="9"
-          />
-          <mat-error
-            *ngIf="
+          <input matInput formControlName="telefono" placeholder="Ingrese teléfono (9 dígitos, opcional)"
+            [maxlength]="9" />
+          <mat-error *ngIf="
               addForm.get('telefono')?.hasError('pattern') ||
               addForm.get('telefono')?.hasError('minlength') ||
               addForm.get('telefono')?.hasError('maxlength')
-            "
-          >
+            ">
             Si ingresa teléfono, debe tener exactamente 9 dígitos.
           </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Fecha de Nacimiento</mat-label>
-          <input
-            matInput
-            [matDatepicker]="picker"
-            formControlName="fechaNacimiento"
-            (click)="openCalendar()"
-            placeholder="Opcional"
-          />
-          <mat-datepicker-toggle
-            matIconSuffix
-            [for]="picker"
-            (click)="openCalendar(); $event.stopPropagation()"
-          ></mat-datepicker-toggle>
+          <input matInput [matDatepicker]="picker" formControlName="fechaNacimiento" (click)="openCalendar()"
+            placeholder="Opcional" />
+          <mat-datepicker-toggle matIconSuffix [for]="picker"
+            (click)="openCalendar(); $event.stopPropagation()"></mat-datepicker-toggle>
           <mat-datepicker #picker></mat-datepicker>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Dirección</mat-label>
-          <input
-            matInput
-            formControlName="direccion"
-            placeholder="Ingrese dirección (opcional)"
-          />
+          <input matInput formControlName="direccion" placeholder="Ingrese dirección (opcional)" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Contraseña</mat-label>
+          <input matInput formControlName="contrasena" placeholder="Contraseña del alumno (opcional)"
+            [type]="hidePassword ? 'password' : 'text'" />
+          <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword"
+            [attr.aria-label]="'Toggle password visibility'" type="button">
+            <mat-icon>{{
+              hidePassword ? "visibility_off" : "visibility"
+              }}</mat-icon>
+          </button>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
@@ -120,53 +96,36 @@
         <!-- Lista de Apoderados con búsqueda -->
         <mat-form-field appearance="outline">
           <mat-label>Apoderado</mat-label>
-          <input
-            matInput
-            [formControl]="apoderadoSearchCtrl"
-            placeholder="Buscar apoderado..."
-            [matAutocomplete]="apoderadoAuto"
-          />
-          <mat-autocomplete
-            #apoderadoAuto="matAutocomplete"
-            (optionSelected)="onApoderadoSelected($event)"
-            [displayWith]="displayApoderadoFn"
-          >
+          <input matInput [formControl]="apoderadoSearchCtrl" placeholder="Buscar apoderado..."
+            [matAutocomplete]="apoderadoAuto" />
+          <mat-autocomplete #apoderadoAuto="matAutocomplete" (optionSelected)="onApoderadoSelected($event)"
+            [displayWith]="displayApoderadoFn">
             <mat-option *ngIf="loadingApoderados" disabled>
               <mat-icon>hourglass_empty</mat-icon>
               Cargando apoderados...
             </mat-option>
-            <mat-option
-              *ngIf="
+            <mat-option *ngIf="
                 !loadingApoderados &&
                 filteredApoderados.length === 0 &&
                 apoderadoSearchCtrl.value
-              "
-              disabled
-            >
+              " disabled>
               <mat-icon>search_off</mat-icon>
               No se encontraron resultados para "{{
-                apoderadoSearchCtrl.value
+              apoderadoSearchCtrl.value
               }}"
             </mat-option>
             <mat-option [value]="null">
               <mat-icon>person_off</mat-icon>
               Sin apoderado asignado
             </mat-option>
-            <mat-option
-              *ngFor="let apoderado of filteredApoderados"
-              [value]="apoderado"
-            >
+            <mat-option *ngFor="let apoderado of filteredApoderados" [value]="apoderado">
               <mat-icon>person</mat-icon>
               <span>{{ apoderado.nombre }} {{ apoderado.apellidos }}</span>
-              <small style="color: #666; margin-left: 8px"
-                >(ID: {{ apoderado.id }})</small
-              >
+              <small style="color: #666; margin-left: 8px">(ID: {{ apoderado.id }})</small>
             </mat-option>
           </mat-autocomplete>
           <mat-hint *ngIf="!loadingApoderados">
-            <mat-icon style="font-size: 14px; width: 14px; height: 14px"
-              >info</mat-icon
-            >
+            <mat-icon style="font-size: 14px; width: 14px; height: 14px">info</mat-icon>
             Apoderados disponibles: {{ apoderados.length }}
           </mat-hint>
         </mat-form-field>
@@ -174,29 +133,18 @@
         <!-- Campo de Salón con búsqueda -->
         <mat-form-field appearance="outline">
           <mat-label>Salón</mat-label>
-          <input
-            matInput
-            [formControl]="salonSearchCtrl"
-            placeholder="Buscar salón..."
-            [matAutocomplete]="salonAuto"
-          />
-          <mat-autocomplete
-            #salonAuto="matAutocomplete"
-            (optionSelected)="onSalonSelected($event)"
-            [displayWith]="displaySalonFn"
-          >
+          <input matInput [formControl]="salonSearchCtrl" placeholder="Buscar salón..." [matAutocomplete]="salonAuto" />
+          <mat-autocomplete #salonAuto="matAutocomplete" (optionSelected)="onSalonSelected($event)"
+            [displayWith]="displaySalonFn">
             <mat-option *ngIf="loadingSalones" disabled>
               <mat-icon>hourglass_empty</mat-icon>
               Cargando salones...
             </mat-option>
-            <mat-option
-              *ngIf="
+            <mat-option *ngIf="
                 !loadingSalones &&
                 filteredSalones.length === 0 &&
                 salonSearchCtrl.value
-              "
-              disabled
-            >
+              " disabled>
               <mat-icon>search_off</mat-icon>
               No se encontraron resultados para "{{ salonSearchCtrl.value }}"
             </mat-option>
@@ -208,22 +156,14 @@
               <mat-icon>school</mat-icon>
               <span>{{
                 salon.nombre || salon.descripcion || "Salón " + salon.id
-              }}</span>
-              <span
-                *ngIf="salon.descripcion && salon.nombre"
-                style="color: #666; margin-left: 8px"
-              >
-                - {{ salon.descripcion }}</span
-              >
-              <small style="color: #666; margin-left: 8px"
-                >(ID: {{ salon.id }})</small
-              >
+                }}</span>
+              <span *ngIf="salon.descripcion && salon.nombre" style="color: #666; margin-left: 8px">
+                - {{ salon.descripcion }}</span>
+              <small style="color: #666; margin-left: 8px">(ID: {{ salon.id }})</small>
             </mat-option>
           </mat-autocomplete>
           <mat-hint *ngIf="!loadingSalones">
-            <mat-icon style="font-size: 14px; width: 14px; height: 14px"
-              >info</mat-icon
-            >
+            <mat-icon style="font-size: 14px; width: 14px; height: 14px">info</mat-icon>
             Salones disponibles: {{ salones.length }}
           </mat-hint>
         </mat-form-field>
@@ -243,16 +183,12 @@
               <mat-icon>person_add</mat-icon>
               Agregar Nuevo Apoderado
             </h4>
-            <button
-              mat-icon-button
-              type="button"
-              [attr.aria-label]="
+            <button mat-icon-button type="button" [attr.aria-label]="
                 showApoderadoForm ? 'Ocultar formulario' : 'Mostrar formulario'
-              "
-            >
+              ">
               <mat-icon>{{
                 showApoderadoForm ? "expand_less" : "expand_more"
-              }}</mat-icon>
+                }}</mat-icon>
             </button>
           </div>
 
@@ -261,43 +197,26 @@
               <div class="form-row">
                 <mat-form-field appearance="outline">
                   <mat-label>Nombres</mat-label>
-                  <input
-                    matInput
-                    formControlName="nombres"
-                    placeholder="Ingrese nombres del apoderado (opcional)"
-                  />
+                  <input matInput formControlName="nombres" placeholder="Ingrese nombres del apoderado (opcional)" />
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
                   <mat-label>Apellido Paterno</mat-label>
-                  <input
-                    matInput
-                    formControlName="apellidoPaterno"
-                    placeholder="Ingrese apellido paterno (opcional)"
-                  />
+                  <input matInput formControlName="apellidoPaterno" placeholder="Ingrese apellido paterno (opcional)" />
                 </mat-form-field>
               </div>
 
               <div class="form-row">
                 <mat-form-field appearance="outline">
                   <mat-label>Apellido Materno</mat-label>
-                  <input
-                    matInput
-                    formControlName="apellidoMaterno"
-                    placeholder="Ingrese apellido materno (opcional)"
-                  />
+                  <input matInput formControlName="apellidoMaterno" placeholder="Ingrese apellido materno (opcional)" />
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
                   <mat-label>DNI</mat-label>
-                  <input
-                    matInput
-                    formControlName="numeroDocumento"
-                    placeholder="Ingrese DNI (8 dígitos, opcional)"
-                    maxlength="8"
-                  />
-                  <mat-error
-                    *ngIf="
+                  <input matInput formControlName="numeroDocumento" placeholder="Ingrese DNI (8 dígitos, opcional)"
+                    maxlength="8" />
+                  <mat-error *ngIf="
                       apoderadoForm
                         .get('numeroDocumento')
                         ?.hasError('pattern') ||
@@ -307,8 +226,7 @@
                       apoderadoForm
                         .get('numeroDocumento')
                         ?.hasError('maxlength')
-                    "
-                  >
+                    ">
                     Si ingresa DNI, debe tener exactamente 8 dígitos
                   </mat-error>
                 </mat-form-field>
@@ -319,25 +237,15 @@
                   <mat-label>Género</mat-label>
                   <mat-select formControlName="genero">
                     <mat-option value="">Sin especificar</mat-option>
-                    <mat-option
-                      *ngFor="let gender of genders"
-                      [value]="gender"
-                      >{{ gender }}</mat-option
-                    >
+                    <mat-option *ngFor="let gender of genders" [value]="gender">{{ gender }}</mat-option>
                   </mat-select>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
                   <mat-label>Teléfono</mat-label>
-                  <input
-                    matInput
-                    formControlName="telefono"
-                    placeholder="Ingrese teléfono (9 dígitos, opcional)"
-                    maxlength="9"
-                  />
-                  <mat-error
-                    *ngIf="apoderadoForm.get('telefono')?.hasError('pattern')"
-                  >
+                  <input matInput formControlName="telefono" placeholder="Ingrese teléfono (9 dígitos, opcional)"
+                    maxlength="9" />
+                  <mat-error *ngIf="apoderadoForm.get('telefono')?.hasError('pattern')">
                     Si ingresa teléfono, debe tener 9 dígitos
                   </mat-error>
                 </mat-form-field>
@@ -365,27 +273,17 @@
               <div class="form-row">
                 <mat-form-field appearance="outline">
                   <mat-label>Contraseña</mat-label>
-                  <input
-                    matInput
-                    formControlName="contrasena"
-                    placeholder="Mínimo 6 caracteres (opcional)"
-                    [type]="hidePassword ? 'password' : 'text'"
-                  />
-                  <button
-                    mat-icon-button
-                    matSuffix
-                    (click)="hidePassword = !hidePassword"
-                    [attr.aria-label]="'Toggle password visibility'"
-                  >
+                  <input matInput formControlName="contrasena" placeholder="Mínimo 6 caracteres (opcional)"
+                    [type]="hidePassword ? 'password' : 'text'" />
+                  <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword"
+                    [attr.aria-label]="'Toggle password visibility'">
                     <mat-icon>{{
                       hidePassword ? "visibility_off" : "visibility"
-                    }}</mat-icon>
+                      }}</mat-icon>
                   </button>
-                  <mat-error
-                    *ngIf="
+                  <mat-error *ngIf="
                       apoderadoForm.get('contrasena')?.hasError('minlength')
-                    "
-                  >
+                    ">
                     Si ingresa contraseña, debe tener al menos 6 caracteres
                   </mat-error>
                 </mat-form-field>
@@ -394,23 +292,15 @@
               <!-- Información sobre campos de apoderado -->
               <div class="info-section">
                 <small style="color: #666; font-style: italic">
-                  ℹ️ Para crear un apoderado, complete al menos el nombre, apellido o DNI. 
+                  ℹ️ Para crear un apoderado, complete al menos el nombre, apellido o DNI.
                   Todos los demás campos son opcionales.
                 </small>
               </div>
 
               <div class="form-actions">
-                <button
-                  mat-raised-button
-                  type="button"
-                  color="primary"
-                  (click)="saveApoderado()"
-                  [disabled]="loadingApoderado"
-                >
-                  <mat-spinner
-                    *ngIf="loadingApoderado"
-                    diameter="20"
-                  ></mat-spinner>
+                <button mat-raised-button type="button" color="primary" (click)="saveApoderado()"
+                  [disabled]="loadingApoderado">
+                  <mat-spinner *ngIf="loadingApoderado" diameter="20"></mat-spinner>
                   <mat-icon *ngIf="!loadingApoderado">save</mat-icon>
                   {{ loadingApoderado ? "Guardando..." : "Guardar Apoderado" }}
                 </button>
@@ -438,12 +328,8 @@
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">Cancelar</button>
-  <button
-    mat-button
-    (click)="onSave()"
-    [disabled]="loadingApoderados || loadingSalones || loadingApoderado"
-    color="primary"
-  >
+  <button mat-button (click)="onSave()" [disabled]="loadingApoderados || loadingSalones || loadingApoderado"
+    color="primary">
     Guardar
   </button>
 </mat-dialog-actions>

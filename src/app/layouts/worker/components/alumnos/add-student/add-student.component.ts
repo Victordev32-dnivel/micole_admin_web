@@ -185,6 +185,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
       fechaNacimiento: [''],
       direccion: [''],
       estado: ['Activo'],
+      contrasena: [''],
       idApoderado: [''],
       idSalon: [''],
       idColegio: [this.data?.colegioId || ''],
@@ -254,7 +255,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
     // Validación manual más flexible - solo verificar que tenga al menos algunos datos básicos
     const formValue = this.apoderadoForm.value;
     const hasMinimumData = formValue.nombres || formValue.apellidoPaterno || formValue.numeroDocumento;
-    
+
     if (!hasMinimumData) {
       this.apoderadoError = 'Por favor, complete al menos el nombre o apellido o DNI del apoderado.';
       return;
@@ -555,16 +556,17 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
           formValue.genero === 'Masculino'
             ? 'm'
             : formValue.genero === 'Femenino'
-            ? 'f'
-            : formValue.genero === 'Otro'
-            ? 'o'
-            : '',
+              ? 'f'
+              : formValue.genero === 'Otro'
+                ? 'o'
+                : '',
         telefono: formValue.telefono || '',
         fechaNacimiento: formValue.fechaNacimiento
           ? this.formatDate(formValue.fechaNacimiento)
           : '',
         direccion: formValue.direccion || '',
         estado: formValue.estado || 'Activo',
+        contrasena: formValue.contrasena || '',
         idApoderado: formValue.idApoderado ? +formValue.idApoderado : null,
         idSalon: formValue.idSalon ? +formValue.idSalon : null,
         idColegio: this.data?.colegioId || 0,

@@ -7,7 +7,7 @@ import { UserService } from './UserData';
     providedIn: 'root'
 })
 export class CursoService {
-    private apiBase = 'https://proy-back-dnivel-44j5.onrender.com/api';
+    private apiBase = '/api';
 
     constructor(
         private http: HttpClient,

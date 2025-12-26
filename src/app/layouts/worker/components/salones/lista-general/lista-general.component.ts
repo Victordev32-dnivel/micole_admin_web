@@ -51,7 +51,7 @@ export class ListaGeneralComponent implements OnInit {
   pages: number[] = [];
   searchTerm = '';
 
-  private apiBase = 'https://proy-back-dnivel-44j5.onrender.com/api';
+  private apiBase = '/api';
   private maxRetries = 3;
   private requestTimeout = 30000; // 30 segundos
 

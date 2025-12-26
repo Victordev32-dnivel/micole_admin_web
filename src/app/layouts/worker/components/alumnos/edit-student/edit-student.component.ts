@@ -114,6 +114,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
   apoderadoSearchCtrl: FormControl = new FormControl('');
   loadingSalones = false;
   loadingApoderados = false;
+  hidePassword = true;
 
   private _onDestroy = new Subject<void>();
 
@@ -168,6 +169,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
       estado: ['Activo'],
       idSalon: [''],
       idApoderado: [''],
+      contrasena: [''],
     });
 
     // Suscribirse a cambios en el formulario
@@ -385,38 +387,49 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
     this.http.get<any>(url, { headers: this.getHeaders() }).subscribe({
       next: (response) => {
         this.ngZone.run(() => {
-          const student = response;
-          this.initialNumeroDocumento = student.numeroDocumento;
+          let student = response;
+          if (response && response.data) {
+            student = response.data;
+          } else if (response && response.student) {
+            student = response.student;
+          } else if (response && response.alumno) {
+            student = response.alumno;
+          }
+
+          console.log('Student data loaded:', student);
+
+          this.initialNumeroDocumento = student.numeroDocumento || student.numero_documento;
 
           // Buscar el apoderado y salón actual para mostrarlos en los inputs
           const currentApoderado = this.apoderados.find(
-            (a) => a.id === student.idApoderado
+            (a) => a.id === (student.idApoderado || student.id_apoderado)
           );
           const currentSalon = this.salones.find(
-            (s) => s.id === student.idSalon
+            (s) => s.id === (student.idSalon || student.id_salon)
           );
 
           this.editForm.patchValue({
-            numeroDocumento: student.numeroDocumento,
+            numeroDocumento: student.numeroDocumento || student.numero_documento,
             nombres: student.nombres || '',
-            apellidoPaterno: student.apellidoPaterno || '',
-            apellidoMaterno: student.apellidoMaterno || '',
+            apellidoPaterno: student.apellidoPaterno || student.apellido_paterno || '',
+            apellidoMaterno: student.apellidoMaterno || student.apellido_materno || '',
             genero:
-              student.genero === 'm'
+              (student.genero === 'm' || student.genero === 'Masculino')
                 ? 'Masculino'
-                : student.genero === 'f'
-                ? 'Femenino'
-                : student.genero === 'o'
-                ? 'Otro'
-                : '',
+                : (student.genero === 'f' || student.genero === 'Femenino')
+                  ? 'Femenino'
+                  : (student.genero === 'o' || student.genero === 'Otro')
+                    ? 'Otro'
+                    : '',
             telefono: student.telefono || '',
-            fechaNacimiento: student.fechaNacimiento
-              ? new Date(student.fechaNacimiento)
+            fechaNacimiento: student.fechaNacimiento || student.fecha_nacimiento
+              ? new Date(student.fechaNacimiento || student.fecha_nacimiento)
               : null,
             direccion: student.direccion || '',
-            estado: student.estado === 'activo' ? 'Activo' : 'Inactivo',
-            idSalon: student.idSalon || '',
-            idApoderado: student.idApoderado || '',
+            estado: (student.estado === 'activo' || student.estado === 'Activo') ? 'Activo' : 'Inactivo',
+            idSalon: student.idSalon || student.id_salon || '',
+            idApoderado: student.idApoderado || student.id_apoderado || '',
+            contrasena: student.contrasena || student.password || '',
           });
 
           // Establecer valores en los controles de búsqueda
@@ -448,7 +461,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
   private checkFormChanges() {
     const currentValues = this.editForm.value;
     const initialValues = {
-       numeroDocumento: this.studentData?.numeroDocumento || '',
+      numeroDocumento: this.studentData?.numeroDocumento || '',
       nombres: this.studentData?.nombres || '',
       apellidoPaterno: this.studentData?.apellidoPaterno || '',
       apellidoMaterno: this.studentData?.apellidoMaterno || '',
@@ -456,10 +469,10 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
         this.studentData?.genero === 'm'
           ? 'Masculino'
           : this.studentData?.genero === 'f'
-          ? 'Femenino'
-          : this.studentData?.genero === 'o'
-          ? 'Otro'
-          : '',
+            ? 'Femenino'
+            : this.studentData?.genero === 'o'
+              ? 'Otro'
+              : '',
       telefono: this.studentData?.telefono || '',
       fechaNacimiento: this.studentData?.fechaNacimiento
         ? new Date(this.studentData.fechaNacimiento)
@@ -468,6 +481,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
       estado: this.studentData?.estado === 'activo' ? 'Activo' : 'Inactivo',
       idSalon: this.studentData?.idSalon || '',
       idApoderado: this.studentData?.idApoderado || '',
+      contrasena: this.studentData?.contrasena || this.studentData?.password || '',
     };
 
     const hasChanges = !this.deepEqual(currentValues, initialValues);
@@ -512,10 +526,10 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
           formValues.genero === 'Masculino'
             ? 'm'
             : formValues.genero === 'Femenino'
-            ? 'f'
-            : formValues.genero === 'Otro'
-            ? 'o'
-            : '',
+              ? 'f'
+              : formValues.genero === 'Otro'
+                ? 'o'
+                : '',
         telefono: formValues.telefono || '',
         fechaNacimiento: formValues.fechaNacimiento
           ? this.formatDate(formValues.fechaNacimiento)
@@ -524,6 +538,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
         estado: formValues.estado || 'Activo',
         idApoderado: formValues.idApoderado ? +formValues.idApoderado : null,
         idSalon: formValues.idSalon ? +formValues.idSalon : null,
+        contrasena: formValues.contrasena || '',
         idColegio: this.data.colegioId || 0,
       };
 

@@ -65,8 +65,8 @@
 
 .table-header {
   display: grid;
-  grid-template-columns: 1fr 2fr 1.5fr 1fr 1fr 1fr 1fr;
-  padding: 15px;
+  grid-template-columns: 0.7fr 1.8fr 1.4fr 0.8fr 1fr 0.8fr 1.2fr 0.6fr;
+  padding: 10px 5px;
   background-color: #f1f3f5;
   border-bottom: 2px solid #e9ecef;
   text-align: center;
@@ -113,10 +113,11 @@
 
 .student-row {
   font-weight: 500;
+  font-size: 0.85rem;
   text-transform: uppercase;
   display: grid;
-  grid-template-columns: 1fr 2fr 1.5fr 1fr 1fr 1fr 1fr;
-  padding: 15px;
+  grid-template-columns: 0.7fr 1.8fr 1.4fr 0.8fr 1fr 0.8fr 1.2fr 0.6fr;
+  padding: 10px 5px;
   border-bottom: 1px solid #e9ecef;
   text-align: center;
   transition: background-color 0.2s;
@@ -132,7 +133,7 @@
 }
 
 .student-row span {
-  padding: 5px;
+  padding: 2px;
   color: #333;
   word-break: break-word;
 }

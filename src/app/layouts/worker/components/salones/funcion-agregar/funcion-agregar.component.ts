@@ -44,7 +44,7 @@ export class FuncionAgregarComponent implements OnInit {
   grados: { id: number; nombre: string }[] = [];
   secciones: { id: number; nombre: string }[] = [];
   niveles: { id: number; nombre: string }[] = [];
-  private apiBase = 'https://proy-back-dnivel-44j5.onrender.com/api';
+  private apiBase = '/api';
 
   constructor(
     private fb: FormBuilder,

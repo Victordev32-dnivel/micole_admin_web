@@ -5,7 +5,7 @@
       <!-- Sección Datos del Alumno -->
       <div class="section student-section">
         <h3>Datos del Alumno</h3>
-        
+
         <!-- DNI - OBLIGATORIO -->
         <mat-form-field appearance="outline">
           <mat-label>DNI *</mat-label>
@@ -13,27 +13,28 @@
           <mat-error *ngIf="editForm.get('numeroDocumento')?.hasError('required')">
             El DNI es obligatorio.
           </mat-error>
-          <mat-error *ngIf="editForm.get('numeroDocumento')?.hasError('pattern') || editForm.get('numeroDocumento')?.hasError('minlength') || editForm.get('numeroDocumento')?.hasError('maxlength')">
+          <mat-error
+            *ngIf="editForm.get('numeroDocumento')?.hasError('pattern') || editForm.get('numeroDocumento')?.hasError('minlength') || editForm.get('numeroDocumento')?.hasError('maxlength')">
             El DNI debe tener exactamente 8 dígitos.
           </mat-error>
         </mat-form-field>
-        
+
         <!-- CAMPOS OPCIONALES -->
         <mat-form-field appearance="outline">
           <mat-label>Nombres</mat-label>
           <input matInput formControlName="nombres" placeholder="Ingrese nombres (opcional)">
         </mat-form-field>
-        
+
         <mat-form-field appearance="outline">
           <mat-label>Apellido Paterno</mat-label>
           <input matInput formControlName="apellidoPaterno" placeholder="Ingrese apellido paterno (opcional)">
         </mat-form-field>
-        
+
         <mat-form-field appearance="outline">
           <mat-label>Apellido Materno</mat-label>
           <input matInput formControlName="apellidoMaterno" placeholder="Ingrese apellido materno (opcional)">
         </mat-form-field>
-        
+
         <mat-form-field appearance="outline">
           <mat-label>Género</mat-label>
           <mat-select formControlName="genero">
@@ -41,27 +42,41 @@
             <mat-option *ngFor="let gender of genders" [value]="gender">{{ gender }}</mat-option>
           </mat-select>
         </mat-form-field>
-        
+
         <mat-form-field appearance="outline">
           <mat-label>Teléfono</mat-label>
-          <input matInput formControlName="telefono" placeholder="Ingrese teléfono (9 dígitos, opcional)" [maxlength]="9">
-          <mat-error *ngIf="editForm.get('telefono')?.hasError('pattern') || editForm.get('telefono')?.hasError('minlength') || editForm.get('telefono')?.hasError('maxlength')">
+          <input matInput formControlName="telefono" placeholder="Ingrese teléfono (9 dígitos, opcional)"
+            [maxlength]="9">
+          <mat-error
+            *ngIf="editForm.get('telefono')?.hasError('pattern') || editForm.get('telefono')?.hasError('minlength') || editForm.get('telefono')?.hasError('maxlength')">
             Si ingresa teléfono, debe tener exactamente 9 dígitos.
           </mat-error>
         </mat-form-field>
-        
+
         <mat-form-field appearance="outline">
           <mat-label>Fecha de Nacimiento</mat-label>
-          <input matInput [matDatepicker]="picker" formControlName="fechaNacimiento" (click)="openCalendar()" placeholder="Opcional">
-          <mat-datepicker-toggle matIconSuffix [for]="picker" (click)="openCalendar(); $event.stopPropagation()"></mat-datepicker-toggle>
+          <input matInput [matDatepicker]="picker" formControlName="fechaNacimiento" (click)="openCalendar()"
+            placeholder="Opcional">
+          <mat-datepicker-toggle matIconSuffix [for]="picker"
+            (click)="openCalendar(); $event.stopPropagation()"></mat-datepicker-toggle>
           <mat-datepicker #picker></mat-datepicker>
         </mat-form-field>
-        
+
         <mat-form-field appearance="outline">
           <mat-label>Dirección</mat-label>
           <input matInput formControlName="direccion" placeholder="Ingrese dirección (opcional)">
         </mat-form-field>
-        
+
+        <mat-form-field appearance="outline">
+          <mat-label>Contraseña</mat-label>
+          <input matInput formControlName="contrasena" placeholder="Contraseña (opcional)"
+            [type]="hidePassword ? 'password' : 'text'">
+          <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword"
+            [attr.aria-label]="'Toggle password visibility'" type="button">
+            <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+          </button>
+        </mat-form-field>
+
         <mat-form-field appearance="outline">
           <mat-label>Estado</mat-label>
           <mat-select formControlName="estado">
@@ -69,22 +84,20 @@
             <mat-option value="Inactivo">Inactivo</mat-option>
           </mat-select>
         </mat-form-field>
-        
+
         <!-- NUEVO: Lista de Apoderados con búsqueda -->
         <mat-form-field appearance="outline">
           <mat-label>Apoderado</mat-label>
-          <input matInput 
-                 [formControl]="apoderadoSearchCtrl" 
-                 placeholder="Buscar apoderado..."
-                 [matAutocomplete]="apoderadoAuto">
-          <mat-autocomplete #apoderadoAuto="matAutocomplete" 
-                           (optionSelected)="onApoderadoSelected($event)"
-                           [displayWith]="displayApoderadoFn">
+          <input matInput [formControl]="apoderadoSearchCtrl" placeholder="Buscar apoderado..."
+            [matAutocomplete]="apoderadoAuto">
+          <mat-autocomplete #apoderadoAuto="matAutocomplete" (optionSelected)="onApoderadoSelected($event)"
+            [displayWith]="displayApoderadoFn">
             <mat-option *ngIf="loadingApoderados" disabled>
               <mat-icon>hourglass_empty</mat-icon>
               Cargando apoderados...
             </mat-option>
-            <mat-option *ngIf="!loadingApoderados && filteredApoderados.length === 0 && apoderadoSearchCtrl.value" disabled>
+            <mat-option *ngIf="!loadingApoderados && filteredApoderados.length === 0 && apoderadoSearchCtrl.value"
+              disabled>
               <mat-icon>search_off</mat-icon>
               No se encontraron resultados para "{{ apoderadoSearchCtrl.value }}"
             </mat-option>
@@ -103,17 +116,13 @@
             Apoderados disponibles: {{ apoderados.length }}
           </mat-hint>
         </mat-form-field>
-        
+
         <!-- Campo de Salón con búsqueda -->
         <mat-form-field appearance="outline">
           <mat-label>Salón</mat-label>
-          <input matInput 
-                 [formControl]="salonSearchCtrl" 
-                 placeholder="Buscar salón..."
-                 [matAutocomplete]="salonAuto">
-          <mat-autocomplete #salonAuto="matAutocomplete" 
-                           (optionSelected)="onSalonSelected($event)"
-                           [displayWith]="displaySalonFn">
+          <input matInput [formControl]="salonSearchCtrl" placeholder="Buscar salón..." [matAutocomplete]="salonAuto">
+          <mat-autocomplete #salonAuto="matAutocomplete" (optionSelected)="onSalonSelected($event)"
+            [displayWith]="displaySalonFn">
             <mat-option *ngIf="loadingSalones" disabled>
               <mat-icon>hourglass_empty</mat-icon>
               Cargando salones...
@@ -129,7 +138,8 @@
             <mat-option *ngFor="let salon of filteredSalones" [value]="salon">
               <mat-icon>school</mat-icon>
               <span>{{ salon.nombre || salon.descripcion || 'Salón ' + salon.id }}</span>
-              <span *ngIf="salon.descripcion && salon.nombre" style="color: #666; margin-left: 8px;"> - {{ salon.descripcion }}</span>
+              <span *ngIf="salon.descripcion && salon.nombre" style="color: #666; margin-left: 8px;"> - {{
+                salon.descripcion }}</span>
               <small style="color: #666; margin-left: 8px;">(ID: {{ salon.id }})</small>
             </mat-option>
           </mat-autocomplete>
@@ -140,10 +150,10 @@
         </mat-form-field>
       </div>
     </div>
-    
+
     <div *ngIf="loading" class="loading">Cargando datos <span class="spinner"></span></div>
     <div *ngIf="error" class="error">{{ error }}</div>
-    
+
     <!-- Información sobre campos opcionales -->
     <div class="info-section">
       <small style="color: #666; font-style: italic;">

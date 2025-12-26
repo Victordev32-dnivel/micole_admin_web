@@ -7,7 +7,7 @@ import { UserService } from './UserData';
     providedIn: 'root'
 })
 export class ProfeService {
-    private apiBase = 'https://proy-back-dnivel-44j5.onrender.com/api';
+    private apiBase = '/api';
 
     constructor(
         private http: HttpClient,
@@ -70,7 +70,11 @@ export class ProfeService {
 
     // POST /ProfeCurso/{usuarioId}
     assignCoursesToProfe(usuarioId: number, listaCursoId: number[]): Observable<any> {
-        const payload = { listaCursoId };
+        const payload = {
+            usuarioId,
+            listaCursoId
+        };
+        console.log('Sending Assign Courses Payload:', JSON.stringify(payload));
         return this.http.post<any>(`${this.apiBase}/ProfeCurso/${usuarioId}`, payload, {
             headers: this.getHeaders()
         });

@@ -229,7 +229,7 @@ export class EditSalonComponent implements OnInit {
   grados: any[] = [];
   secciones: any[] = [];
 
-  private apiBase = 'https://proy-back-dnivel-44j5.onrender.com/api';
+  private apiBase = '/api';
 
   constructor(
     private fb: FormBuilder,

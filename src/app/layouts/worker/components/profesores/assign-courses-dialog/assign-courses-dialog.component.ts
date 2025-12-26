@@ -92,7 +92,7 @@ export class AssignCoursesDialogComponent implements OnInit {
 
     onSave(): void {
         this.saving = true;
-        const listaCursoId = this.selectedCourses.map(c => c.id);
+        const listaCursoId = this.selectedCourses.map(c => Number(c.id));
         this.dialogRef.close(listaCursoId);
     }
 
