@@ -1,0 +1,40 @@
+.main-container {
+    padding: 20px;
+}
+
+.filters-form {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+mat-form-field {
+    flex: 1;
+    min-width: 200px;
+}
+
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.error-message {
+    padding: 16px;
+    background-color: #e3f2fd;
+    color: #0d47a1;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+}

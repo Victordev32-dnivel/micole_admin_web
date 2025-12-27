@@ -1,0 +1,92 @@
+<div class="main-container">
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>Registro de Asistencias y Salidas</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <form [formGroup]="form" class="filters-form">
+
+                <!-- Salon Selector -->
+                <mat-form-field appearance="outline">
+                    <mat-label>Salón</mat-label>
+                    <mat-select formControlName="idSalon" (selectionChange)="onSalonChange()">
+                        <mat-option *ngFor="let salon of salones" [value]="salon.id">
+                            {{ salon.nombre }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <!-- Alumno Selector -->
+                <mat-form-field appearance="outline">
+                    <mat-label>Alumno</mat-label>
+                    <mat-select formControlName="idAlumno" (selectionChange)="onFilterChange()">
+                        <mat-option *ngFor="let alumno of alumnos" [value]="alumno.id">
+                            {{ alumno.nombre_completo }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <!-- Tipo Selector -->
+                <mat-form-field appearance="outline">
+                    <mat-label>Tipo de Registro</mat-label>
+                    <mat-select formControlName="tipo" (selectionChange)="onFilterChange()">
+                        <mat-option *ngFor="let tipo of tiposOpciones" [value]="tipo.value">
+                            {{ tipo.label }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+            </form>
+
+            <!-- Loading Spinner -->
+            <div *ngIf="loading" class="spinner-container">
+                <mat-spinner diameter="40"></mat-spinner>
+            </div>
+
+            <!-- Error Message -->
+            <div *ngIf="error && !loading" class="error-message">
+                <mat-icon>info</mat-icon> {{ error }}
+            </div>
+
+            <!-- Results Table -->
+            <div *ngIf="!loading && registros.length > 0" class="table-container">
+                <table mat-table [dataSource]="registros" class="mat-elevation-z8">
+
+                    <!-- Fecha Column -->
+                    <ng-container matColumnDef="fecha">
+                        <th mat-header-cell *matHeaderCellDef> Fecha </th>
+                        <td mat-cell *matCellDef="let element"> {{ element.fecha || element.fecha_salida }} </td>
+                    </ng-container>
+
+                    <!-- Hora Column -->
+                    <ng-container matColumnDef="hora">
+                        <th mat-header-cell *matHeaderCellDef> Hora </th>
+                        <td mat-cell *matCellDef="let element"> {{ element.hora || element.hora_salida }} </td>
+                    </ng-container>
+
+                    <!-- Estado Column -->
+                    <ng-container matColumnDef="estado">
+                        <th mat-header-cell *matHeaderCellDef> Estado/Persona </th>
+                        <td mat-cell *matCellDef="let element">
+                            {{ element.estado || element.persona_autorizada || '-' }}
+                        </td>
+                    </ng-container>
+
+                    <!-- Acciones Column -->
+                    <ng-container matColumnDef="acciones">
+                        <th mat-header-cell *matHeaderCellDef> Acciones </th>
+                        <td mat-cell *matCellDef="let element">
+                            <button mat-icon-button color="warn" (click)="eliminarRegistro(element)">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                </table>
+            </div>
+
+        </mat-card-content>
+    </mat-card>
+</div>

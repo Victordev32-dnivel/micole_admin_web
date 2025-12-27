@@ -103,6 +103,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   workerItems = [
     { path: '/worker/alumnos', label: 'Alumnos', icon: 'fas fa-users' },
     { path: '/worker/notas', label: 'Notas', icon: 'fas fa-file-alt' },
+    /*
     {
       path: '/worker/asistencias',
       label: 'Asistencias',
@@ -112,6 +113,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
       path: '/worker/salidas',
       label: 'Salidas',
       icon: 'fas fa-sign-out-alt',
+    },
+    */
+    {
+      path: '/worker/asistencias', // Reusing path but label changed
+      label: 'Registro Asistencia',
+      icon: 'fas fa-clipboard-check'
     },
     {
       path: '/worker/comunicados',
@@ -127,6 +134,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     { path: '/worker/salones', label: 'Salones', icon: 'fas fa-chalkboard' },
     { path: '/worker/cursos', label: 'Cursos', icon: 'fas fa-book' },
     { path: '/worker/profesores', label: 'Profesores', icon: 'fas fa-chalkboard-teacher' },
+    { path: '/worker/tipo-asistencia', label: 'Tipo Asistencia', icon: 'fas fa-clock' },
   ];
 
   private resizeListener: () => void;

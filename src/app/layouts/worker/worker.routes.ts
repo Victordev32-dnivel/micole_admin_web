@@ -17,16 +17,21 @@ export const WORKER_ROUTES: Routes = [
     children: [
       { path: 'alumnos', component: StudentListComponent },
       { path: 'matriculas', component: MatriculasListComponent },
-      { path: 'asistencias', component: AsistenciasComponent },
+      { path: 'asistencias', loadComponent: () => import('./components/unified-asistencia/unified-asistencia.component').then(m => m.UnifiedAsistenciaComponent) },
+      // { path: 'asistencias', component: AsistenciasComponent }, // DEPRECATED
+      { path: 'matriculas', component: MatriculasListComponent },
+      // { path: 'asistencias', component: AsistenciasComponent }, // Already handled above
       { path: 'comunicados', component: ComunicadosListadoComponent },
       { path: 'tarjetas', component: TarjetasComponent },
       { path: 'notas', component: NotasComponent },
       { path: 'apoderado', component: ApoderadoListComponent },
       { path: 'salones', component: ListaGeneralComponent },
-      { path: 'salidas', component: SalidasListComponent },
+      { path: 'salidas', loadComponent: () => import('./components/unified-asistencia/unified-asistencia.component').then(m => m.UnifiedAsistenciaComponent) },
+      // { path: 'salidas', component: SalidasListComponent }, // DEPRECATED
       { path: 'cursos', loadComponent: () => import('./components/cursos/curso-list/curso-list.component').then(m => m.CursoListComponent) },
       { path: 'profesores', loadComponent: () => import('./components/profesores/profesores.component').then(m => m.ProfesoresComponent) },
       { path: 'academia-matricula', loadComponent: () => import('./components/academia-matricula/academia-matricula.component').then(m => m.AcademiaMatriculaComponent) },
+      { path: 'tipo-asistencia', loadComponent: () => import('./components/tipo-asistencia/tipo-asistencia-list/tipo-asistencia-list.component').then(m => m.TipoAsistenciaListComponent) },
     ],
   },
 ];
