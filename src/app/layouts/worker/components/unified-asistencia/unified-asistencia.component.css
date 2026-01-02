@@ -2,6 +2,31 @@
     padding: 20px;
 }
 
+mat-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.header-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+}
+
+.header-icon.entrada-icon {
+    color: #4caf50;
+}
+
+.header-icon.salida-icon {
+    color: #f44336;
+}
+
+.header-icon.otros-icon {
+    color: #ff9800;
+}
+
 .filters-form {
     display: flex;
     gap: 32px;
@@ -9,9 +34,10 @@
     margin-bottom: 20px;
 }
 
-mat-form-field {
+.filters-form mat-form-field {
     flex: 1;
     min-width: 200px;
+    max-width: 350px;
 }
 
 .spinner-container {
@@ -31,10 +57,46 @@ mat-form-field {
     margin-bottom: 20px;
 }
 
+.info-message {
+    padding: 16px;
+    background-color: #fff3e0;
+    color: #e65100;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
 .table-container {
     overflow-x: auto;
+    margin-top: 16px;
 }
 
 table {
     width: 100%;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: #757575;
+    background-color: #fafafa;
+    border-radius: 8px;
+    margin-top: 16px;
+}
+
+.empty-state mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    color: #bdbdbd;
+}
+
+.empty-state span {
+    font-size: 14px;
 }

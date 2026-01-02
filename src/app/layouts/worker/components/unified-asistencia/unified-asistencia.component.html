@@ -1,11 +1,12 @@
 <div class="main-container">
     <mat-card>
         <mat-card-header>
-            <mat-card-title>Registro de Asistencias y Salidas</mat-card-title>
+            <mat-icon class="header-icon" [ngClass]="tipoActual + '-icon'">{{ getIcon() }}</mat-icon>
+            <mat-card-title>{{ getTitle() }}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
+            <!-- Filtros -->
             <form [formGroup]="form" class="filters-form">
-
                 <!-- Salon Selector -->
                 <mat-form-field appearance="outline">
                     <mat-label>Salón</mat-label>
@@ -19,24 +20,29 @@
                 <!-- Alumno Selector -->
                 <mat-form-field appearance="outline">
                     <mat-label>Alumno</mat-label>
-                    <mat-select formControlName="idAlumno" (selectionChange)="onFilterChange()">
+                    <mat-select formControlName="idAlumno" (selectionChange)="onAlumnoChange()">
                         <mat-option *ngFor="let alumno of alumnos" [value]="alumno.id">
                             {{ alumno.nombre_completo }}
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
 
-                <!-- Tipo Selector -->
-                <mat-form-field appearance="outline">
-                    <mat-label>Tipo de Registro</mat-label>
-                    <mat-select formControlName="tipo" (selectionChange)="onFilterChange()">
-                        <mat-option *ngFor="let tipo of tiposOpciones" [value]="tipo.value">
-                            {{ tipo.label }}
+                <!-- Sub-selector para tipos "Otros" (Tolerancia, etc.) -->
+                <mat-form-field appearance="outline" *ngIf="tipoActual === 'otros' && tiposOtros.length > 0">
+                    <mat-label>Tipo</mat-label>
+                    <mat-select [(value)]="selectedOtroTipo" (selectionChange)="onOtroTipoChange()">
+                        <mat-option *ngFor="let tipo of tiposOtros" [value]="tipo.id">
+                            {{ tipo.tipo }}
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
-
             </form>
+
+            <!-- Mensaje cuando no hay tipos "Otros" configurados -->
+            <div *ngIf="tipoActual === 'otros' && tiposOtros.length === 0 && !loading" class="info-message">
+                <mat-icon>info</mat-icon>
+                <span>No hay otros tipos de asistencia configurados (solo Entrada y Salida están disponibles).</span>
+            </div>
 
             <!-- Loading Spinner -->
             <div *ngIf="loading" class="spinner-container">
@@ -85,6 +91,14 @@
                     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
                     <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
                 </table>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="!loading && registros.length === 0 && form.get('idAlumno')?.value && !error"
+                class="empty-state">
+                <mat-icon>folder_open</mat-icon>
+                <span>No hay registros de {{ tipoActual === 'entrada' ? 'entrada' : tipoActual === 'salida' ? 'salida' :
+                    'este tipo' }}</span>
             </div>
 
         </mat-card-content>

@@ -17,17 +17,16 @@ export const WORKER_ROUTES: Routes = [
     children: [
       { path: 'alumnos', component: StudentListComponent },
       { path: 'matriculas', component: MatriculasListComponent },
-      { path: 'asistencias', loadComponent: () => import('./components/unified-asistencia/unified-asistencia.component').then(m => m.UnifiedAsistenciaComponent) },
-      // { path: 'asistencias', component: AsistenciasComponent }, // DEPRECATED
-      { path: 'matriculas', component: MatriculasListComponent },
-      // { path: 'asistencias', component: AsistenciasComponent }, // Already handled above
+      // Rutas separadas para Entrada, Salida y Otros
+      { path: 'entrada', loadComponent: () => import('./components/unified-asistencia/unified-asistencia.component').then(m => m.UnifiedAsistenciaComponent), data: { tipo: 'entrada' } },
+      { path: 'salida', loadComponent: () => import('./components/unified-asistencia/unified-asistencia.component').then(m => m.UnifiedAsistenciaComponent), data: { tipo: 'salida' } },
+      { path: 'asistencias', loadComponent: () => import('./components/unified-asistencia/unified-asistencia.component').then(m => m.UnifiedAsistenciaComponent), data: { tipo: 'otros' } },
       { path: 'comunicados', component: ComunicadosListadoComponent },
       { path: 'tarjetas', component: TarjetasComponent },
       { path: 'notas', component: NotasComponent },
       { path: 'apoderado', component: ApoderadoListComponent },
       { path: 'salones', component: ListaGeneralComponent },
-      { path: 'salidas', loadComponent: () => import('./components/unified-asistencia/unified-asistencia.component').then(m => m.UnifiedAsistenciaComponent) },
-      // { path: 'salidas', component: SalidasListComponent }, // DEPRECATED
+      { path: 'salidas', loadComponent: () => import('./components/unified-asistencia/unified-asistencia.component').then(m => m.UnifiedAsistenciaComponent), data: { tipo: 'salida' } },
       { path: 'cursos', loadComponent: () => import('./components/cursos/curso-list/curso-list.component').then(m => m.CursoListComponent) },
       { path: 'profesores', loadComponent: () => import('./components/profesores/profesores.component').then(m => m.ProfesoresComponent) },
       { path: 'academia-matricula', loadComponent: () => import('./components/academia-matricula/academia-matricula.component').then(m => m.AcademiaMatriculaComponent) },

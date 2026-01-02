@@ -103,20 +103,18 @@ export class SidebarComponent implements OnInit, OnDestroy {
   workerItems = [
     { path: '/worker/alumnos', label: 'Alumnos', icon: 'fas fa-users' },
     { path: '/worker/notas', label: 'Notas', icon: 'fas fa-file-alt' },
-    /*
+    {
+      path: '/worker/entrada',
+      label: 'Entrada',
+      icon: 'fas fa-sign-in-alt'
+    },
+    {
+      path: '/worker/salida',
+      label: 'Salida',
+      icon: 'fas fa-sign-out-alt'
+    },
     {
       path: '/worker/asistencias',
-      label: 'Asistencias',
-      icon: 'fas fa-check-square',
-    },
-    {
-      path: '/worker/salidas',
-      label: 'Salidas',
-      icon: 'fas fa-sign-out-alt',
-    },
-    */
-    {
-      path: '/worker/asistencias', // Reusing path but label changed
       label: 'Registro Asistencia',
       icon: 'fas fa-clipboard-check'
     },

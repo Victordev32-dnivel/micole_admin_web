@@ -11,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
 import { UserService } from '../../../../services/UserData';
 import { TipoAsistenciaService, TipoAsistencia } from '../../../../services/tipo-asistencia.service';
 
@@ -38,33 +39,29 @@ export class UnifiedAsistenciaComponent implements OnInit {
     form: FormGroup;
     salones: any[] = [];
     alumnos: any[] = [];
-    registros: any[] = [];
     tiposAsistencia: TipoAsistencia[] = [];
     loading: boolean = false;
     error: string | null = null;
     successMessage: string | null = null;
     colegioId: number = 0;
 
-    // Tipos estáticos + dinámicos
-    tiposOpciones: any[] = [
-        { value: 'entrada', label: 'Entrada' },
-        { value: 'salida', label: 'Salida' }
-    ];
+    // Tipo actual de la ruta: 'entrada', 'salida', 'otros'
+    tipoActual: string = 'entrada';
+
+    // Registros para el tipo actual
+    registros: any[] = [];
+
+    // Tipos "Otros" (excluye entrada/salida)
+    tiposOtros: TipoAsistencia[] = [];
+    selectedOtroTipo: number | null = null;
 
     displayedColumns: string[] = ['fecha', 'hora', 'estado', 'acciones'];
 
     private apiBaseUrl = 'https://proy-back-dnivel-44j5.onrender.com/api';
     private salonApiUrl = `${this.apiBaseUrl}/salon/colegio/lista`;
     private alumnoApiUrl = `${this.apiBaseUrl}/alumno/salon`;
-
-    // Endpoints específicos
-    private asistenciaApiUrl = `${this.apiBaseUrl}/asistencia`; // Para Entrada
-    private salidaApiUrl = `${this.apiBaseUrl}/asistencia/salida`; // Para Salida
-    // Para registrar otros tipos si existiera un endpoint, por ahora asumo que se usaría el de asistencia con un campo extra o similar.
-    // Dado que la API de "TipoAsistencia" es nueva, tal vez los registros se guarden en una tabla diferente o la misma.
-    // Por ahora, asumiré que 'otros' tipos no tienen una vista de registros específica implementada en el backend 
-    // o se comportarán como 'asistencia' (Entrada) hasta nueva orden.
-    // Sin embargo, el usuario pidió "SELECCIONAR EL TIPO YA SEA ENTRADA SALIDA O EL OTRO".
+    private asistenciaApiUrl = `${this.apiBaseUrl}/asistencia`;
+    private salidaApiUrl = `${this.apiBaseUrl}/asistencia/salida`;
 
     constructor(
         private fb: FormBuilder,
@@ -74,20 +71,52 @@ export class UnifiedAsistenciaComponent implements OnInit {
         private userService: UserService,
         private tipoAsistenciaService: TipoAsistenciaService,
         private snackBar: MatSnackBar,
+        private route: ActivatedRoute,
         @Inject(PLATFORM_ID) private platformId: Object
     ) {
         this.form = this.fb.group({
             idSalon: ['', Validators.required],
-            idAlumno: ['', Validators.required],
-            tipo: ['entrada', Validators.required]
+            idAlumno: ['', Validators.required]
         });
     }
 
     ngOnInit() {
         if (isPlatformBrowser(this.platformId)) {
+            // Leer el tipo desde la ruta
+            this.route.data.subscribe(data => {
+                this.tipoActual = data['tipo'] || 'entrada';
+                this.registros = [];
+                this.error = null;
+                // Si ya hay un alumno seleccionado, recargar registros
+                const alumnoId = this.form.get('idAlumno')?.value;
+                if (alumnoId) {
+                    this.loadRegistros(alumnoId);
+                }
+            });
+
             this.loadUserData();
             this.loadSalones();
-            this.loadTiposAsistencia();
+            if (this.tipoActual === 'otros') {
+                this.loadTiposAsistencia();
+            }
+        }
+    }
+
+    getTitle(): string {
+        switch (this.tipoActual) {
+            case 'entrada': return 'Registro de Entrada';
+            case 'salida': return 'Registro de Salida';
+            case 'otros': return 'Registro de Asistencia';
+            default: return 'Registro de Asistencia';
+        }
+    }
+
+    getIcon(): string {
+        switch (this.tipoActual) {
+            case 'entrada': return 'login';
+            case 'salida': return 'logout';
+            case 'otros': return 'schedule';
+            default: return 'schedule';
         }
     }
 
@@ -99,6 +128,7 @@ export class UnifiedAsistenciaComponent implements OnInit {
         this.userService.userData$.subscribe((userData) => {
             if (userData) {
                 this.colegioId = userData.colegio;
+                this.loadSalones();
                 this.cdr.detectChanges();
             }
         });
@@ -116,13 +146,20 @@ export class UnifiedAsistenciaComponent implements OnInit {
         this.tipoAsistenciaService.getAll().subscribe({
             next: (data) => {
                 this.tiposAsistencia = data;
-                // Agregar tipos dinámicos a la lista
-                const dynamicTypes = data.map(t => ({ value: `custom_${t.id}`, label: t.tipo, original: t }));
-                this.tiposOpciones = [
-                    { value: 'entrada', label: 'Entrada' },
-                    { value: 'salida', label: 'Salida' },
-                    ...dynamicTypes
-                ];
+                // Filtrar tipos que NO son entrada ni salida
+                this.tiposOtros = data.filter(t =>
+                    t.tipo.toLowerCase() !== 'entrada' &&
+                    t.tipo.toLowerCase() !== 'salida'
+                );
+                // Seleccionar el primer tipo "otro" por defecto si existe
+                if (this.tiposOtros.length > 0) {
+                    this.selectedOtroTipo = this.tiposOtros[0].id;
+                    // Si ya hay un alumno seleccionado, cargar registros para este tipo
+                    const alumnoId = this.form.get('idAlumno')?.value;
+                    if (alumnoId) {
+                        this.loadRegistrosOtros(alumnoId, this.selectedOtroTipo);
+                    }
+                }
             },
             error: (err) => console.error('Error loading types', err)
         });
@@ -164,78 +201,107 @@ export class UnifiedAsistenciaComponent implements OnInit {
             });
     }
 
-    onFilterChange() {
-        // Se ejecuta cambio de alumno o de tipo
+    onAlumnoChange() {
+        this.registros = [];
+        this.error = null;
         const alumnoId = this.form.get('idAlumno')?.value;
-        const tipo = this.form.get('tipo')?.value;
-
-        if (alumnoId && tipo) {
-            this.loadRegistros(alumnoId, tipo);
-        } else {
-            this.registros = [];
+        if (alumnoId) {
+            this.loadRegistros(alumnoId);
         }
     }
 
-    loadRegistros(alumnoId: number, tipo: string) {
+    onOtroTipoChange() {
+        const alumnoId = this.form.get('idAlumno')?.value;
+        if (alumnoId && this.selectedOtroTipo) {
+            this.loadRegistrosOtros(alumnoId, this.selectedOtroTipo);
+        }
+    }
+
+    loadRegistros(alumnoId: number) {
+        switch (this.tipoActual) {
+            case 'entrada':
+                this.loadRegistrosEntrada(alumnoId);
+                break;
+            case 'salida':
+                this.loadRegistrosSalida(alumnoId);
+                break;
+            case 'otros':
+                if (this.selectedOtroTipo) {
+                    this.loadRegistrosOtros(alumnoId, this.selectedOtroTipo);
+                } else {
+                    // If selectedOtroTipo is not set yet, load types first
+                    this.loadTiposAsistencia();
+                }
+                break;
+        }
+    }
+
+    loadRegistrosEntrada(alumnoId: number) {
         this.loading = true;
-        this.registros = [];
         this.error = null;
 
-        let url = '';
-
-        if (tipo === 'entrada') {
-            url = `${this.asistenciaApiUrl}/${alumnoId}`;
-        } else if (tipo === 'salida') {
-            url = `${this.salidaApiUrl}/${alumnoId}`;
-        } else if (tipo.startsWith('custom_')) {
-            // TODO: Definir endpoint para tipos personalizados si existe.
-            // Por ahora, mostraré vacío o un mensaje.
-            // Si el backend no soporta listar por tipo custom, esto quedará pendiente.
-            // Asumiremos que por ahora solo Entrada y Salida tienen endpoints de lista claros por Alumno.
-            this.loading = false;
-            this.registros = [];
-            return;
-        }
-
-        this.http.get<any[]>(url, { headers: this.getHeaders() })
+        this.http.get<any[]>(`${this.asistenciaApiUrl}/${alumnoId}`, { headers: this.getHeaders() })
             .subscribe({
                 next: (response) => {
                     this.registros = Array.isArray(response) ? response : [];
                     this.loading = false;
                     if (this.registros.length === 0) {
-                        this.error = 'No se encontraron registros.';
+                        this.error = 'No se encontraron registros de entrada.';
                     }
                 },
-                error: (err) => {
-                    console.error(err);
-                    this.error = 'Error al cargar registros.';
+                error: () => {
+                    this.error = 'Error al cargar registros de entrada.';
                     this.loading = false;
                 }
             });
     }
 
+    loadRegistrosSalida(alumnoId: number) {
+        this.loading = true;
+        this.error = null;
+
+        this.http.get<any[]>(`${this.salidaApiUrl}/${alumnoId}`, { headers: this.getHeaders() })
+            .subscribe({
+                next: (response) => {
+                    this.registros = Array.isArray(response) ? response : [];
+                    this.loading = false;
+                    if (this.registros.length === 0) {
+                        this.error = 'No se encontraron registros de salida.';
+                    }
+                },
+                error: () => {
+                    this.error = 'Error al cargar registros de salida.';
+                    this.loading = false;
+                }
+            });
+    }
+
+    loadRegistrosOtros(alumnoId: number, tipoId: number) {
+        this.loading = true;
+        this.error = null;
+
+        // TODO: Implementar cuando el backend tenga endpoint para tipos personalizados
+        this.loading = false;
+        this.registros = [];
+        this.error = 'Los registros de este tipo aún no están disponibles.';
+    }
+
     eliminarRegistro(registro: any) {
-        // Lógica de eliminación unificada
-        // Intentar encontrar ID
         const id = registro.id || registro.idAsistencia || registro.idSalida || registro.ID;
-        const tipo = this.form.get('tipo')?.value;
 
         if (!id) {
-            // Eliminar solo de vista si no hay ID
             this.registros = this.registros.filter(r => r !== registro);
             return;
         }
 
         if (!confirm('¿Estás seguro de eliminar este registro?')) return;
 
-        // Usar endpoint genérico de eliminación de asistencia si es posible, o específico
-        // En SalidasListComponent se usa: /api/asistencia/{id} para eliminar salidas también (parece que comparten tabla o endpoint delete)
         const deleteUrl = `${this.asistenciaApiUrl}/${id}`;
 
         this.http.delete(deleteUrl, { headers: this.getHeaders() }).subscribe({
             next: () => {
                 this.snackBar.open('Registro eliminado', 'Cerrar', { duration: 3000 });
-                this.onFilterChange(); // Recargar
+                this.registros = this.registros.filter(r => r !== registro);
             },
             error: () => {
                 this.snackBar.open('Error al eliminar', 'Cerrar', { duration: 3000 });
