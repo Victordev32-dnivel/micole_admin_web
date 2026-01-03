@@ -16,6 +16,7 @@ import { MatOptionModule } from '@angular/material/core';
 import { CommonModule } from '@angular/common';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { UserService } from '../../../../../services/UserData';
+import { TipoAsistenciaService, TipoAsistencia } from '../../../../../services/tipo-asistencia.service';
 
 @Component({
   selector: 'app-funcion-agregar',
@@ -43,7 +44,9 @@ export class FuncionAgregarComponent implements OnInit {
   isSubmitting = false;
   grados: { id: number; nombre: string }[] = [];
   secciones: { id: number; nombre: string }[] = [];
+
   niveles: { id: number; nombre: string }[] = [];
+  tiposAsistencia: TipoAsistencia[] = [];
   private apiBase = '/api';
 
   constructor(
@@ -51,6 +54,7 @@ export class FuncionAgregarComponent implements OnInit {
     private http: HttpClient,
     private snackBar: MatSnackBar,
     private userService: UserService,
+    private tipoAsistenciaService: TipoAsistenciaService,
     public dialogRef: MatDialogRef<FuncionAgregarComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { tipo: string; idColegio: number }
   ) {
@@ -64,6 +68,7 @@ export class FuncionAgregarComponent implements OnInit {
       this.loadGrados();
       this.loadSecciones();
       this.loadNiveles();
+      this.loadTiposAsistencia();
     }
   }
 
@@ -85,7 +90,7 @@ export class FuncionAgregarComponent implements OnInit {
           nombre: [''], // Optional based on User feedback, but keeping as form control
           horaInicio: ['', Validators.required],
           horaFin: ['', Validators.required],
-          tipo: ['', Validators.required],
+          tipo: [0, [Validators.required, Validators.min(1)]], // Changed to number for ID
           idGrado: [0, [Validators.required, Validators.min(1)]],
           idSeccion: [0, [Validators.required, Validators.min(1)]],
           idNivel: [0, [Validators.required, Validators.min(1)]],
@@ -152,6 +157,18 @@ export class FuncionAgregarComponent implements OnInit {
           this.niveles = [];
         },
       });
+  }
+
+  private loadTiposAsistencia() {
+    this.tipoAsistenciaService.getAll().subscribe({
+      next: (data) => {
+        this.tiposAsistencia = data;
+      },
+      error: (err) => {
+        console.error('Error al cargar tipos de asistencia:', err);
+        this.tiposAsistencia = [];
+      }
+    });
   }
 
   onSubmit() {
