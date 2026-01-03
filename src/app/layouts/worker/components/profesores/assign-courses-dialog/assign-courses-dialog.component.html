@@ -1,25 +1,92 @@
-<h2 mat-dialog-title>Asignar Cursos - {{data.profe.nombreCompleto}}</h2>
+<h2 mat-dialog-title>
+    <span *ngIf="vistaActual === 'lista'">Cursos Asignados - {{data.profe.nombreCompleto}}</span>
+    <span *ngIf="vistaActual === 'agregar'">Agregar Curso - {{data.profe.nombreCompleto}}</span>
+</h2>
 
 <mat-dialog-content>
-    <div *ngIf="loading" class="loading-container">
-        <p>Cargando cursos...</p>
+    <!-- VISTA: Lista de cursos asignados -->
+    <div *ngIf="vistaActual === 'lista'">
+        <!-- Loading -->
+        <div *ngIf="loading" class="loading-container">
+            <mat-spinner diameter="30"></mat-spinner>
+            <p>Cargando cursos asignados...</p>
+        </div>
+
+        <!-- Sin cursos asignados -->
+        <div *ngIf="!loading && cursosAsignados.length === 0" class="empty-state">
+            <mat-icon>school</mat-icon>
+            <p>Este profesor no tiene cursos asignados.</p>
+        </div>
+
+        <!-- Tabla de cursos asignados -->
+        <table mat-table [dataSource]="cursosAsignados" class="mat-elevation-z2"
+            *ngIf="!loading && cursosAsignados.length > 0">
+            <ng-container matColumnDef="titulo">
+                <th mat-header-cell *matHeaderCellDef>Curso</th>
+                <td mat-cell *matCellDef="let curso">{{ curso.titulo }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="acciones">
+                <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                <td mat-cell *matCellDef="let curso">
+                    <button mat-icon-button color="warn" (click)="eliminarCurso(curso)" title="Eliminar">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <!-- Botón para agregar nuevo -->
+        <div class="add-button-container">
+            <button mat-raised-button color="primary" (click)="mostrarAgregar()">
+                <mat-icon>add</mat-icon>
+                Asignar Nuevo Curso
+            </button>
+        </div>
     </div>
 
-    <div *ngIf="!loading && cursos.length === 0" class="empty-state">
-        <p>No se encontraron cursos disponibles.</p>
-    </div>
+    <!-- VISTA: Agregar nuevos cursos -->
+    <div *ngIf="vistaActual === 'agregar'">
+        <div *ngIf="loadingDisponibles" class="loading-container">
+            <mat-spinner diameter="30"></mat-spinner>
+            <p>Cargando cursos disponibles...</p>
+        </div>
 
-    <mat-selection-list *ngIf="!loading && cursos.length > 0">
-        <mat-list-option *ngFor="let curso of cursos" [selected]="isCourseSelected(curso)"
-            (click)="toggleSelection(curso)">
-            {{curso.displayName}}
-        </mat-list-option>
-    </mat-selection-list>
+        <div *ngIf="!loadingDisponibles && cursosDisponibles.length === 0" class="empty-state">
+            <mat-icon>check_circle</mat-icon>
+            <p>No hay más cursos disponibles para asignar.</p>
+        </div>
+
+        <mat-selection-list *ngIf="!loadingDisponibles && cursosDisponibles.length > 0">
+            <mat-list-option *ngFor="let curso of cursosDisponibles" [selected]="isCourseSelected(curso)"
+                [disabled]="curso.yaAsignado" (click)="!curso.yaAsignado && toggleSelection(curso)">
+                <span [class.curso-asignado]="curso.yaAsignado">
+                    {{curso.displayName}}
+                    <span *ngIf="curso.yaAsignado" class="badge-asignado">(Ya asignado)</span>
+                </span>
+            </mat-list-option>
+        </mat-selection-list>
+    </div>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-    <button mat-button (click)="onCancel()" [disabled]="saving">Cancelar</button>
-    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="saving || selectedCourses.length === 0">
-        {{ saving ? 'Guardando...' : 'Guardar' }}
-    </button>
+    <!-- Acciones para vista LISTA -->
+    <ng-container *ngIf="vistaActual === 'lista'">
+        <button mat-button (click)="onCancel()">Cerrar</button>
+    </ng-container>
+
+    <!-- Acciones para vista AGREGAR -->
+    <ng-container *ngIf="vistaActual === 'agregar'">
+        <button mat-button (click)="volverALista()">
+            <mat-icon>arrow_back</mat-icon>
+            Volver
+        </button>
+        <button mat-raised-button color="primary" (click)="onSave()"
+            [disabled]="saving || selectedCourses.length === 0">
+            {{ saving ? 'Guardando...' : 'Guardar' }}
+        </button>
+    </ng-container>
 </mat-dialog-actions>

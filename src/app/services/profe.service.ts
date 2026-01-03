@@ -79,4 +79,19 @@ export class ProfeService {
             headers: this.getHeaders()
         });
     }
+
+    // GET /api/ProfeCurso/{usuarioId} - Obtener cursos asignados al profesor
+    getMisCursos(usuarioId: number): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiBase}/ProfeCurso/${usuarioId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    // DELETE /api/ProfeCurso/{usuarioId} - Eliminar cursos asignados al profesor
+    removeCursosFromProfe(usuarioId: number, listaCursoId: number[]): Observable<any> {
+        return this.http.delete<any>(`${this.apiBase}/ProfeCurso/${usuarioId}`, {
+            headers: this.getHeaders(),
+            body: { listaCursoId }
+        });
+    }
 }
