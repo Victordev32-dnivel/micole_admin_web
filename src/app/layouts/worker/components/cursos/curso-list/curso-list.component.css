@@ -70,3 +70,17 @@ td.mat-cell {
     height: 56px;
     /* Match standard mat-form-field height */
 }
+
+/* Fix for actions column to prevent stacking */
+.mat-column-acciones {
+    white-space: nowrap;
+    width: 120px;
+    text-align: center;
+}
+
+td.mat-column-acciones {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}

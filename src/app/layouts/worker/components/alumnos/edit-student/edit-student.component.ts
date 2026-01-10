@@ -46,7 +46,8 @@ import {
   MatAutocompleteSelectedEvent,
 } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, forkJoin, Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 
 export const MY_DATE_FORMATS = {
   parse: { dateInput: 'DD/MM/YYYY' },
@@ -71,6 +72,9 @@ interface Salon {
 interface Apoderado {
   id: number;
   nombre: string;
+  apellidos?: string;
+  dni?: string;
+  numeroDocumento?: string;
 }
 
 @Component({
@@ -179,17 +183,50 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Cargar salones y apoderados cuando se inicializa el componente
-    this.loadSalones();
-    this.loadApoderados();
-
-    // Configurar filtros de búsqueda
-    this.setupSearchFilters();
-
-    // Cargar datos iniciales al abrir el diálogo
-    if (this.data && this.data.id) {
-      this.loadInitialData();
+    const studentId = Number(this.data.id);
+    if (!studentId) {
+      this.error = 'ID inválido';
+      return;
     }
+
+    this.loading = true;
+    this.setupSearchFilters(); // Setup filters early
+
+    // Use forkJoin to wait for all data
+    forkJoin({
+      salones: this.getSalonesObservable(),
+      apoderados: this.getApoderadosObservable(),
+      student: this.getStudentObservable(studentId)
+    }).subscribe({
+      next: (results) => {
+        this.ngZone.run(() => {
+          // 1. Set Salones
+          this.salones = results.salones || [];
+          this.filteredSalones = this.salones.slice();
+
+          // 2. Set Apoderados
+          this.apoderados = results.apoderados || [];
+          this.filteredApoderados = this.apoderados.slice();
+
+          // 3. Process Student Data
+          const student = results.student;
+          if (student) {
+            this.processStudentData(student);
+          }
+
+          this.loading = false;
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err) => {
+        this.ngZone.run(() => {
+          console.error('Error loading initial data:', err);
+          this.error = 'Error al cargar datos. Por favor, intente nuevamente.';
+          this.loading = false;
+          this.cdr.detectChanges();
+        });
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -204,14 +241,12 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   private setupSearchFilters(): void {
-    // Filtro para salones
     this.salonSearchCtrl.valueChanges
       .pipe(takeUntil(this._onDestroy))
       .subscribe((value) => {
         this.filterSalones(value);
       });
 
-    // Filtro para apoderados
     this.apoderadoSearchCtrl.valueChanges
       .pipe(takeUntil(this._onDestroy))
       .subscribe((value) => {
@@ -254,7 +289,6 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
     });
   }
 
-  // Funciones para mostrar el texto seleccionado en el input
   displaySalonFn = (salon: Salon): string => {
     if (!salon) return '';
     return salon.nombre || salon.descripcion || `Salón ${salon.id}`;
@@ -264,7 +298,6 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
     return apoderado ? apoderado.nombre : '';
   };
 
-  // Manejadores de selección
   onSalonSelected(event: MatAutocompleteSelectedEvent): void {
     const salon = event.option.value;
     const salonId = salon ? salon.id : '';
@@ -277,184 +310,158 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
     this.editForm.patchValue({ idApoderado: apoderadoId });
   }
 
+  // Observable wrappers
+  private getSalonesObservable(): Observable<Salon[]> {
+    let colegioId = this.data?.colegioId || this.userService.getUserData()?.colegio;
+    if (!colegioId) return of([]);
+
+    return this.http.get<any>(`${this.salonesApiUrl}/${colegioId}`, { headers: this.getHeaders() })
+      .pipe(
+        map(response => {
+          let data = response;
+          if (response && response.data) data = response.data;
+          else if (response && response.salones) data = response.salones;
+          return Array.isArray(data) ? data : [];
+        }),
+        catchError(err => {
+          console.error('Error loading salones', err);
+          return of([]);
+        })
+      );
+  }
+
+  private getApoderadosObservable(): Observable<Apoderado[]> {
+    let colegioId = this.data?.colegioId || this.userService.getUserData()?.colegio;
+    if (!colegioId) return of([]);
+
+    return this.http.get<any>(`${this.apoderadosApiUrl}/${colegioId}`, { headers: this.getHeaders() })
+      .pipe(
+        map(response => {
+          let data = [];
+          if (response && response.data) data = response.data;
+          else if (Array.isArray(response)) data = response;
+          return data;
+        }),
+        catchError(err => {
+          console.error('Error loading apoderados', err);
+          return of([]);
+        })
+      );
+  }
+
+  private getStudentObservable(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() })
+      .pipe(
+        map(response => {
+          if (response && response.data) return response.data;
+          if (response && response.student) return response.student;
+          if (response && response.alumno) return response.alumno;
+          return response;
+        })
+      );
+  }
+
+  private processStudentData(student: any) {
+    console.log('Student data loaded:', student);
+    this.studentData = student; // Store for comparison later
+
+    this.initialNumeroDocumento = student.numeroDocumento || student.numero_documento;
+
+    // --- LOGIC TO FIND SALON ---
+    // 1. Try ID
+    let currentSalon = this.salones.find(s =>
+      s.id === (student.idSalon || student.id_salon)
+    );
+    // 2. Try Name Match if ID didn't work (fallback)
+    if (!currentSalon && student.salon) {
+      const salonName = this.normalizeString(student.salon);
+      currentSalon = this.salones.find(s => {
+        const sName = this.normalizeString(s.nombre || '');
+        const sDesc = this.normalizeString(s.descripcion || '');
+        return sName === salonName || sDesc === salonName || sName.includes(salonName) || salonName.includes(sName);
+      });
+    }
+
+    // --- LOGIC TO FIND APODERADO ---
+    // 1. Try ID
+    let currentApoderado = this.apoderados.find(a =>
+      a.id === (student.idApoderado || student.id_apoderado)
+    );
+    // 2. Try Name/Document match fallback
+    if (!currentApoderado) {
+      // Priority 1: Document Match (Robust)
+      const studentDoc = student.numeroDocumentoApoderado || student.dniApoderado;
+      if (studentDoc) {
+        currentApoderado = this.apoderados.find(a => {
+          const aDoc = (a as any).dni || (a as any).numeroDocumento || (a as any).numero_documento || (a as any).nro_documento;
+          return aDoc && String(aDoc).trim() === String(studentDoc).trim();
+        });
+      }
+
+      // Priority 2: Name Match (Fallback)
+      if (!currentApoderado && student.nombreApoderado) {
+        const sName = this.normalizeString(`${student.nombreApoderado} ${student.apellidoPaternoApoderado || ''} ${student.apellidoMaternoApoderado || ''}`);
+        currentApoderado = this.apoderados.find(a => {
+          const aName = this.normalizeString(`${a.nombre} ${(a as any).apellidos || (a as any).apellidoPaterno || ''}`);
+          // Check if matches or significantly includes
+          return aName === sName || (sName.length > 5 && aName.includes(sName)) || (aName.length > 5 && sName.includes(aName));
+        });
+      }
+    }
+
+    this.editForm.patchValue({
+      numeroDocumento: student.numeroDocumento || student.numero_documento,
+      nombres: student.nombres || student.nombre || '',
+      apellidoPaterno: student.apellidoPaterno || student.apellido_paterno || '',
+      apellidoMaterno: student.apellidoMaterno || student.apellido_materno || '',
+      genero:
+        (student.genero === 'm' || student.genero === 'Masculino')
+          ? 'Masculino'
+          : (student.genero === 'f' || student.genero === 'Femenino')
+            ? 'Femenino'
+            : (student.genero === 'o' || student.genero === 'Otro')
+              ? 'Otro'
+              : '',
+      telefono: student.telefono || '',
+      fechaNacimiento: student.fechaNacimiento || student.fecha_nacimiento
+        ? new Date(student.fechaNacimiento || student.fecha_nacimiento)
+        : null,
+      direccion: student.direccion || '',
+      estado: (student.estado === 'activo' || student.estado === 'Activo') ? 'Activo' : 'Inactivo',
+      idSalon: currentSalon ? currentSalon.id : '',
+      idApoderado: currentApoderado ? currentApoderado.id : '',
+      contrasena: student.contrasena || student.password || '',
+    });
+
+    // Set Autocomplete Objects
+    if (currentApoderado) {
+      this.apoderadoSearchCtrl.setValue(currentApoderado);
+    }
+    if (currentSalon) {
+      this.salonSearchCtrl.setValue(currentSalon);
+    }
+
+    this.isFormChanged = false;
+  }
+
+  private normalizeString(str: string): string {
+    return str
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // remove accents
+      .trim();
+  }
+
+  // Remove old load methods as they are replaced by Observables
+  private loadSalones() { }
+  private loadApoderados() { }
+  private loadInitialData() { }
+
   private getHeaders(): HttpHeaders {
     const jwtToken = this.userService.getJwtToken() || this.staticToken;
     return new HttpHeaders({
       Authorization: `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
-    });
-  }
-
-  private loadSalones(): void {
-    let colegioId = this.data?.colegioId;
-
-    if (!colegioId) {
-      const userData = this.userService.getUserData();
-      colegioId = userData?.colegio;
-    }
-
-    if (!colegioId) {
-      console.error('No se encontró ID del colegio para salones');
-      return;
-    }
-
-    this.loadingSalones = true;
-    const headers = this.getHeaders();
-    const url = `${this.salonesApiUrl}/${colegioId}`;
-
-    this.http.get<any>(url, { headers }).subscribe({
-      next: (response) => {
-        this.ngZone.run(() => {
-          let salonesData = response;
-          if (response && response.data) {
-            salonesData = response.data;
-          } else if (response && response.salones) {
-            salonesData = response.salones;
-          } else if (Array.isArray(response)) {
-            salonesData = response;
-          }
-
-          this.salones = salonesData || [];
-          this.filteredSalones = this.salones.slice();
-          this.loadingSalones = false;
-          this.cdr.detectChanges();
-        });
-      },
-      error: (error) => {
-        this.ngZone.run(() => {
-          console.error('Error al cargar salones:', error);
-          this.loadingSalones = false;
-          this.cdr.detectChanges();
-        });
-      },
-    });
-  }
-
-  private loadApoderados(): void {
-    let colegioId = this.data?.colegioId;
-
-    if (!colegioId) {
-      const userData = this.userService.getUserData();
-      colegioId = userData?.colegio;
-    }
-
-    if (!colegioId) {
-      console.error('No se encontró ID del colegio para apoderados');
-      return;
-    }
-
-    this.loadingApoderados = true;
-    const headers = this.getHeaders();
-    const url = `${this.apoderadosApiUrl}/${colegioId}`;
-
-    this.http.get<any>(url, { headers }).subscribe({
-      next: (response) => {
-        this.ngZone.run(() => {
-          let apoderadosData = [];
-          if (response && response.data && Array.isArray(response.data)) {
-            apoderadosData = response.data;
-          } else if (Array.isArray(response)) {
-            apoderadosData = response;
-          }
-
-          this.apoderados = apoderadosData || [];
-          this.filteredApoderados = this.apoderados.slice();
-          this.loadingApoderados = false;
-          this.cdr.detectChanges();
-        });
-      },
-      error: (error) => {
-        this.ngZone.run(() => {
-          console.error('Error al cargar apoderados:', error);
-          this.loadingApoderados = false;
-          this.cdr.detectChanges();
-        });
-      },
-    });
-  }
-
-  private loadInitialData() {
-    this.loading = true;
-    const studentId = Number(this.data.id);
-    if (isNaN(studentId)) {
-      this.error = 'ID inválido';
-      this.loading = false;
-      this.cdr.detectChanges();
-      return;
-    }
-    const url = `${this.apiUrl}/${studentId}`;
-
-    this.http.get<any>(url, { headers: this.getHeaders() }).subscribe({
-      next: (response) => {
-        this.ngZone.run(() => {
-          let student = response;
-          if (response && response.data) {
-            student = response.data;
-          } else if (response && response.student) {
-            student = response.student;
-          } else if (response && response.alumno) {
-            student = response.alumno;
-          }
-
-          console.log('Student data loaded:', student);
-
-          this.initialNumeroDocumento = student.numeroDocumento || student.numero_documento;
-
-          // Buscar el apoderado y salón actual para mostrarlos en los inputs
-          const currentApoderado = this.apoderados.find(
-            (a) => a.id === (student.idApoderado || student.id_apoderado)
-          );
-          const currentSalon = this.salones.find(
-            (s) => s.id === (student.idSalon || student.id_salon)
-          );
-
-          this.editForm.patchValue({
-            numeroDocumento: student.numeroDocumento || student.numero_documento,
-            nombres: student.nombres || '',
-            apellidoPaterno: student.apellidoPaterno || student.apellido_paterno || '',
-            apellidoMaterno: student.apellidoMaterno || student.apellido_materno || '',
-            genero:
-              (student.genero === 'm' || student.genero === 'Masculino')
-                ? 'Masculino'
-                : (student.genero === 'f' || student.genero === 'Femenino')
-                  ? 'Femenino'
-                  : (student.genero === 'o' || student.genero === 'Otro')
-                    ? 'Otro'
-                    : '',
-            telefono: student.telefono || '',
-            fechaNacimiento: student.fechaNacimiento || student.fecha_nacimiento
-              ? new Date(student.fechaNacimiento || student.fecha_nacimiento)
-              : null,
-            direccion: student.direccion || '',
-            estado: (student.estado === 'activo' || student.estado === 'Activo') ? 'Activo' : 'Inactivo',
-            idSalon: student.idSalon || student.id_salon || '',
-            idApoderado: student.idApoderado || student.id_apoderado || '',
-            contrasena: student.contrasena || student.password || '',
-          });
-
-          // Establecer valores en los controles de búsqueda
-          if (currentApoderado) {
-            this.apoderadoSearchCtrl.setValue(currentApoderado);
-          }
-
-          if (currentSalon) {
-            this.salonSearchCtrl.setValue(currentSalon);
-          }
-
-          this.isFormChanged = false; // Inicialmente no hay cambios
-
-          this.loading = false;
-          this.cdr.detectChanges();
-        });
-      },
-      error: (error) => {
-        this.ngZone.run(() => {
-          console.error('Error al cargar datos del alumno:', error);
-          this.error = 'Error al cargar datos del alumno';
-          this.loading = false;
-          this.cdr.detectChanges();
-        });
-      },
     });
   }
 
