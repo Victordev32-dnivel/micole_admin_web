@@ -182,7 +182,7 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
           Validators.maxLength(9),
         ],
       ],
-      fechaNacimiento: [''],
+      fechaNacimiento: [null],
       direccion: [''],
       estado: ['Activo'],
       contrasena: [''],
@@ -563,13 +563,13 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
         telefono: formValue.telefono || '',
         fechaNacimiento: formValue.fechaNacimiento
           ? this.formatDate(formValue.fechaNacimiento)
-          : '',
+          : null,
         direccion: formValue.direccion || '',
         estado: formValue.estado || 'Activo',
         contrasena: formValue.contrasena || '',
-        idApoderado: formValue.idApoderado ? +formValue.idApoderado : null,
-        idSalon: formValue.idSalon ? +formValue.idSalon : null,
-        idColegio: this.data?.colegioId || 0,
+        idApoderado: formValue.idApoderado ? +formValue.idApoderado : 0,
+        idSalon: formValue.idSalon ? +formValue.idSalon : 0,
+        // idColegio: this.data?.colegioId || 0, // Removed as per user schema request
       };
 
       const headers = this.getHeaders();

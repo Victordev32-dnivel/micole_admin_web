@@ -102,10 +102,10 @@ export class StudentListComponent implements OnInit {
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
       console.log('🚀 Iniciando StudentListComponent...');
-      
+
       this.checkScreenSize();
       this.loadUserData();
-      
+
       // Verificar que tenemos los datos del usuario antes de cargar
       const userData = this.userService.getUserData();
       if (userData && userData.colegio) {
@@ -125,7 +125,7 @@ export class StudentListComponent implements OnInit {
           }
         });
       }
-      
+
       // Configurar el filtro de búsqueda
       this.searchTermControl.valueChanges.subscribe((term) => {
         this.filterStudents(term);
@@ -191,7 +191,7 @@ export class StudentListComponent implements OnInit {
   private loadUserData(): void {
     const userData = this.userService.getUserData();
     console.log('📋 Datos de usuario cargados:', userData);
-    
+
     if (userData) {
       this.userName = userData.nombre;
       this.userType = userData.tipoUsuario;
@@ -215,7 +215,7 @@ export class StudentListComponent implements OnInit {
   private getHeaders(): HttpHeaders {
     const jwtToken = this.userService.getJwtToken() || this.staticToken;
     console.log('🔑 Token usado:', jwtToken ? 'Token presente' : 'Sin token');
-    
+
     return new HttpHeaders({
       Authorization: `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
@@ -298,12 +298,12 @@ export class StudentListComponent implements OnInit {
       return;
     }
 
-    console.log('👥 Cargando estudiantes...', { 
-      page, 
-      colegioId: this.colegioId, 
-      selectedSalonId: this.selectedSalonId 
+    console.log('👥 Cargando estudiantes...', {
+      page,
+      colegioId: this.colegioId,
+      selectedSalonId: this.selectedSalonId
     });
-    
+
     this.loading = true;
     const headers = this.getHeaders();
 
@@ -322,10 +322,10 @@ export class StudentListComponent implements OnInit {
         console.log('📥 Respuesta completa de la API:', response);
         console.log('📥 Tipo de respuesta:', typeof response);
         console.log('📥 Es array?', Array.isArray(response));
-        
+
         this.ngZone.run(() => {
           let studentsData: any[] = [];
-          
+
           // CORRECCIÓN: Mejorar el procesamiento de la respuesta
           if (Array.isArray(response)) {
             studentsData = response;
@@ -368,7 +368,7 @@ export class StudentListComponent implements OnInit {
             this.students = [...studentsData].reverse();
             this.filteredStudents = [...this.students];
             this.currentPage = page;
-            
+
             // CORRECCIÓN: Manejar metadatos de paginación
             if (response && typeof response === 'object' && !Array.isArray(response)) {
               this.totalAlumnos = response.totalAlumnos || response.total || response.count || studentsData.length;
@@ -395,7 +395,7 @@ export class StudentListComponent implements OnInit {
 
           this.updateVisiblePages();
           this.loading = false;
-          
+
           // CORRECCIÓN: Forzar detección de cambios
           this.cdr.detectChanges();
         });
@@ -405,7 +405,7 @@ export class StudentListComponent implements OnInit {
         console.error('Status:', error.status);
         console.error('Message:', error.message);
         console.error('Error body:', error.error);
-        
+
         this.ngZone.run(() => {
           this.students = [];
           this.filteredStudents = [];
@@ -481,6 +481,7 @@ export class StudentListComponent implements OnInit {
         id: student.id,
         numero_documento: student.numero_documento,
         colegioId: this.colegioId,
+        alumnoSalonId: student.alumnoSalonId,
       },
     });
 

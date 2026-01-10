@@ -328,6 +328,11 @@ export class UnifiedAsistenciaComponent implements OnInit {
             console.log('Sample student structure:', this.alumnos[0]);
         }
 
+        console.log('Exporting for salon:', salonId, 'Month:', mesIdx);
+        if (this.alumnos.length > 0) {
+            console.log('Sample student structure:', this.alumnos[0]);
+        }
+
         if (!salonId || !mesIdx || this.alumnos.length === 0) {
             this.snackBar.open('Seleccione un salón con alumnos para exportar.', 'Cerrar', { duration: 3000 });
             return;

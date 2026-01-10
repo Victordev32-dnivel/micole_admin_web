@@ -164,7 +164,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
           Validators.maxLength(9),
         ],
       ],
-      fechaNacimiento: [''],
+      fechaNacimiento: [null],
       direccion: [''],
       estado: ['Activo'],
       idSalon: [''],
@@ -503,7 +503,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
     return Boolean(dniValid && telefonoValid);
   }
 
-  private salonUpdateApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/SalonAlumno';
+  private salonUpdateApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/SalonAlumno';
 
   onSave(): void {
     const telefono = this.editForm.get('telefono')?.value;
@@ -542,7 +542,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
           telefono: formValues.telefono || '',
           fechaNacimiento: formValues.fechaNacimiento
             ? this.formatDate(formValues.fechaNacimiento)
-            : '',
+            : null,
           direccion: formValues.direccion || '',
           estado: formValues.estado || 'Activo',
           idApoderado: formValues.idApoderado ? +formValues.idApoderado : null,
@@ -577,7 +577,20 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
       // Si cambió el salón, llamamos a la API específica primero
       if (newSalonId && newSalonId !== initialSalonId) {
         // PUT /SalonAlumno/{id}/{IdSalon}
-        const salonUrl = `${this.salonUpdateApiUrl}/${studentId}/${newSalonId}`;
+        // USAMOS alumnoSalonId QUE VIENE DE LA TABLA (data.alumnoSalonId)
+        const alumnoSalonId = this.data.alumnoSalonId;
+
+        if (!alumnoSalonId) {
+          console.error('No se tiene el alumnoSalonId para actualizar el salón.');
+          // Fallback? O error? Procedemos con updateMainData pero avisamos?
+          // Si no hay ID de relación, tal vez sea un POST en vez de PUT? 
+          // Por ahora asumimos que el usuario quiere editar existentes.
+          this.error = 'Error: No se encontró ID de relación alumno-salón.';
+          this.loading = false;
+          return;
+        }
+
+        const salonUrl = `${this.salonUpdateApiUrl}/${alumnoSalonId}/${newSalonId}`;
 
         this.http.put(salonUrl, {}, { headers: this.getHeaders() }).subscribe({
           next: () => {
