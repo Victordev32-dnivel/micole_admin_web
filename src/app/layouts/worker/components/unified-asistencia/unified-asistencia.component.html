@@ -36,6 +36,20 @@
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Mes Reporte</mat-label>
+                    <mat-select formControlName="mesReporte">
+                        <mat-option *ngFor="let mes of meses; let i = index" [value]="i + 1">
+                            {{ mes }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <button mat-raised-button color="primary" type="button" (click)="exportarExcel()"
+                    [disabled]="loading || !form.get('idSalon')?.value" style="height: 56px; margin-bottom: 20px;">
+                    <mat-icon>description</mat-icon> Exportar Excel
+                </button>
             </form>
 
             <!-- Mensaje cuando no hay tipos "Otros" configurados -->

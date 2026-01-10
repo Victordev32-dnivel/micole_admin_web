@@ -30,6 +30,8 @@ import {
   HttpHeaders,
 } from '@angular/common/http';
 import { UserService } from '../../../../services/UserData';
+import { ExcelService } from '../../../../services/excel.service';
+import { forkJoin, map, catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-salidas-list',
@@ -62,6 +64,11 @@ export class SalidasListComponent implements OnInit {
   successMessage: string | null = null;
   colegioId: number = 0;
 
+  meses: string[] = [
+    'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+    'JULIO', 'AGOSTO', 'SETIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+  ];
+
   private salonApiUrl =
     'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista';
   private alumnoApiUrl =
@@ -79,11 +86,14 @@ export class SalidasListComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
     private userService: UserService,
+    private excelService: ExcelService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
+    const currentMonth = new Date().getMonth() + 1; // 1-12
     this.salidaForm = this.fb.group({
       idSalon: ['', Validators.required],
-      idAlumno: ['', Validators.required],
+      idAlumno: [''], // Ya no es requerido para la acción de exportar (aunque sí para ver detalle individual)
+      mesReporte: [currentMonth]
     });
   }
 
@@ -230,6 +240,110 @@ export class SalidasListComponent implements OnInit {
           this.cdr.detectChanges();
         },
       });
+  }
+
+  exportarExcel() {
+    const salonId = this.salidaForm.get('idSalon')?.value;
+    const mesIdx = this.salidaForm.get('mesReporte')?.value; // 1-12
+
+    if (!salonId || !mesIdx || this.alumnos.length === 0) {
+      this.error = 'Seleccione un salón con alumnos para exportar.';
+      return;
+    }
+
+    this.loading = true;
+    this.error = null;
+    const headers = this.getHeaders();
+    const observables = [];
+
+    // Preparar observables para cada alumno
+    for (const alumno of this.alumnos) {
+      observables.push(
+        this.http.get<any>(`${this.salidaApiUrl}/${alumno.id}`, { headers }).pipe(
+          map(response => {
+            const salidas = Array.isArray(response) ? response : (response.data || []);
+            // Filtrar por mes
+            const salidasMes = salidas.filter((s: any) => {
+              const fechaStr = s.fecha || s.fecha_salida;
+              if (!fechaStr) return false;
+              // asumiendo formato YYYY-MM-DD o similar, o Date object
+              const fecha = new Date(fechaStr);
+              // Ojo: los strings de fecha a veces tienen problema con timezone.
+              // Mejor parsing seguro si es string "YYYY-MM-DD" -> split
+              if (typeof fechaStr === 'string' && fechaStr.includes('-')) {
+                const parts = fechaStr.split('-');
+                if (parts.length >= 2) {
+                  return parseInt(parts[1]) === parseInt(mesIdx);
+                }
+              }
+              return (fecha.getMonth() + 1) === parseInt(mesIdx);
+            });
+
+            // Mapear a formato día/estado
+            const asistenciasDia = salidasMes.map((s: any) => {
+              const fechaStr = s.fecha || s.fecha_salida;
+              let dia = 0;
+              if (typeof fechaStr === 'string' && fechaStr.includes('-')) {
+                dia = parseInt(fechaStr.split('-')[2]);
+              } else {
+                dia = new Date(fechaStr).getDate();
+              }
+              // Estado: 'S' de Salida o las siglas de su estado (P=Puntual, T=Tarde)
+              // Si el estado es 'Puntual', ponemos 'P', si es 'Tarde' ponemos 'T'
+              let estado = 'S'; // Default Salida
+              if (s.estado) {
+                const est = s.estado.toLowerCase();
+                if (est.includes('puntual')) estado = '•'; // Punto para asistencia normal
+                else if (est.includes('tarde')) estado = 'T';
+                else if (est.includes('falta')) estado = 'F';
+                else estado = 'S';
+              }
+              return { dia, estado };
+            });
+
+            return {
+              dni: alumno.dni || alumno.codigo, // Ajustar según modelo
+              nombres: alumno.nombre || alumno.nombres, // Ajustar según modelo
+              apellidos: alumno.apellido || alumno.apellidos, // Ajustar según modelo total
+              asistencias: asistenciasDia,
+              totalATiempo: salidasMes.filter((s: any) => s.estado?.toLowerCase().includes('puntual')).length,
+              totalTardanza: salidasMes.filter((s: any) => s.estado?.toLowerCase().includes('tarde')).length,
+              totalFaltas: 0 // Salidas no suelen tener 'Faltas', eso es entrada/asistencia
+            };
+          }),
+          catchError(err => of({
+            dni: alumno.dni, nombres: alumno.nombres, apellidos: alumno.apellidos,
+            asistencias: [], totalATiempo: 0, totalTardanza: 0, totalFaltas: 0
+          })) // Si falla uno, no detener todo
+        )
+      );
+    }
+
+    forkJoin(observables).subscribe({
+      next: (dataAlumnos) => {
+        const salonNombre = this.salones.find(s => s.id === salonId)?.nombre || 'Salon';
+        const mesNombre = this.meses[mesIdx - 1];
+        const filename = `Reporte_Salidas_${salonNombre}_${mesNombre}`;
+
+        this.excelService.exportarAsistencia(
+          dataAlumnos,
+          mesNombre,
+          `GRADO Y SECCIÓN: ${salonNombre}`,
+          filename
+        );
+
+        this.loading = false;
+        this.successMessage = 'Reporte generado y descargado correctamente';
+        this.cdr.detectChanges();
+        this.limpiarMensajeDespuesDe(4000);
+      },
+      error: (err) => {
+        this.loading = false;
+        this.error = 'Error al generar el reporte masivo.';
+        this.cdr.detectChanges();
+      }
+    });
+
   }
 
   // Método para eliminar salida

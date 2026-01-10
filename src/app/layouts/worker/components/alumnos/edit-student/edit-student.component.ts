@@ -503,6 +503,8 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
     return Boolean(dniValid && telefonoValid);
   }
 
+  private salonUpdateApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/SalonAlumno';
+
   onSave(): void {
     const telefono = this.editForm.get('telefono')?.value;
     const telefonoValid = !telefono || /^[0-9]{9}$/.test(telefono);
@@ -517,53 +519,87 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
       this.error = null;
 
       const formValues = this.editForm.value;
-      const editData = {
-        numeroDocumento: formValues.numeroDocumento, // Usa el nuevo valor en lugar de this.initialNumeroDocumento
-        nombres: formValues.nombres || '',
-        apellidoPaterno: formValues.apellidoPaterno || '',
-        apellidoMaterno: formValues.apellidoMaterno || '',
-        genero:
-          formValues.genero === 'Masculino'
-            ? 'm'
-            : formValues.genero === 'Femenino'
-              ? 'f'
-              : formValues.genero === 'Otro'
-                ? 'o'
-                : '',
-        telefono: formValues.telefono || '',
-        fechaNacimiento: formValues.fechaNacimiento
-          ? this.formatDate(formValues.fechaNacimiento)
-          : '',
-        direccion: formValues.direccion || '',
-        estado: formValues.estado || 'Activo',
-        idApoderado: formValues.idApoderado ? +formValues.idApoderado : null,
-        idSalon: formValues.idSalon ? +formValues.idSalon : null,
-        contrasena: formValues.contrasena || '',
-        idColegio: this.data.colegioId || 0,
+      const studentId = Number(this.data.id);
+
+      // Verificamos si hubo cambio de salón
+      const initialSalonId = this.studentData?.idSalon || this.studentData?.id_salon;
+      const newSalonId = formValues.idSalon ? +formValues.idSalon : null;
+
+      const updateMainData = () => {
+        const editData = {
+          numeroDocumento: formValues.numeroDocumento,
+          nombres: formValues.nombres || '',
+          apellidoPaterno: formValues.apellidoPaterno || '',
+          apellidoMaterno: formValues.apellidoMaterno || '',
+          genero:
+            formValues.genero === 'Masculino'
+              ? 'm'
+              : formValues.genero === 'Femenino'
+                ? 'f'
+                : formValues.genero === 'Otro'
+                  ? 'o'
+                  : '',
+          telefono: formValues.telefono || '',
+          fechaNacimiento: formValues.fechaNacimiento
+            ? this.formatDate(formValues.fechaNacimiento)
+            : '',
+          direccion: formValues.direccion || '',
+          estado: formValues.estado || 'Activo',
+          idApoderado: formValues.idApoderado ? +formValues.idApoderado : null,
+          idSalon: newSalonId,
+          contrasena: formValues.contrasena || '',
+          idColegio: this.data.colegioId || 0,
+        };
+
+        const url = `${this.apiUrl}/${studentId}`;
+
+        this.http
+          .put<any>(url, editData, { headers: this.getHeaders() })
+          .subscribe({
+            next: (response) => {
+              this.ngZone.run(() => {
+                this.dialogRef.close(this.editForm.value);
+                this.loading = false;
+                this.cdr.detectChanges();
+              });
+            },
+            error: (error) => {
+              this.ngZone.run(() => {
+                console.error('Error al editar alumno:', error);
+                this.error = 'Error al guardar cambios';
+                this.loading = false;
+                this.cdr.detectChanges();
+              });
+            },
+          });
       };
 
-      const studentId = Number(this.data.id);
-      const url = `${this.apiUrl}/${studentId}`;
+      // Si cambió el salón, llamamos a la API específica primero
+      if (newSalonId && newSalonId !== initialSalonId) {
+        // PUT /SalonAlumno/{id}/{IdSalon}
+        const salonUrl = `${this.salonUpdateApiUrl}/${studentId}/${newSalonId}`;
 
-      this.http
-        .put<any>(url, editData, { headers: this.getHeaders() })
-        .subscribe({
-          next: (response) => {
+        this.http.put(salonUrl, {}, { headers: this.getHeaders() }).subscribe({
+          next: () => {
+            console.log('Salón actualizado correctamente');
+            updateMainData();
+          },
+          error: (err) => {
+            console.error('Error al actualizar salón:', err);
+            // Aun si falla el salón, ¿intentamos guardar lo demás? 
+            // Mejor mostramos error para que reintente.
             this.ngZone.run(() => {
-              this.dialogRef.close(this.editForm.value);
+              this.error = 'Error al actualizar el salón del alumno.';
               this.loading = false;
               this.cdr.detectChanges();
             });
-          },
-          error: (error) => {
-            this.ngZone.run(() => {
-              console.error('Error al editar alumno:', error);
-              this.error = 'Error al guardar cambios';
-              this.loading = false;
-              this.cdr.detectChanges();
-            });
-          },
+          }
         });
+      } else {
+        // Si no cambio el salón, guardamos directo
+        updateMainData();
+      }
+
     } else {
       this.error = 'No hay cambios para guardar.';
     }
@@ -576,7 +612,6 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
   openCalendar(): void {
     if (isPlatformBrowser(this.platformId) && this.datepicker) {
       this.datepicker.open();
-      ('Calendario abierto manualmente');
     } else {
       console.error('Datepicker no encontrado');
     }

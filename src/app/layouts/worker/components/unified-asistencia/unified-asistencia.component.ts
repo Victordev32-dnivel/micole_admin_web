@@ -14,6 +14,8 @@ import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http'
 import { ActivatedRoute } from '@angular/router';
 import { UserService } from '../../../../services/UserData';
 import { TipoAsistenciaService, TipoAsistencia } from '../../../../services/tipo-asistencia.service';
+import { ExcelService } from '../../../../services/excel.service';
+import { forkJoin, map, catchError, of } from 'rxjs';
 
 @Component({
     selector: 'app-unified-asistencia',
@@ -45,6 +47,11 @@ export class UnifiedAsistenciaComponent implements OnInit {
     successMessage: string | null = null;
     colegioId: number = 0;
 
+    meses: string[] = [
+        'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+        'JULIO', 'AGOSTO', 'SETIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+    ];
+
     // Tipo actual de la ruta: 'entrada', 'salida', 'otros'
     tipoActual: string = 'entrada';
 
@@ -71,12 +78,15 @@ export class UnifiedAsistenciaComponent implements OnInit {
         private userService: UserService,
         private tipoAsistenciaService: TipoAsistenciaService,
         private snackBar: MatSnackBar,
+        private excelService: ExcelService,
         private route: ActivatedRoute,
         @Inject(PLATFORM_ID) private platformId: Object
     ) {
+        const currentMonth = new Date().getMonth() + 1;
         this.form = this.fb.group({
             idSalon: ['', Validators.required],
-            idAlumno: ['', Validators.required]
+            idAlumno: ['', Validators.required],
+            mesReporte: [currentMonth]
         });
     }
 
@@ -308,4 +318,120 @@ export class UnifiedAsistenciaComponent implements OnInit {
             }
         });
     }
+
+    exportarExcel() {
+        const salonId = this.form.get('idSalon')?.value;
+        const mesIdx = this.form.get('mesReporte')?.value; // 1-12
+
+        console.log('Exporting for salon:', salonId, 'Month:', mesIdx);
+        if (this.alumnos.length > 0) {
+            console.log('Sample student structure:', this.alumnos[0]);
+        }
+
+        if (!salonId || !mesIdx || this.alumnos.length === 0) {
+            this.snackBar.open('Seleccione un salón con alumnos para exportar.', 'Cerrar', { duration: 3000 });
+            return;
+        }
+
+        this.loading = true;
+        const headers = this.getHeaders();
+        const observables = [];
+
+        // Determinar endpoint según tipo
+        let currentApiUrl = this.asistenciaApiUrl; // default entrada
+        if (this.tipoActual === 'salida') currentApiUrl = this.salidaApiUrl;
+        // if this.tipoActual === 'otros' ...
+
+        for (const alumno of this.alumnos) {
+            observables.push(
+                this.http.get<any>(`${currentApiUrl}/${alumno.id}`, { headers }).pipe(
+                    map(response => {
+                        const data = Array.isArray(response) ? response : (response.data || []);
+                        const mesFilter = data.filter((d: any) => {
+                            const fechaStr = d.fecha || d.fecha_salida;
+                            if (!fechaStr) return false;
+                            const fecha = new Date(fechaStr);
+                            if (typeof fechaStr === 'string' && fechaStr.includes('-')) {
+                                const parts = fechaStr.split('-');
+                                if (parts.length >= 2) {
+                                    return parseInt(parts[1]) === parseInt(mesIdx);
+                                }
+                            }
+                            return (fecha.getMonth() + 1) === parseInt(mesIdx);
+                        });
+
+                        const asistenciasDia = mesFilter.map((d: any) => {
+                            const fechaStr = d.fecha || d.fecha_salida;
+                            let dia = 0;
+                            if (typeof fechaStr === 'string' && fechaStr.includes('-')) {
+                                dia = parseInt(fechaStr.split('-')[2]);
+                            } else {
+                                dia = new Date(fechaStr).getDate();
+                            }
+
+                            // Determinar estado para el reporte
+                            let estadoRep = '•'; // Default presente/punto
+                            if (this.tipoActual === 'salida') {
+                                if (d.estado?.toLowerCase().includes('puntual')) estadoRep = '•';
+                                else if (d.estado?.toLowerCase().includes('tarde')) estadoRep = 'T';
+                                else estadoRep = 'S';
+                            } else {
+                                // Entrada logic (asumiendo propiedades de entrada)
+                                const est = (d.estado || d.estado_asistencia || '').toLowerCase();
+                                if (est.includes('presente') || est.includes('puntual')) estadoRep = '•';
+                                else if (est.includes('tarde') || est.includes('tardanza')) estadoRep = 'T';
+                                else if (est.includes('falta')) estadoRep = 'F';
+                                else if (est) estadoRep = '•'; // Si hay algún estado desconocido, marcar presente por defecto o la primera letra
+                                else estadoRep = '';
+                            }
+
+                            return { dia, estado: estadoRep };
+                        });
+
+                        return {
+                            dni: alumno.dni || alumno.codigo || alumno.numero_documento,
+                            nombres: alumno.nombres || alumno.nombre || '',
+                            apellidos: alumno.apellidos ||
+                                (alumno.apellido_paterno ? `${alumno.apellido_paterno} ${alumno.apellido_materno || ''}`.trim() : '') ||
+                                (alumno.apellidoPaterno ? `${alumno.apellidoPaterno} ${alumno.apellidoMaterno || ''}`.trim() : '') ||
+                                '',
+                            asistencias: asistenciasDia,
+                            totalATiempo: 0, // Calcular si es relevante
+                            totalTardanza: 0,
+                            totalFaltas: 0
+                        };
+                    }),
+                    catchError(() => of({
+                        dni: alumno.dni, nombres: alumno.nombres, apellidos: alumno.apellidos,
+                        asistencias: []
+                    }))
+                )
+            );
+        }
+
+        forkJoin(observables).subscribe({
+            next: (dataAlumnos) => {
+                const salonNombre = this.salones.find(s => s.id === salonId)?.nombre || 'Salon';
+                const mesNombre = this.meses[mesIdx - 1];
+                const tipoTitulo = this.tipoActual === 'entrada' ? 'ENTRADA' : (this.tipoActual === 'salida' ? 'SALIDA' : 'ASISTENCIA');
+                const filename = `Reporte_${tipoTitulo}_${salonNombre}_${mesNombre}`;
+
+                this.excelService.exportarAsistencia(
+                    dataAlumnos,
+                    mesNombre,
+                    `Reporte ${tipoTitulo} - ${salonNombre}`,
+                    filename
+                );
+
+                this.loading = false;
+                this.snackBar.open('Reporte generado correctamente', 'Cerrar', { duration: 3000 });
+            },
+            error: (err) => {
+                console.error(err);
+                this.loading = false;
+                this.snackBar.open('Error al generar el reporte', 'Cerrar', { duration: 3000 });
+            }
+        });
+    }
+
 }
