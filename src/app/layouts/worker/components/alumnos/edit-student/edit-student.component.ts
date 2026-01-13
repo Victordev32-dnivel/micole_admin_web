@@ -184,6 +184,8 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
 
   ngOnInit(): void {
     const studentId = Number(this.data.id);
+    const colegioId = this.data.colegioId || this.userService.getUserData()?.colegio;
+
     if (!studentId) {
       this.error = 'ID inválido';
       return;
@@ -196,7 +198,7 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
     forkJoin({
       salones: this.getSalonesObservable(),
       apoderados: this.getApoderadosObservable(),
-      student: this.getStudentObservable(studentId)
+      student: this.getStudentObservable(studentId, colegioId ? colegioId : 0)
     }).subscribe({
       next: (results) => {
         this.ngZone.run(() => {
@@ -212,7 +214,10 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
           const student = results.student;
           if (student) {
             this.processStudentData(student);
+          } else {
+            this.error = 'No se pudo cargar la información del alumno.';
           }
+
 
           this.loading = false;
           this.cdr.detectChanges();
@@ -349,13 +354,16 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
       );
   }
 
-  private getStudentObservable(id: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() })
+  private getStudentObservable(id: number, colegioId: number): Observable<any> {
+    // New endpoint: /api/alumno/{id}/salon/{colegioId}
+    const url = `${this.apiUrl}/${id}/salon/${colegioId}`;
+    console.log('Fetching student detail from:', url);
+
+    return this.http.get<any>(url, { headers: this.getHeaders() })
       .pipe(
         map(response => {
           if (response && response.data) return response.data;
-          if (response && response.student) return response.student;
-          if (response && response.alumno) return response.alumno;
+          // Return response directly as it might be the student object itself
           return response;
         })
       );

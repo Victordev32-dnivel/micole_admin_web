@@ -478,6 +478,7 @@ export class StudentListComponent implements OnInit {
       height: 'auto',
       panelClass: 'custom-dialog',
       data: {
+        student: student,
         id: student.id,
         numero_documento: student.numero_documento,
         colegioId: this.colegioId,
