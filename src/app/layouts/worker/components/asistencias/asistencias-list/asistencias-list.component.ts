@@ -507,24 +507,50 @@ export class AsistenciasComponent implements OnInit {
       resultadosFiltrados.forEach(({ alumno }) => {
         const fila: any[] = [];
 
-        // Información básica del alumno
+        // Informations basic algorithm
         fila.push(alumno.numero_documento || '');
 
-        // Separar nombres y apellidos del nombre completo
-        const nombreCompleto = alumno.nombre_completo || '';
-        const partesNombre = nombreCompleto.trim().split(' ');
-
+        // Separar nombres y apellidos logic improved
         let nombres = '';
         let apellidos = '';
 
-        if (partesNombre.length >= 2) {
-          const mitad = Math.ceil(partesNombre.length / 2);
-          nombres = partesNombre.slice(0, mitad).join(' ');
-          apellidos = partesNombre.slice(mitad).join(' ');
+        if (alumno.nombres || alumno.apellidoPaterno || alumno.apellidoMaterno) {
+          nombres = alumno.nombres || '';
+          apellidos = `${alumno.apellidoPaterno || ''} ${alumno.apellidoMaterno || ''}`.trim();
+        } else if (alumno.nombre && alumno.apellidos) {
+          nombres = alumno.nombre;
+          apellidos = alumno.apellidos;
         } else {
-          nombres = nombreCompleto;
-          apellidos = '';
+          // Fallback to nombre_completo split
+          const nombreCompleto = alumno.nombre_completo || alumno.nombre || '';
+
+          // Check if it has a tab character which separates names from surnames in the API
+          if (nombreCompleto.includes('\t')) {
+            const parts = nombreCompleto.split('\t');
+            nombres = parts[0].trim();
+            apellidos = parts[1] ? parts[1].trim() : '';
+          } else {
+            // Split by any whitespace if no tab found
+            const partesNombre = nombreCompleto.trim().split(/\s+/);
+
+            if (partesNombre.length >= 2) {
+              let splitIndex = Math.ceil(partesNombre.length / 2);
+              // Adjustment for 3 words: Name Surname Surname (common in LatAm)
+              if (partesNombre.length === 3) {
+                splitIndex = 1;
+              }
+              nombres = partesNombre.slice(0, splitIndex).join(' ');
+              apellidos = partesNombre.slice(splitIndex).join(' ');
+            } else {
+              nombres = nombreCompleto;
+              apellidos = '';
+            }
+          }
         }
+
+        // Ensure strings are strings
+        nombres = String(nombres || '').trim();
+        apellidos = String(apellidos || '').trim();
 
         fila.push(nombres);
         fila.push(apellidos);
