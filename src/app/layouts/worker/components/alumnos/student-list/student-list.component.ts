@@ -675,9 +675,9 @@ export class StudentListComponent implements OnInit {
       const formData = new FormData();
       formData.append('file', file);
 
-      const colegioId = sessionStorage.getItem('colegioId');
+      const colegioId = this.colegioId;
       if (!colegioId) {
-        console.error('No se encontró colegioId en sessionStorage');
+        console.error('No se encontró colegioId en el componente (usando this.colegioId)');
         // Opcional: Mostrar mensaje de error al usuario
         return;
       }
@@ -691,7 +691,7 @@ export class StudentListComponent implements OnInit {
             console.log('Archivo subido exitosamente', response);
             this.loading = false;
             // Opcional: Recargar la lista de estudiantes
-            // this.loadStudents(); // Asume que tienes un método para cargar estudiantes
+            this.loadStudents(); // Asume que tienes un método para cargar estudiantes
             input.value = ''; // Limpiar el input file
           },
           error: (error) => {
