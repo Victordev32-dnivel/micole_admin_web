@@ -522,7 +522,7 @@ export class EditApoderadosComponent implements OnInit {
       apellidoPaterno: ['', [Validators.required, Validators.minLength(2)]],
       apellidoMaterno: ['', [Validators.required, Validators.minLength(2)]],
       genero: ['', [Validators.required]],
-      telefono: ['', [Validators.required, Validators.pattern(/^\d{9}$/)]],
+      telefono: ['', [Validators.pattern(/^\d{9}$/)]],
       parentesco: ['', [Validators.required]],
       idColegio: [1], // Valor fijo según tu API
     });
@@ -606,7 +606,7 @@ export class EditApoderadosComponent implements OnInit {
     this.updating = true;
 
     const formData = this.apoderadoForm.value;
-    const url = `https://proy-back-dnivel-44j5.onrender.com/api/apoderado/${this.apoderadoId}`;
+    const url = `/api/apoderado/${this.apoderadoId}`;
 
     // Preparar datos para actualización (INCLUYENDO contraseña)
     const updateData: any = {

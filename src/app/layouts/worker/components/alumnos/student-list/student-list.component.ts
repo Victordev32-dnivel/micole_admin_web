@@ -518,7 +518,7 @@ export class StudentListComponent implements OnInit {
       return;
     }
 
-    console.log('🗑️ Eliminando estudiante:', id);
+    console.log('🗑️ Eliminando estudiante (con recarga forzada):', id);
     this.loading = true;
     const headers = this.getHeaders();
     const deleteUrl = `${this.apiUrl}/${id}`;
@@ -527,20 +527,20 @@ export class StudentListComponent implements OnInit {
       .delete(deleteUrl, { headers, responseType: 'text' as 'json' })
       .subscribe({
         next: (response) => {
-          console.log('✅ Estudiante eliminado exitosamente');
-          this.ngZone.run(() => {
-            if (this.filteredStudents.length === 1 && this.currentPage > 1) {
-              this.changePage(this.currentPage - 1);
-            } else {
-              this.loadStudents(this.currentPage);
-            }
-          });
+          console.log('✅ Estudiante eliminado. Forzando recarga de página...');
+          // Forzar recarga completa
+          window.location.href = window.location.href;
+          window.location.reload();
         },
         error: (error) => {
           console.error('❌ Error al eliminar alumno:', error);
           this.ngZone.run(() => {
             this.loading = false;
             this.cdr.detectChanges();
+
+            // Intentar recargar incluso si hay error (opcional, pero el usuario está desesperado)
+            // alert('Hubo un error, pero vamos a recargar por si acaso');
+            // window.location.reload();
           });
         },
       });

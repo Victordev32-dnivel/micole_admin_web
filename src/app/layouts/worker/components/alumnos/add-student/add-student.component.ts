@@ -137,13 +137,10 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
   apoderadoError: string | null = null;
   apoderadoSuccess: string | null = null;
 
-  private apiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno';
-  private salonesApiUrl =
-    'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista';
-  private apoderadosApiUrl =
-    'https://proy-back-dnivel-44j5.onrender.com/api/apoderado/colegio/lista';
-  private apoderadoCreateApiUrl =
-    'https://proy-back-dnivel-44j5.onrender.com/api/apoderado';
+  private apiUrl = '/api/alumno';
+  private salonesApiUrl = '/api/salon/colegio/lista';
+  private apoderadosApiUrl = '/api/apoderado/colegio/lista';
+  private apoderadoCreateApiUrl = '/api/apoderado';
   private staticToken = '732612882';
 
   @ViewChild('picker') datepicker: MatDatepicker<Date> | undefined;
