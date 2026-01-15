@@ -71,13 +71,10 @@ export class StudentListComponent implements OnInit {
   visiblePages: number[] = [];
   maxVisiblePages: number = 5;
 
-  private apiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno';
-  private colegioApiUrl =
-    'https://proy-back-dnivel-44j5.onrender.com/api/alumno/colegio';
-  private salonApiUrl =
-    'https://proy-back-dnivel-44j5.onrender.com/api/alumno/salon';
-  private salonesListUrl =
-    'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista';
+  private apiUrl = '/api/alumno';
+  private colegioApiUrl = '/api/alumno/colegio';
+  private salonApiUrl = '/api/alumno/salon';
+  private salonesListUrl = '/api/salon/colegio/lista';
   private staticToken = '732612882';
 
   constructor(
