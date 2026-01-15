@@ -27,6 +27,13 @@
       <mat-icon>add</mat-icon>
       Agregar Alumno
     </button>
+
+    <!-- Botón para subir Excel -->
+    <button mat-raised-button color="primary" class="upload-button" [disabled]="loading" (click)="fileInput.click()">
+      <mat-icon>upload_file</mat-icon>
+      Subir Excel
+    </button>
+    <input type="file" #fileInput accept=".xlsx,.xls" style="display: none;" (change)="onFileSelected($event)" />
   </div>
 
   <!-- Información de filtros activos -->
