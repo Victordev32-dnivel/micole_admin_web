@@ -26,6 +26,8 @@ import {
   HttpClientModule,
   HttpHeaders,
 } from '@angular/common/http';
+import * as XLSX from 'xlsx';
+import { firstValueFrom } from 'rxjs';
 import { ConfirmationDialogComponent } from '../confirmation-delete/confirmation-dialog.component';
 import { StudentEditComponent } from '../edit-student/edit-student.component';
 import { AddStudentComponent } from '../add-student/add-student.component';
@@ -75,6 +77,8 @@ export class StudentListComponent implements OnInit {
   private colegioApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno/colegio';
   private salonApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno/salon';
   private salonesListUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista';
+  private apoderadoCreateApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/apoderado';
+  private apoderadosListUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/apoderado/colegio/lista';
   private staticToken = '732612882';
 
   constructor(
@@ -630,6 +634,213 @@ export class StudentListComponent implements OnInit {
 
   trackBySalonId(index: number, salon: any): any {
     return salon.id || salon.salonId || index;
+  }
+
+  // Método para descargar la plantilla
+  downloadTemplate(): void {
+    const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet([
+      [
+        'DNI_ALUMNO',
+        'NOMBRES_ALUMNO',
+        'APELLIDO_PATERNO_ALUMNO',
+        'APELLIDO_MATERNO_ALUMNO',
+        'GENERO_ALUMNO (M/F)',
+        'TELEFONO_ALUMNO',
+        'FECHA_NACIMIENTO_ALUMNO (DD/MM/YYYY)',
+        'DIRECCION_ALUMNO',
+        'CONTRASENA_ALUMNO',
+        'ID_SALON',
+        'DNI_APODERADO',
+        'NOMBRES_APODERADO',
+        'APELLIDO_PATERNO_APODERADO',
+        'APELLIDO_MATERNO_APODERADO',
+        'TELEFONO_APODERADO',
+        'CONTRASENA_APODERADO'
+      ],
+      // Ejemplo
+      [
+        '12345678',
+        'Juan',
+        'Perez',
+        'Lopez',
+        'M',
+        '987654321',
+        '01/01/2010',
+        'Av. Siempre Viva 123',
+        '123456',
+        '1',
+        '87654321',
+        'Maria',
+        'Lopez',
+        'Gomez',
+        '912345678',
+        '123456'
+      ]
+    ]);
+
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Plantilla Alumnos');
+    XLSX.writeFile(wb, 'plantilla_carga_masiva_alumnos.xlsx');
+  }
+
+  onFileChange(event: any): void {
+    const target: DataTransfer = <DataTransfer>event.target;
+    if (target.files.length !== 1) throw new Error('No se puede usar múltiples archivos');
+
+    const reader: FileReader = new FileReader();
+    reader.onload = (e: any) => {
+      const bstr: string = e.target.result;
+      const wb: XLSX.WorkBook = XLSX.read(bstr, { type: 'binary' });
+      const wsname: string = wb.SheetNames[0];
+      const ws: XLSX.WorkSheet = wb.Sheets[wsname];
+      const data = XLSX.utils.sheet_to_json(ws);
+
+      this.processBulkUpload(data);
+
+      // Reset input
+      event.target.value = '';
+    };
+    reader.readAsBinaryString(target.files[0]);
+  }
+
+  async processBulkUpload(data: any[]): Promise<void> {
+    if (!data || data.length === 0) {
+      alert('El archivo está vacío');
+      return;
+    }
+
+    if (!confirm(`Se encontraron ${data.length} registros. ¿Desea procesarlos?`)) {
+      return;
+    }
+
+    this.loading = true;
+    let successCount = 0;
+    let errorCount = 0;
+    const errors: string[] = [];
+
+    // Cargar apoderados existentes para verificar duplicados/reutilizar
+    let existingApoderados: any[] = [];
+    try {
+      const headers = this.getHeaders();
+      const apoderadosResponse: any = await firstValueFrom(this.http.get(this.apoderadosListUrl + '/' + this.colegioId, { headers }));
+      existingApoderados = Array.isArray(apoderadosResponse) ? apoderadosResponse : (apoderadosResponse.data || []);
+    } catch (e) {
+      console.error('Error cargando apoderados', e);
+    }
+
+    // Mapa de DNI -> ID Apoderado
+    const apoderadoMap = new Map<string, number>();
+    existingApoderados.forEach(a => {
+      if (a.numeroDocumento || a.dni) {
+        apoderadoMap.set((a.numeroDocumento || a.dni).toString(), a.id);
+      }
+    });
+
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i];
+      try {
+        // Validar datos mínimos
+        if (!row.DNI_ALUMNO || !row.NOMBRES_ALUMNO || !row.ID_SALON) {
+          throw new Error(`Fila ${i + 2}: Faltan datos obligatorios (DNI Alumno, Nombre, ID Salon)`);
+        }
+
+        let idApoderado = 0;
+
+        // 1. Gestionar Apoderado
+        if (row.DNI_APODERADO) {
+          const dniApoderado = row.DNI_APODERADO.toString();
+
+          if (apoderadoMap.has(dniApoderado)) {
+            idApoderado = apoderadoMap.get(dniApoderado)!;
+          } else {
+            // Crear apoderado
+            const newApoderado = {
+              nombres: row.NOMBRES_APODERADO || 'Apoderado',
+              apellidoPaterno: row.APELLIDO_PATERNO_APODERADO || '',
+              apellidoMaterno: row.APELLIDO_MATERNO_APODERADO || '',
+              numeroDocumento: dniApoderado,
+              genero: '', // Opcional
+              telefono: row.TELEFONO_APODERADO ? row.TELEFONO_APODERADO.toString() : '',
+              parentesco: 'PADRE', // Default
+              contrasena: row.CONTRASENA_APODERADO || dniApoderado,
+              tipoUsuario: 'apoderado',
+              idColegio: this.colegioId
+            };
+
+            try {
+              const headers = this.getHeaders();
+              const resp: any = await firstValueFrom(this.http.post(this.apoderadoCreateApiUrl, newApoderado, { headers }));
+              if (resp && resp.id) {
+                idApoderado = resp.id;
+                apoderadoMap.set(dniApoderado, idApoderado);
+              }
+            } catch (err: any) {
+              // Si falla creando apoderado, loguear pero intentar seguir si es duplicado no detectado
+              console.error('Error creando apoderado', err);
+              // Intentar buscarlo de nuevo por si acaso
+              if (err.status === 400 && err.error && err.error.message && err.error.message.includes('existe')) {
+                // Ya existe, pero no estaba en mi lista inicial? Raro, pero posible.
+                // Asumimos fallo crítico para este alumno si no tenemos ID apoderado.
+                throw new Error(`Error con apoderado DNI ${dniApoderado}: ${err.error.message}`);
+              }
+            }
+          }
+        }
+
+        // 2. Crear Alumno
+        const newStudent = {
+          numeroDocumento: row.DNI_ALUMNO.toString(),
+          nombres: row.NOMBRES_ALUMNO,
+          apellidoPaterno: row.APELLIDO_PATERNO_ALUMNO || '',
+          apellidoMaterno: row.APELLIDO_MATERNO_ALUMNO || '',
+          genero: row['GENERO_ALUMNO (M/F)'] === 'F' ? 'f' : 'm',
+          telefono: row.TELEFONO_ALUMNO ? row.TELEFONO_ALUMNO.toString() : '',
+          fechaNacimiento: this.parseDate(row['FECHA_NACIMIENTO_ALUMNO (DD/MM/YYYY)']),
+          direccion: row.DIRECCION_ALUMNO || '',
+          estado: 'Activo',
+          contrasena: row.CONTRASENA_ALUMNO || row.DNI_ALUMNO.toString(),
+          idApoderado: idApoderado, // Puede ser 0 si no hay apoderado
+          idSalon: parseInt(row.ID_SALON),
+          // idColegio: this.colegioId // Backend might infer or need it
+        };
+
+        const headers = this.getHeaders();
+        await firstValueFrom(this.http.post(this.apiUrl, newStudent, { headers }));
+        successCount++;
+
+      } catch (error: any) {
+        errorCount++;
+        const msg = error.message || (error.error ? error.error.message : 'Error desconocido');
+        errors.push(`Fila ${i + 2} (${row.DNI_ALUMNO || '?'}): ${msg}`);
+      }
+    }
+
+    this.loading = false;
+    this.loadStudents(this.currentPage);
+
+    let resultMsg = `Proceso finalizado.\nExitosos: ${successCount}\nFallidos: ${errorCount}`;
+    if (errors.length > 0) {
+      resultMsg += '\n\nErrores:\n' + errors.slice(0, 10).join('\n') + (errors.length > 10 ? '\n...' : '');
+    }
+
+    alert(resultMsg);
+  }
+
+  private parseDate(dateStr: string): string | null {
+    if (!dateStr) return null;
+    // Asumiendo DD/MM/YYYY o formato Excel fecha
+    if (typeof dateStr === 'number') {
+      // Excel date number
+      const date = new Date(Math.round((dateStr - 25569) * 86400 * 1000));
+      return date.toISOString();
+    }
+
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+      // DD/MM/YYYY -> YYYY-MM-DD
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return null;
   }
 
   logout() {

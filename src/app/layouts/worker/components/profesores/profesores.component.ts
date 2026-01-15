@@ -109,7 +109,7 @@ export class ProfesoresComponent implements OnInit {
                             idColegio: this.colegioId
                         };
                         // Remove numeroDocumento if it's there, as API might not want it on update
-                        delete updatePayload.numeroDocumento;
+                        // delete updatePayload.numeroDocumento;
 
                         this.profeService.updateProfe(profe.id, updatePayload).subscribe({
                             next: () => {

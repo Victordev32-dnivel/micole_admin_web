@@ -5,7 +5,7 @@
 }
 
 .content-wrapper {
-    max-width: 1200px;
+    max-width: 100%;
     margin: 0 auto;
 }
 
@@ -78,7 +78,7 @@ td.mat-cell {
     text-align: center;
 }
 
-td.mat-column-acciones {
+.action-buttons {
     display: flex;
     gap: 8px;
     justify-content: center;

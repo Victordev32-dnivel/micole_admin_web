@@ -58,7 +58,7 @@ export class ProfeDialogComponent implements OnInit {
             // But for safety, let's disable it in edit mode if it's a key identifier.
             // User prompt payload for update: contrasena, nombres, apellidos, genero, telefono, idColegio.
             // NO numeroDocumento. So we strictly shouldn't send it.
-            this.profeForm.get('numeroDocumento')?.disable();
+            // this.profeForm.get('numeroDocumento')?.disable();
         }
     }
 

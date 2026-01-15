@@ -90,7 +90,7 @@ export class FuncionAgregarComponent implements OnInit {
           nombre: [''], // Optional based on User feedback, but keeping as form control
           horaInicio: ['', Validators.required],
           horaFin: ['', Validators.required],
-          tipo: [0, [Validators.required, Validators.min(1)]], // Changed to number for ID
+          tipo: [null, [Validators.required, Validators.min(1)]],
           idGrado: [0, [Validators.required, Validators.min(1)]],
           idSeccion: [0, [Validators.required, Validators.min(1)]],
           idNivel: [0, [Validators.required, Validators.min(1)]],
@@ -176,7 +176,8 @@ export class FuncionAgregarComponent implements OnInit {
       this.loading = true;
       this.error = null;
       this.isSubmitting = true;
-      const formData = this.addForm.value;
+      let formData = this.addForm.value;
+      console.log('JSON ENVÍO:', JSON.stringify(formData, null, 2));
 
       let url = '';
       switch (this.tipo) {
@@ -191,6 +192,16 @@ export class FuncionAgregarComponent implements OnInit {
           break;
         case 'salones':
           url = `${this.apiBase}/salon`;
+          formData = {
+            horaInicio: formData.horaInicio,
+            horaFin: formData.horaFin,
+            tipoId: formData.tipo,
+            idGrado: formData.idGrado,
+            idSeccion: formData.idSeccion,
+            idNivel: formData.idNivel,
+            idColegio: formData.idColegio
+          };
+          console.log('JSON API ENVÍO:', JSON.stringify(formData, null, 2));
           break;
       }
 

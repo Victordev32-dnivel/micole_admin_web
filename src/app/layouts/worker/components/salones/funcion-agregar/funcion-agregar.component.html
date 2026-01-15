@@ -51,7 +51,7 @@
               {{ tipo.tipo }}
             </mat-option>
           </mat-select>
-          <mat-error *ngIf="addForm.get('tipo')?.hasError('required') || addForm.get('tipo')?.hasError('min')">
+          <mat-error *ngIf="addForm.get('tipo')?.hasError('required')">
             Seleccione un tipo
           </mat-error>
         </mat-form-field>
