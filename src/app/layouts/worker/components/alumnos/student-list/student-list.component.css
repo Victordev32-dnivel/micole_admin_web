@@ -184,22 +184,36 @@
   border-radius: 4px;
 }
 
-/* Estilos específicos para los iconos de acciones */
-.edit-icon {
-  color: #ffcc00 !important;
+/* Estilos específicos para los botones de acciones */
+.edit-button,
+.delete-button {
+  background-color: transparent !important;
+  border-radius: 50% !important;
+  min-width: 40px !important;
+  width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  transition: all 0.2s ease !important;
 }
 
-.edit-icon:hover {
-  background-color: rgba(255, 204, 0, 0.1);
+.edit-button mat-icon {
+  color: #ffcc00 !important;
+  /* Color ámbar/amarillo para editar */
+}
+
+.delete-button mat-icon {
+  color: #dc3545 !important;
+  /* Color rojo para eliminar */
+}
+
+.edit-button:hover {
+  background-color: rgba(255, 204, 0, 0.1) !important;
   transform: scale(1.1);
 }
 
-.delete-icon {
-  color: #dc3545 !important;
-}
-
-.delete-icon:hover {
-  background-color: rgba(220, 53, 69, 0.1);
+.delete-button:hover {
+  background-color: rgba(220, 53, 69, 0.1) !important;
   transform: scale(1.1);
 }
 

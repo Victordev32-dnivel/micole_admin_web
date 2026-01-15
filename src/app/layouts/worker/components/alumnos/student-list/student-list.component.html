@@ -42,143 +42,132 @@
     </button>
 
     <!-- Botón plantilla -->
-    <button mat-raised-button color="accent" class="template-button" (click)="downloadTemplate()" style="margin-right: 8px;">
-      <mat-icon>file_download</mat-icon>
-      Descargar Plantilla
-    </button>
 
-    <!-- Botón para subir Excel -->
-    <button mat-raised-button color="primary" class="upload-button" [disabled]="loading" (click)="fileInput.click()">
-      <mat-icon>upload_file</mat-icon>
-      Subir Excel
-    </button>
-    <input type="file" #fileInput accept=".xlsx,.xls" style="display: none;" (change)="onFileSelected($event)" />
-  </div>
 
-  <!-- Información de filtros activos -->
-  <div class="filter-info" *ngIf="selectedSalonId">
-    <mat-icon>info</mat-icon>
-    <span>Mostrando estudiantes del {{ getSelectedSalonName() }}</span>
-    <button mat-icon-button (click)="salonFilterControl.setValue(''); onSalonFilterChange()" title="Limpiar filtro">
-      <mat-icon>clear</mat-icon>
-    </button>
-  </div>
-
-  <div class="student-table">
-    <div class="table-header">
-      <span data-label="DNI">DNI</span>
-      <span data-label="NOMBRE">NOMBRE</span>
-      <span data-label="APODERADO">APODERADO</span>
-      <span data-label="CONTRASEÑA">CONTRASEÑA</span>
-      <span data-label="CÓDIGO">CÓDIGO</span>
-      <span data-label="TELÉFONO">TELÉFONO</span>
-      <span data-label="GRADO">GRADO</span>
-      <span data-label="ACCIONES">ACCIONES</span>
+    <!-- Información de filtros activos -->
+    <div class="filter-info" *ngIf="selectedSalonId">
+      <mat-icon>info</mat-icon>
+      <span>Mostrando estudiantes del {{ getSelectedSalonName() }}</span>
+      <button mat-icon-button (click)="salonFilterControl.setValue(''); onSalonFilterChange()" title="Limpiar filtro">
+        <mat-icon>clear</mat-icon>
+      </button>
     </div>
 
-    <div class="table-body">
-      <!-- Loading -->
-      <div *ngIf="loading" class="loading-container">
-        <div class="loading">
-          Cargando datos
-          <span class="spinner"></span>
-        </div>
+    <div class="student-table">
+      <div class="table-header">
+        <span data-label="DNI">DNI</span>
+        <span data-label="NOMBRE">NOMBRE</span>
+        <span data-label="APODERADO">APODERADO</span>
+        <span data-label="CONTRASEÑA">CONTRASEÑA</span>
+        <span data-label="CÓDIGO">CÓDIGO</span>
+        <span data-label="TELÉFONO">TELÉFONO</span>
+        <span data-label="GRADO">GRADO</span>
+        <span data-label="ACCIONES">ACCIONES</span>
       </div>
 
-      <!-- Loading salones -->
-      <div *ngIf="loadingSalones" class="loading-container">
-        <div class="loading">
-          Cargando salones
-          <span class="spinner"></span>
-        </div>
-      </div>
-
-      <!-- Filas de estudiantes -->
-      <div class="student-row" *ngFor="let student of filteredStudents; trackBy: trackByStudentId">
-        <span data-label="DNI">{{ student.numero_documento }}</span>
-        <span data-label="NOMBRE">{{ student.nombre_completo }}</span>
-        <span data-label="APODERADO" class="apoderado-cell">
-          <div class="apoderado-info">
-            <mat-icon class="parent-icon" [title]="student.parentesco">
-              {{ getParentIcon(student.parentesco) }}
-            </mat-icon>
-            <span class="apoderado-name">
-              {{ student.nombreApoderado }}
-              {{ student.apellidoPaternoApoderado }}
-              {{ student.apellidoMaternoApoderado }}
-            </span>
-            <mat-icon class="phone-icon" *ngIf="student.telefonoApoderado"
-              [title]="'Teléfono: ' + student.telefonoApoderado">
-              phone
-            </mat-icon>
+      <div class="table-body">
+        <!-- Loading -->
+        <div *ngIf="loading" class="loading-container">
+          <div class="loading">
+            Cargando datos
+            <span class="spinner"></span>
           </div>
-        </span>
-        <span data-label="CONTRASEÑA">{{ student.contrasena || student.password || "-" }}</span>
-        <span data-label="CÓDIGO">{{ student.codigo }}</span>
-        <span data-label="TELÉFONO">{{ student.telefono || "N/A" }}</span>
-        <span data-label="GRADO">{{ student.grado }} - {{ student.salon }}</span>
-        <span class="actions" data-label="ACCIONES">
-          <button mat-icon-button (click)="openEditDialog(student)" class="edit-button" title="Editar estudiante"
-            [disabled]="loading">
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button mat-icon-button (click)="confirmDelete(student.id)" class="delete-button" title="Eliminar estudiante"
-            [disabled]="loading">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </span>
-      </div>
+        </div>
 
-      <!-- Mensaje cuando no hay datos -->
-      <div *ngIf="filteredStudents.length === 0 && !loading && !loadingSalones" class="no-data-container">
-        <div class="no-data-message">
-          <mat-icon>school</mat-icon>
-          <p *ngIf="
+        <!-- Loading salones -->
+        <div *ngIf="loadingSalones" class="loading-container">
+          <div class="loading">
+            Cargando salones
+            <span class="spinner"></span>
+          </div>
+        </div>
+
+        <!-- Filas de estudiantes -->
+        <div class="student-row" *ngFor="let student of filteredStudents; trackBy: trackByStudentId">
+          <span data-label="DNI">{{ student.numero_documento }}</span>
+          <span data-label="NOMBRE">{{ student.nombre_completo }}</span>
+          <span data-label="APODERADO" class="apoderado-cell">
+            <div class="apoderado-info">
+              <mat-icon class="parent-icon" [title]="student.parentesco">
+                {{ getParentIcon(student.parentesco) }}
+              </mat-icon>
+              <span class="apoderado-name">
+                {{ student.nombreApoderado }}
+                {{ student.apellidoPaternoApoderado }}
+                {{ student.apellidoMaternoApoderado }}
+              </span>
+              <mat-icon class="phone-icon" *ngIf="student.telefonoApoderado"
+                [title]="'Teléfono: ' + student.telefonoApoderado">
+                phone
+              </mat-icon>
+            </div>
+          </span>
+          <span data-label="CONTRASEÑA">{{ student.contrasena || student.password || "-" }}</span>
+          <span data-label="CÓDIGO">{{ student.codigo }}</span>
+          <span data-label="TELÉFONO">{{ student.telefono || "N/A" }}</span>
+          <span data-label="GRADO">{{ student.grado }} - {{ student.salon }}</span>
+          <span class="actions" data-label="ACCIONES">
+            <button mat-icon-button (click)="openEditDialog(student)" class="edit-button" title="Editar estudiante"
+              [disabled]="loading">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button (click)="confirmDelete(student.id)" class="delete-button"
+              title="Eliminar estudiante" [disabled]="loading">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </span>
+        </div>
+
+        <!-- Mensaje cuando no hay datos -->
+        <div *ngIf="filteredStudents.length === 0 && !loading && !loadingSalones" class="no-data-container">
+          <div class="no-data-message">
+            <mat-icon>school</mat-icon>
+            <p *ngIf="
               searchTermControl.value && searchTermControl.value.trim() !== ''
             ">
-            No se encontraron estudiantes que coincidan con "<strong>{{
-              searchTermControl.value
-              }}</strong>"
-          </p>
-          <p *ngIf="
+              No se encontraron estudiantes que coincidan con "<strong>{{
+                searchTermControl.value
+                }}</strong>"
+            </p>
+            <p *ngIf="
               selectedSalonId &&
               (!searchTermControl.value ||
                 searchTermControl.value.trim() === '')
             ">
-            No hay estudiantes en {{ getSelectedSalonName() }}
-          </p>
-          <p *ngIf="
+              No hay estudiantes en {{ getSelectedSalonName() }}
+            </p>
+            <p *ngIf="
               !selectedSalonId &&
               (!searchTermControl.value ||
                 searchTermControl.value.trim() === '')
             ">
-            No hay estudiantes registrados
-          </p>
-          <button mat-stroked-button color="primary" (click)="openAddDialog()" class="add-first-student">
-            <mat-icon>add</mat-icon>
-            Agregar primer estudiante
-          </button>
+              No hay estudiantes registrados
+            </p>
+            <button mat-stroked-button color="primary" (click)="openAddDialog()" class="add-first-student">
+              <mat-icon>add</mat-icon>
+              Agregar primer estudiante
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- PAGINACIÓN RESPONSIVA MEJORADA -->
-  <div class="pagination" *ngIf="totalPages > 1 && !selectedSalonId">
-    <div class="pagination-info">
-      <span class="total-info">Total de alumnos: {{ totalAlumnos }}</span>
-      <span class="page-info">Página {{ currentPage }} de {{ totalPages }}</span>
+    <!-- PAGINACIÓN RESPONSIVA MEJORADA -->
+    <div class="pagination" *ngIf="totalPages > 1 && !selectedSalonId">
+      <div class="pagination-info">
+        <span class="total-info">Total de alumnos: {{ totalAlumnos }}</span>
+        <span class="page-info">Página {{ currentPage }} de {{ totalPages }}</span>
 
+      </div>
+
+
+
+      <!-- Paginación simple para móvil con números -->
+      <div *ngIf="isMobile && totalPages <= 10" class="mobile-page-numbers">
+        <button *ngFor="let page of getPageNumbers()" mat-button [class.active]="page === currentPage"
+          [disabled]="loading" (click)="changePage(page)" class="page-button">
+          {{ page }}
+        </button>
+      </div>
     </div>
-
-
-
-    <!-- Paginación simple para móvil con números -->
-    <div *ngIf="isMobile && totalPages <= 10" class="mobile-page-numbers">
-      <button *ngFor="let page of getPageNumbers()" mat-button [class.active]="page === currentPage"
-        [disabled]="loading" (click)="changePage(page)" class="page-button">
-        {{ page }}
-      </button>
-    </div>
   </div>
-</div>

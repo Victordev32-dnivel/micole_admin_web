@@ -77,6 +77,8 @@ export class StudentListComponent implements OnInit {
   private colegioApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno/colegio';
   private salonApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno/salon';
   private salonesListUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista';
+  private apoderadoCreateApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/apoderado';
+  private apoderadosListUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/apoderado/colegio/lista';
   private staticToken = '732612882';
 
   constructor(
@@ -857,7 +859,10 @@ export class StudentListComponent implements OnInit {
     if (typeof dateStr === 'number') {
       // Excel date number
       const date = new Date(Math.round((dateStr - 25569) * 86400 * 1000));
-      return date.toISOString();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     }
 
     const parts = dateStr.split('/');
@@ -873,47 +878,5 @@ export class StudentListComponent implements OnInit {
     localStorage.removeItem('user');
     this.router.navigate(['/login']);
   }
-  downloadTemplate(): void {
-    const link = document.createElement('a');
-    link.href = 'assets/PlantillaExcel.xlsx';
-    link.download = 'PlantillaExcel.xlsx';
-    link.click();
-  }
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file: File | null = input.files?.[0] ?? null;
-
-    if (file) {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const colegioId = this.colegioId;
-      if (!colegioId) {
-        console.error('No se encontró colegioId en el componente (usando this.colegioId)');
-        // Opcional: Mostrar mensaje de error al usuario
-        return;
-      }
-
-      this.loading = true; // Asumiendo que tienes una variable loading
-
-      this.http
-        .post(this.apiUrl + `/upload/${colegioId}`, formData)
-        .subscribe({
-          next: (response) => {
-            console.log('Archivo subido exitosamente', response);
-            this.loading = false;
-            // Opcional: Recargar la lista de estudiantes
-            this.loadStudents(); // Asume que tienes un método para cargar estudiantes
-            input.value = ''; // Limpiar el input file
-          },
-          error: (error) => {
-            console.error('Error al subir el archivo', error);
-            this.loading = false;
-            // Opcional: Mostrar mensaje de error al usuario
-            input.value = '';
-          },
-        });
-    }
-  }
 }
