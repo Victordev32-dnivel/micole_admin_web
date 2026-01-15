@@ -667,6 +667,13 @@ export class StudentListComponent implements OnInit {
     localStorage.removeItem('user');
     this.router.navigate(['/login']);
   }
+  downloadTemplate(): void {
+    const link = document.createElement('a');
+    link.href = 'assets/PlantillaExcel.xlsx';
+    link.download = 'PlantillaExcel.xlsx';
+    link.click();
+  }
+
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file: File | null = input.files?.[0] ?? null;
