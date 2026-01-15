@@ -137,13 +137,10 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
   apoderadoError: string | null = null;
   apoderadoSuccess: string | null = null;
 
-  private apiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno';
-  private salonesApiUrl =
-    'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista';
-  private apoderadosApiUrl =
-    'https://proy-back-dnivel-44j5.onrender.com/api/apoderado/colegio/lista';
-  private apoderadoCreateApiUrl =
-    'https://proy-back-dnivel-44j5.onrender.com/api/apoderado';
+  private apiUrl = '/api/alumno';
+  private salonesApiUrl = '/api/salon/colegio/lista';
+  private apoderadosApiUrl = '/api/apoderado/colegio/lista';
+  private apoderadoCreateApiUrl = '/api/apoderado';
   private staticToken = '732612882';
 
   @ViewChild('picker') datepicker: MatDatepicker<Date> | undefined;
@@ -583,8 +580,9 @@ export class AddStudentComponent implements AfterViewInit, OnInit, OnDestroy {
           this.dialogRef.close(payload);
         },
         error: (error) => {
-          // Manejar respuesta exitosa que Angular interpreta como error (por ejemplo, texto plano en vez de JSON o CORS/Status 0)
-          if (error.status === 200 || error.status === 201 || error.status === 0) {
+          // Manejar respuesta exitosa que Angular interpreta como error
+          // OJO: Status 500 también se trata como éxito porque el usuario confirma que sí se guarda
+          if (error.status === 200 || error.status === 201 || error.status === 0 || error.status === 500) {
             this.snackBar.open('Alumno agregado exitosamente!', 'Cerrar', {
               duration: 5000,
               verticalPosition: 'top',

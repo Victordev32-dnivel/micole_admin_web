@@ -66,7 +66,7 @@ export class LoginComponent {
             this.userService.setUserData(userData);
             this.authService.login(userData);
             this.loading = false;
-
+            sessionStorage.setItem('colegioId', response.colegio);
             if (response.tipoUsuario === 'trabajador') {
               this.router.navigate(['/worker/alumnos']);
             } else if (response.tipoUsuario === 'admin') {

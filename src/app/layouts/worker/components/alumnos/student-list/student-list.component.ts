@@ -77,8 +77,6 @@ export class StudentListComponent implements OnInit {
   private colegioApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno/colegio';
   private salonApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/alumno/salon';
   private salonesListUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/salon/colegio/lista';
-  private apoderadoCreateApiUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/apoderado';
-  private apoderadosListUrl = 'https://proy-back-dnivel-44j5.onrender.com/api/apoderado/colegio/lista';
   private staticToken = '732612882';
 
   constructor(
@@ -207,7 +205,10 @@ export class StudentListComponent implements OnInit {
 
     this.userService.userData$.subscribe((userData) => {
       if (userData) {
-        console.log('🔄 Datos de usuario actualizados via observable:', userData);
+        console.log(
+          '🔄 Datos de usuario actualizados via observable:',
+          userData
+        );
         this.userName = userData.nombre;
         this.userType = userData.tipoUsuario;
         this.colegioId = userData.colegio;
@@ -305,7 +306,7 @@ export class StudentListComponent implements OnInit {
     console.log('👥 Cargando estudiantes...', {
       page,
       colegioId: this.colegioId,
-      selectedSalonId: this.selectedSalonId
+      selectedSalonId: this.selectedSalonId,
     });
 
     this.loading = true;
@@ -338,14 +339,27 @@ export class StudentListComponent implements OnInit {
             // Priorizar 'data' que es lo que viene en tu ejemplo
             if (response.data && Array.isArray(response.data)) {
               studentsData = response.data;
-              console.log('📊 Datos encontrados en response.data:', studentsData.length);
+              console.log(
+                '📊 Datos encontrados en response.data:',
+                studentsData.length
+              );
             } else {
               // Buscar en otras propiedades posibles
-              const possibleKeys = ['students', 'alumnos', 'alumno', 'items', 'result', 'lista'];
+              const possibleKeys = [
+                'students',
+                'alumnos',
+                'alumno',
+                'items',
+                'result',
+                'lista',
+              ];
               for (const key of possibleKeys) {
                 if (response[key] && Array.isArray(response[key])) {
                   studentsData = response[key];
-                  console.log(`📊 Datos encontrados en ${key}:`, studentsData.length);
+                  console.log(
+                    `📊 Datos encontrados en ${key}:`,
+                    studentsData.length
+                  );
                   break;
                 }
               }
@@ -374,9 +388,20 @@ export class StudentListComponent implements OnInit {
             this.currentPage = page;
 
             // CORRECCIÓN: Manejar metadatos de paginación
-            if (response && typeof response === 'object' && !Array.isArray(response)) {
-              this.totalAlumnos = response.totalAlumnos || response.total || response.count || studentsData.length;
-              this.totalPages = response.totalPages || response.totalPaginas || Math.ceil(this.totalAlumnos / this.pageSize);
+            if (
+              response &&
+              typeof response === 'object' &&
+              !Array.isArray(response)
+            ) {
+              this.totalAlumnos =
+                response.totalAlumnos ||
+                response.total ||
+                response.count ||
+                studentsData.length;
+              this.totalPages =
+                response.totalPages ||
+                response.totalPaginas ||
+                Math.ceil(this.totalAlumnos / this.pageSize);
             } else {
               // Si no hay metadatos, calcular basado en los datos
               this.totalAlumnos = studentsData.length;
@@ -394,7 +419,7 @@ export class StudentListComponent implements OnInit {
             filteredStudents: this.filteredStudents.length,
             totalAlumnos: this.totalAlumnos,
             totalPages: this.totalPages,
-            currentPage: this.currentPage
+            currentPage: this.currentPage,
           });
 
           this.updateVisiblePages();
@@ -451,7 +476,7 @@ export class StudentListComponent implements OnInit {
       console.log('🔍 Filtro aplicado:', {
         term,
         totalStudents: this.students.length,
-        filteredCount: this.filteredStudents.length
+        filteredCount: this.filteredStudents.length,
       });
 
       this.cdr.detectChanges();
@@ -522,7 +547,7 @@ export class StudentListComponent implements OnInit {
       return;
     }
 
-    console.log('🗑️ Eliminando estudiante:', id);
+    console.log('🗑️ Eliminando estudiante (con recarga forzada):', id);
     this.loading = true;
     const headers = this.getHeaders();
     const deleteUrl = `${this.apiUrl}/${id}`;
@@ -531,20 +556,20 @@ export class StudentListComponent implements OnInit {
       .delete(deleteUrl, { headers, responseType: 'text' as 'json' })
       .subscribe({
         next: (response) => {
-          console.log('✅ Estudiante eliminado exitosamente');
-          this.ngZone.run(() => {
-            if (this.filteredStudents.length === 1 && this.currentPage > 1) {
-              this.changePage(this.currentPage - 1);
-            } else {
-              this.loadStudents(this.currentPage);
-            }
-          });
+          console.log('✅ Estudiante eliminado. Forzando recarga de página...');
+          // Forzar recarga completa
+          window.location.href = window.location.href;
+          window.location.reload();
         },
         error: (error) => {
           console.error('❌ Error al eliminar alumno:', error);
           this.ngZone.run(() => {
             this.loading = false;
             this.cdr.detectChanges();
+
+            // Intentar recargar incluso si hay error (opcional, pero el usuario está desesperado)
+            // alert('Hubo un error, pero vamos a recargar por si acaso');
+            // window.location.reload();
           });
         },
       });
@@ -847,5 +872,48 @@ export class StudentListComponent implements OnInit {
     this.userService.clearUserData();
     localStorage.removeItem('user');
     this.router.navigate(['/login']);
+  }
+  downloadTemplate(): void {
+    const link = document.createElement('a');
+    link.href = 'assets/PlantillaExcel.xlsx';
+    link.download = 'PlantillaExcel.xlsx';
+    link.click();
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file: File | null = input.files?.[0] ?? null;
+
+    if (file) {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const colegioId = this.colegioId;
+      if (!colegioId) {
+        console.error('No se encontró colegioId en el componente (usando this.colegioId)');
+        // Opcional: Mostrar mensaje de error al usuario
+        return;
+      }
+
+      this.loading = true; // Asumiendo que tienes una variable loading
+
+      this.http
+        .post(this.apiUrl + `/upload/${colegioId}`, formData)
+        .subscribe({
+          next: (response) => {
+            console.log('Archivo subido exitosamente', response);
+            this.loading = false;
+            // Opcional: Recargar la lista de estudiantes
+            this.loadStudents(); // Asume que tienes un método para cargar estudiantes
+            input.value = ''; // Limpiar el input file
+          },
+          error: (error) => {
+            console.error('Error al subir el archivo', error);
+            this.loading = false;
+            // Opcional: Mostrar mensaje de error al usuario
+            input.value = '';
+          },
+        });
+    }
   }
 }

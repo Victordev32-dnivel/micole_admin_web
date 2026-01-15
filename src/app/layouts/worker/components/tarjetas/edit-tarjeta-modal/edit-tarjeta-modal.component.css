@@ -28,6 +28,19 @@
   color: white;
 }
 
+.modal-title {
+  color: #ffffff !important;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.modal-subtitle {
+  color: rgba(255, 255, 255, 0.8) !important;
+  margin: 4px 0 0 0;
+  font-size: 0.85rem;
+}
+
 /* ===== CONTENIDO PRINCIPAL ===== */
 .modal-content {
   padding: 20px;
@@ -80,15 +93,16 @@
 
 /* Forzar ancho completo en todos los elementos del formulario */
 .edit-tarjeta-modal .mat-form-field,
-.edit-tarjeta-modal .mat-form-field .mat-form-field-wrapper,
-.edit-tarjeta-modal .mat-form-field .mat-form-field-flex,
-.edit-tarjeta-modal .mat-form-field .mat-form-field-infix,
-.edit-tarjeta-modal .mat-input-element,
-.edit-tarjeta-modal .mat-select {
+.edit-tarjeta-modal .form-field,
+.mat-form-field {
   width: 100% !important;
-  min-width: 100% !important;
-  max-width: 100% !important;
+  display: block !important;
 }
+
+::ng-deep .mat-form-field-wrapper {
+  width: 100% !important;
+}
+
 
 /* ===== CAMPOS DE FORMULARIO - ALINEACIÓN ===== */
 .mat-form-field-appearance-outline .mat-form-field-wrapper {
@@ -175,24 +189,24 @@
     border-radius: 0;
     max-height: 100vh;
   }
-  
+
   .modal-header {
     border-radius: 0;
   }
-  
+
   .modal-content {
     padding: 16px;
   }
-  
+
   .action-buttons {
     width: 100%;
     flex-direction: column-reverse;
   }
-  
+
   .action-buttons button {
     width: 100%;
   }
-  
+
   .mat-form-field {
     margin-bottom: 16px;
   }
@@ -222,7 +236,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255,255,255,0.8);
+  background: rgba(255, 255, 255, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
