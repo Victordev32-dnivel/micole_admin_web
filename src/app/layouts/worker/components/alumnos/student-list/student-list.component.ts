@@ -600,6 +600,8 @@ export class StudentListComponent implements OnInit {
     }
   }
 
+
+
   goToPreviousPage(): void {
     if (this.currentPage > 1) {
       this.changePage(this.currentPage - 1);
@@ -665,49 +667,13 @@ export class StudentListComponent implements OnInit {
 
   // Método para descargar la plantilla
   downloadTemplate(): void {
-    const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet([
-      [
-        'DNI_ALUMNO',
-        'NOMBRES_ALUMNO',
-        'APELLIDO_PATERNO_ALUMNO',
-        'APELLIDO_MATERNO_ALUMNO',
-        'GENERO_ALUMNO (M/F)',
-        'TELEFONO_ALUMNO',
-        'FECHA_NACIMIENTO_ALUMNO (DD/MM/YYYY)',
-        'DIRECCION_ALUMNO',
-        'CONTRASENA_ALUMNO',
-        'ID_SALON',
-        'DNI_APODERADO',
-        'NOMBRES_APODERADO',
-        'APELLIDO_PATERNO_APODERADO',
-        'APELLIDO_MATERNO_APODERADO',
-        'TELEFONO_APODERADO',
-        'CONTRASENA_APODERADO'
-      ],
-      // Ejemplo
-      [
-        '12345678',
-        'Juan',
-        'Perez',
-        'Lopez',
-        'M',
-        '987654321',
-        '01/01/2010',
-        'Av. Siempre Viva 123',
-        '123456',
-        '1',
-        '87654321',
-        'Maria',
-        'Lopez',
-        'Gomez',
-        '912345678',
-        '123456'
-      ]
-    ]);
-
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Plantilla Alumnos');
-    XLSX.writeFile(wb, 'plantilla_carga_masiva_alumnos.xlsx');
+    const link = document.createElement('a');
+    link.setAttribute('target', '_blank');
+    link.setAttribute('href', '/assets/FORMATO_ALUMNOS_DNIVEL.xlsx');
+    link.setAttribute('download', 'FORMATO_ALUMNOS_DNIVEL.xlsx');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   }
 
   onFileChange(event: any): void {
@@ -853,7 +819,7 @@ export class StudentListComponent implements OnInit {
     alert(resultMsg);
   }
 
-  private parseDate(dateStr: string): string | null {
+  private parseDate(dateStr: any): string | null {
     if (!dateStr) return null;
     // Asumiendo DD/MM/YYYY o formato Excel fecha
     if (typeof dateStr === 'number') {
