@@ -1,0 +1,55 @@
+<div class="dialog-container">
+    <div class="dialog-header">
+        <h2>Registrar Alumnos a Cursos</h2>
+    </div>
+
+    <div class="dialog-content" *ngIf="!loading; else loadingTemplate">
+        <form [formGroup]="form">
+
+            <!-- Alumno Selection -->
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Seleccionar Alumno</mat-label>
+                <mat-select formControlName="alumnoId">
+                    <mat-option *ngIf="alumnos.length === 0" disabled>No hay alumnos disponibles</mat-option>
+                    <mat-option *ngFor="let alumno of alumnos" [value]="alumno.id">
+                        {{ alumno.nombre_completo || alumno.nombres + ' ' + alumno.apellidos }}
+                    </mat-option>
+                </mat-select>
+                <mat-error *ngIf="form.get('alumnoId')?.hasError('required')">
+                    Debe seleccionar un alumno
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Cursos Selection (Multiple) -->
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Seleccionar Cursos</mat-label>
+                <mat-select formControlName="cursosId" multiple>
+                    <mat-option *ngIf="cursos.length === 0" disabled>No hay cursos disponibles</mat-option>
+                    <mat-option *ngFor="let curso of cursos" [value]="curso.id">
+                        {{ curso.titulo }}
+                    </mat-option>
+                </mat-select>
+                <mat-error *ngIf="form.get('cursosId')?.hasError('required')">
+                    Debe seleccionar al menos un curso
+                </mat-error>
+            </mat-form-field>
+
+        </form>
+    </div>
+
+    <div class="dialog-actions">
+        <button mat-button (click)="cancelar()" [disabled]="submitting">Cancelar</button>
+        <button mat-raised-button color="primary" (click)="guardar()"
+            [disabled]="form.invalid || submitting || loading">
+            <mat-spinner diameter="20" *ngIf="submitting"></mat-spinner>
+            <span *ngIf="!submitting">Guardar</span>
+        </button>
+    </div>
+</div>
+
+<ng-template #loadingTemplate>
+    <div class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Cargando datos...</p>
+    </div>
+</ng-template>

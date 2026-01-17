@@ -1,0 +1,46 @@
+.dialog-container {
+    padding: 24px;
+    min-width: 400px;
+}
+
+.dialog-header {
+    margin-bottom: 24px;
+}
+
+.dialog-header h2 {
+    margin: 0;
+    color: #1f2937;
+    font-size: 24px;
+    font-weight: 500;
+}
+
+.dialog-content {
+    margin-bottom: 24px;
+}
+
+.full-width {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: #666;
+    gap: 16px;
+}
+
+/* Spinner adjustment inside button */
+button mat-spinner {
+    display: inline-block;
+    margin-right: 8px;
+}

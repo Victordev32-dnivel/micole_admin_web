@@ -66,4 +66,18 @@ export class CursoService {
             headers: this.getHeaders()
         });
     }
+
+    // GET /api/alumno/salon/{idSalon}
+    getAlumnosPorSalon(salonId: number): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiBase}/alumno/salon/${salonId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    // POST /api/CursoAlumno
+    asignarCursosAlumno(data: { cursosId: number[], alumnoId: number }): Observable<any> {
+        return this.http.post<any>(`${this.apiBase}/CursoAlumno`, data, {
+            headers: this.getHeaders()
+        });
+    }
 }

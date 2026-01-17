@@ -155,6 +155,32 @@ export class ListaGeneralComponent implements OnInit {
             console.log(`✅ Respuesta de ${tipo}:`, response);
 
             this.data = response.data || [];
+
+            // Corregir formato de horario para salones (Inicio - Fin)
+            if (tipo === 'salones') {
+              this.data.forEach(item => {
+                let start = item.horaInicio;
+                let end = item.horaFin;
+
+                // Si no hay campos individuales, intentar extraer del string horario
+                if ((!start || !end) && item.horario) {
+                  const parts = item.horario.split(' - ');
+                  if (parts.length === 2) {
+                    start = parts[0].trim();
+                    end = parts[1].trim();
+                  }
+                }
+
+                if (start && end) {
+                  if (start > end) {
+                    item.horario = `${end} - ${start}`;
+                  } else {
+                    item.horario = `${start} - ${end}`;
+                  }
+                }
+              });
+            }
+
             this.filteredData = [...this.data];
             this.totalPages = response.totalPages || 1;
             this.totalResults = response.totalNiveles ||

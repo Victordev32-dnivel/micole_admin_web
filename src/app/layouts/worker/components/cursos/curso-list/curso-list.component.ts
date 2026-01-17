@@ -13,6 +13,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CursoService } from '../../../../../services/curso.service';
 import { UserService } from '../../../../../services/UserData';
 import { CreateCursoComponent } from '../create-curso/create-curso.component';
+import { EnrollStudentDialogComponent } from '../enroll-student-dialog/enroll-student-dialog.component';
 
 @Component({
     selector: 'app-curso-list',
@@ -129,6 +130,26 @@ export class CursoListComponent implements OnInit {
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
                 this.loadCursos();
+            }
+        });
+    }
+
+    registrarAlumnos() {
+        if (!this.selectedSalonId) {
+            this.snackBar.open('Debe seleccionar un salón primero', 'Cerrar', { duration: 3000 });
+            return;
+        }
+
+        const dialogRef = this.dialog.open(EnrollStudentDialogComponent, {
+            width: '500px',
+            data: {
+                salonId: this.selectedSalonId
+            }
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                // Optionally reload or show success message if not handled in dialog
             }
         });
     }
