@@ -80,10 +80,11 @@ import { UserService } from '../../../../../services/UserData';
 
           <div class="form-row">
             <mat-form-field appearance="outline" class="form-field">
-              <mat-label>Tipo de salón</mat-label>
+                <mat-label>Tipo de salón</mat-label>
               <mat-select formControlName="tipo" required>
-                <mat-option value="entrada">Entrada</mat-option>
-                <mat-option value="salida">Salida</mat-option>
+                <mat-option [value]="1">Tipo 1 (Entrada)</mat-option>
+                <mat-option [value]="2">Tipo 2 (Salida)</mat-option>
+                <mat-option [value]="3">Tipo 3</mat-option>
               </mat-select>
               <mat-error *ngIf="editForm.get('tipo')?.hasError('required')">
                 El tipo es obligatorio
@@ -243,7 +244,7 @@ export class EditSalonComponent implements OnInit {
       nombre: [''], // Campo opcional según la API
       horaInicio: ['', [Validators.required, Validators.pattern(/^([0-1][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/)]],
       horaFin: ['', [Validators.required, Validators.pattern(/^([0-1][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/)]],
-      tipo: ['entrada', Validators.required], // Valor por defecto 'entrada'
+      tipo: [1, Validators.required], // Valor por defecto 1
       idNivel: ['', Validators.required],
       idGrado: ['', Validators.required],
       idSeccion: ['', Validators.required]
@@ -356,9 +357,9 @@ export class EditSalonComponent implements OnInit {
             if (response) {
               this.editForm.patchValue({
                 nombre: response.nombre || '',
-                horaInicio: response.horaInicio || '',
-                horaFin: response.horaFin || '',
-                tipo: response.tipo || 'entrada', // Valor por defecto 'entrada'
+                horaInicio: response.horarioInicio || response.horaInicio || '',
+                horaFin: response.horarioFin || response.horaFin || '',
+                tipo: response.tipo || 1,
                 idNivel: response.idNivel || '',
                 idGrado: response.idGrado || '',
                 idSeccion: response.idSeccion || ''
@@ -386,9 +387,9 @@ export class EditSalonComponent implements OnInit {
               if (salon) {
                 this.editForm.patchValue({
                   nombre: salon.nombre || '',
-                  horaInicio: salon.horaInicio || '',
-                  horaFin: salon.horaFin || '',
-                  tipo: salon.tipo || 'entrada', // Valor por defecto 'entrada'
+                  horaInicio: salon.horarioInicio || salon.horaInicio || '',
+                  horaFin: salon.horarioFin || salon.horaFin || '',
+                  tipo: salon.tipo || 1,
                   idNivel: salon.idNivel || '',
                   idGrado: salon.idGrado || '',
                   idSeccion: salon.idSeccion || ''
@@ -425,7 +426,7 @@ export class EditSalonComponent implements OnInit {
     const datos = {
       horaInicio: this.ensureTimeFormat(this.editForm.value.horaInicio),
       horaFin: this.ensureTimeFormat(this.editForm.value.horaFin),
-      tipo: this.editForm.value.tipo,
+      tipoId: this.editForm.value.tipo,
       idGrado: this.editForm.value.idGrado,
       idSeccion: this.editForm.value.idSeccion,
       idNivel: this.editForm.value.idNivel,
