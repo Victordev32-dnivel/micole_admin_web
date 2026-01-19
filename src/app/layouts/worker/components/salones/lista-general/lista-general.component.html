@@ -2,41 +2,25 @@
   <!-- Toolbar -->
   <div class="toolbar">
     <div class="segmented" role="tablist" aria-label="Tipos">
-      <button
-        class="seg"
-        [class.active]="tipoSeleccionado.value === 'niveles'"
-        (click)="tipoSeleccionado.setValue('niveles')"
-        [attr.aria-pressed]="tipoSeleccionado.value === 'niveles'"
-      >
+      <button class="seg" [class.active]="tipoSeleccionado.value === 'niveles'"
+        (click)="tipoSeleccionado.setValue('niveles')" [attr.aria-pressed]="tipoSeleccionado.value === 'niveles'">
         <mat-icon>layers</mat-icon>
         <span>Niveles</span>
       </button>
-      <button
-        class="seg"
-        [class.active]="tipoSeleccionado.value === 'secciones'"
-        (click)="tipoSeleccionado.setValue('secciones')"
-        [attr.aria-pressed]="tipoSeleccionado.value === 'secciones'"
-      >
+      <button class="seg" [class.active]="tipoSeleccionado.value === 'secciones'"
+        (click)="tipoSeleccionado.setValue('secciones')" [attr.aria-pressed]="tipoSeleccionado.value === 'secciones'">
         <mat-icon>view_agenda</mat-icon>
         <span>Secciones</span>
       </button>
 
-      <button
-        class="seg"
-        [class.active]="tipoSeleccionado.value === 'grados'"
-        (click)="tipoSeleccionado.setValue('grados')"
-        [attr.aria-pressed]="tipoSeleccionado.value === 'grados'"
-      >
+      <button class="seg" [class.active]="tipoSeleccionado.value === 'grados'"
+        (click)="tipoSeleccionado.setValue('grados')" [attr.aria-pressed]="tipoSeleccionado.value === 'grados'">
         <mat-icon>school</mat-icon>
         <span>Grados</span>
       </button>
 
-      <button
-        class="seg"
-        [class.active]="tipoSeleccionado.value === 'salones'"
-        (click)="tipoSeleccionado.setValue('salones')"
-        [attr.aria-pressed]="tipoSeleccionado.value === 'salones'"
-      >
+      <button class="seg" [class.active]="tipoSeleccionado.value === 'salones'"
+        (click)="tipoSeleccionado.setValue('salones')" [attr.aria-pressed]="tipoSeleccionado.value === 'salones'">
         <mat-icon>meeting_room</mat-icon>
         <span>Salones</span>
       </button>
@@ -46,9 +30,7 @@
         <mat-icon>add</mat-icon>
         Agregar {{ tipoSeleccionado.value | titlecase }}
       </button>
-      <span *ngIf="!loading" style="margin-left: 12px"
-        >Total: <strong>{{ totalResults }}</strong></span
-      >
+      <span *ngIf="!loading" style="margin-left: 12px">Total: <strong>{{ totalResults }}</strong></span>
     </div>
   </div>
 
@@ -59,20 +41,9 @@
       <div class="search-field">
         <mat-form-field appearance="outline">
           <mat-label>Buscar {{ tipoSeleccionado.value | titlecase }}</mat-label>
-          <input
-            matInput
-            name="searchTerm"
-            [(ngModel)]="searchTerm"
-            (input)="applySearch()"
-            placeholder="Ingresa el nombre a buscar"
-          />
-          <button
-            mat-icon-button
-            matSuffix
-            (click)="clearSearch()"
-            aria-label="Limpiar"
-            *ngIf="searchTerm"
-          >
+          <input matInput name="searchTerm" [(ngModel)]="searchTerm" (input)="applySearch()"
+            placeholder="Ingresa el nombre a buscar" />
+          <button mat-icon-button matSuffix (click)="clearSearch()" aria-label="Limpiar" *ngIf="searchTerm">
             <mat-icon>close</mat-icon>
           </button>
         </mat-form-field>
@@ -83,12 +54,7 @@
         <span class="search-results">
           <strong>{{ filteredData.length }}</strong> de <strong>{{ data.length }}</strong> resultados
         </span>
-        <button
-          mat-stroked-button
-          color="primary"
-          (click)="clearSearch()"
-          *ngIf="searchTerm"
-        >
+        <button mat-stroked-button color="primary" (click)="clearSearch()" *ngIf="searchTerm">
           Limpiar
         </button>
       </div>
@@ -103,10 +69,7 @@
       <span>NOMBRE</span>
       <span class="acciones">ACCIONES</span>
     </div>
-    <div
-      class="table-header salones"
-      *ngIf="tipoSeleccionado.value === 'salones'"
-    >
+    <div class="table-header salones" *ngIf="tipoSeleccionado.value === 'salones'">
       <span>ID</span>
       <span>NOMBRE</span>
       <span>HORARIO</span>
@@ -121,31 +84,17 @@
 
     <!-- filas -->
     <div class="table-body" *ngIf="!loading && !error">
-      <div
-        class="row"
-        *ngFor="let item of filteredData"
-        [ngClass]="{ 'row-salones': tipoSeleccionado.value === 'salones' }"
-      >
-        <ng-container
-          *ngIf="tipoSeleccionado.value !== 'salones'; else salonesRow"
-        >
+      <div class="row" *ngFor="let item of filteredData"
+        [ngClass]="{ 'row-salones': tipoSeleccionado.value === 'salones' }">
+        <ng-container *ngIf="tipoSeleccionado.value !== 'salones'; else salonesRow">
           <span class="cell">{{ item.id }}</span>
           <span class="cell">{{ item.nombre }}</span>
           <span class="cell acciones">
-            <mat-icon
-              class="action edit"
-              title="Editar"
-              (click)="abrirModalEditar(item.id)"
-              >edit</mat-icon
-            >
-            <mat-icon
-              class="action delete"
-              title="Eliminar"
-              (click)="abrirModalEliminar(item.id, item.nombre)"
-            >
+            <mat-icon class="action edit" title="Editar" (click)="abrirModalEditar(item.id)">edit</mat-icon>
+            <mat-icon class="action delete" title="Eliminar" (click)="abrirModalEliminar(item.id, item.nombre)">
               delete
             </mat-icon>
-           
+
           </span>
         </ng-container>
         <ng-template #salonesRow>
@@ -154,20 +103,10 @@
           <span class="cell">{{ item.horario || "-" }}</span>
           <span class="cell">{{ item.tipo || "-" }}</span>
           <span class="cell acciones">
-            <mat-icon
-              class="action edit"
-              title="Editar"
-              (click)="abrirModalEditar(item.id); $event.stopPropagation();"
-              >edit</mat-icon
-            >
-            <mat-icon 
-              class="action delete" 
-              title="Eliminar"
-              (click)="abrirModalEliminar(item.id, item.nombre); $event.stopPropagation();"
-            >
-              delete
-            </mat-icon>
-           
+            <mat-icon class="action edit" title="Editar"
+              (click)="abrirModalEditar(item.id); $event.stopPropagation();">edit</mat-icon>
+
+
           </span>
         </ng-template>
       </div>
@@ -181,43 +120,22 @@
   <!-- footer: paginación y pageSize -->
   <div class="footer">
     <div class="pagination" *ngIf="!loading && totalPages > 1">
-      <button
-        class="page-btn"
-        [disabled]="currentPage === 1"
-        (click)="changePage(1)"
-      >
+      <button class="page-btn" [disabled]="currentPage === 1" (click)="changePage(1)">
         «
       </button>
-      <button
-        class="page-btn"
-        [disabled]="currentPage === 1"
-        (click)="changePage(currentPage - 1)"
-      >
+      <button class="page-btn" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">
         ‹
       </button>
-      <button
-        class="page-btn"
-        *ngFor="let p of pages"
-        [class.active]="p === currentPage"
-        (click)="changePage(p)"
-      >
+      <button class="page-btn" *ngFor="let p of pages" [class.active]="p === currentPage" (click)="changePage(p)">
         {{ p }}
       </button>
-      <button
-        class="page-btn"
-        [disabled]="currentPage === totalPages"
-        (click)="changePage(currentPage + 1)"
-      >
+      <button class="page-btn" [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">
         ›
       </button>
-      <button
-        class="page-btn"
-        [disabled]="currentPage === totalPages"
-        (click)="changePage(totalPages)"
-      >
+      <button class="page-btn" [disabled]="currentPage === totalPages" (click)="changePage(totalPages)">
         »
       </button>
     </div>
-   
+
   </div>
 </div>
