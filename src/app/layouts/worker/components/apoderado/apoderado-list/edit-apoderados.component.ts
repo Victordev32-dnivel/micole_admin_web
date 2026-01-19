@@ -207,9 +207,9 @@ interface DialogData {
               La contraseña debe tener al menos 6 caracteres
             </mat-error>
             <mat-error
-              *ngIf="apoderadoForm.get('contrasena')?.hasError('pattern')"
+              *ngIf="apoderadoForm.get('contrasena')?.hasError('minlength')"
             >
-              La contraseña debe contener al menos una letra y un número
+              La contraseña debe tener al menos 6 caracteres
             </mat-error>
           </mat-form-field>
 
@@ -514,8 +514,7 @@ export class EditApoderadosComponent implements OnInit {
         '',
         [
           Validators.required,
-          Validators.minLength(6),
-          Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,}$/), // Al menos una letra y un número
+          Validators.minLength(6)
         ],
       ],
       nombres: ['', [Validators.required, Validators.minLength(2)]],
@@ -685,8 +684,6 @@ export class EditApoderadosComponent implements OnInit {
     if (field?.hasError('pattern')) {
       if (fieldName === 'numeroDocumento') return 'El DNI debe tener 8 dígitos';
       if (fieldName === 'telefono') return 'El teléfono debe tener 9 dígitos';
-      if (fieldName === 'contrasena')
-        return 'La contraseña debe contener al menos una letra y un número';
     }
 
     return '';

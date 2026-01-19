@@ -237,10 +237,17 @@ export class AcademiaMatriculaComponent implements OnInit {
             return;
         }
 
+        if (!alumno.id) {
+            this.snackBar.open('Error: El alumno no tiene ID válido', 'Cerrar', { duration: 3000 });
+            console.error('Alumno inválido:', alumno);
+            return;
+        }
+
         const selectedSalon = this.academiaSalones.find(s => s.id === this.selectedAcademiaSalonId);
         const salonName = selectedSalon ? selectedSalon.nombre : 'el salón seleccionado';
 
-        if (!confirm(`¿Seguro que deseas matricular a ${alumno.nombre_completo} en ${salonName}?`)) {
+        // DEBUG: Mostrar IDs en el confirm para verificar
+        if (!confirm(`¿Seguro que deseas matricular a ${alumno.nombre_completo} (ID: ${alumno.id}) en ${salonName} (ID: ${this.selectedAcademiaSalonId})?`)) {
             return;
         }
 
@@ -251,23 +258,57 @@ export class AcademiaMatriculaComponent implements OnInit {
             idSalon: this.selectedAcademiaSalonId
         };
 
-        this.http.patch(`${this.apiBase}/alumno/matricula`, body, { headers: this.getHeaders(), responseType: 'text' })
-            .subscribe({
-                next: () => {
-                    this.snackBar.open(`Alumno matriculado en ${salonName} exitosamente`, 'Cerrar', { duration: 3000, panelClass: ['success-snackbar'] });
-                    this.loading = false;
-                    // Update the local state to reflect the change immediately
-                    alumno.academia = true;
-                },
-                error: (err) => {
-                    console.error('Error matriculating', err);
-                    this.loading = false;
-                    // If responseType is text, err.error should be the text body. 
-                    // Fallback to a generic message if empty.
-                    const errorMessage = err.error || 'Error al matricular alumno';
-                    this.snackBar.open(errorMessage, 'Cerrar', { duration: 3000, panelClass: ['error-snackbar'] });
-                }
-            });
+        console.log('Enviando payload matricula:', body);
+
+        console.log('Enviando payload matricula:', body);
+
+        // Implementación de reintento robusto (PATCH -> POST -> PUT)
+        const methodsToTry = ['patch', 'post', 'put'];
+        let currentMethodIndex = 0;
+
+        const tryNextMethod = () => {
+            if (currentMethodIndex >= methodsToTry.length) {
+                this.loading = false;
+                this.snackBar.open('Error: Todos los métodos de matrícula fallaron', 'Cerrar', { duration: 5000, panelClass: ['error-snackbar'] });
+                console.error('Todos los métodos HTTP fallaron para matrícula');
+                return;
+            }
+
+            const method = methodsToTry[currentMethodIndex];
+            currentMethodIndex++;
+
+            console.log(`Intentando método: ${method.toUpperCase()}...`);
+
+            this.http.request(method, `${this.apiBase}/alumno/matricula`, {
+                body: body,
+                headers: this.getHeaders(),
+                responseType: 'text'
+            })
+                .subscribe({
+                    next: () => {
+                        console.log(`Éxito con método: ${method.toUpperCase()}`);
+                        this.snackBar.open(`Alumno matriculado en ${salonName} exitosamente`, 'Cerrar', { duration: 3000, panelClass: ['success-snackbar'] });
+                        this.loading = false;
+                        alumno.academia = true;
+                    },
+                    error: (err) => {
+                        console.warn(`Falló método ${method.toUpperCase()}`, err);
+
+                        // Si es el último intento, mostrar el error
+                        if (currentMethodIndex >= methodsToTry.length) {
+                            this.loading = false;
+                            const errorMessage = err.error || 'Error al matricular alumno (Intento final)';
+                            this.snackBar.open(errorMessage, 'Cerrar', { duration: 3000, panelClass: ['error-snackbar'] });
+                        } else {
+                            // Intentar siguiente método
+                            tryNextMethod();
+                        }
+                    }
+                });
+        };
+
+        // Iniciar intentos
+        tryNextMethod();
     }
 
     desmatricular(alumno: any) {
