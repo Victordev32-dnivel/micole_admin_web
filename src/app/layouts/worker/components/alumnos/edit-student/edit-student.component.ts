@@ -566,28 +566,26 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
         };
 
         const editData = {
-          alumno: {
-            numeroDocumento: formValues.numeroDocumento,
-            nombres: formValues.nombres || '',
-            apellidoPaterno: formValues.apellidoPaterno || '',
-            apellidoMaterno: formValues.apellidoMaterno || '',
-            genero:
-              formValues.genero === 'Masculino'
-                ? 'm'
-                : formValues.genero === 'Femenino'
-                  ? 'f'
-                  : formValues.genero === 'Otro'
-                    ? 'o'
-                    : '',
-            telefono: formValues.telefono || '',
-            fechaNacimiento: formValues.fechaNacimiento
-              ? formatDateOnly(formValues.fechaNacimiento)
-              : null,
-            direccion: formValues.direccion || '',
-            estado: formValues.estado || 'Activo',
-            idApoderado: apoderadoId,
-            contrasena: formValues.contrasena || '',
-          }
+          numeroDocumento: formValues.numeroDocumento,
+          nombres: formValues.nombres || '',
+          apellidoPaterno: formValues.apellidoPaterno || '',
+          apellidoMaterno: formValues.apellidoMaterno || '',
+          genero:
+            formValues.genero === 'Masculino'
+              ? 'm'
+              : formValues.genero === 'Femenino'
+                ? 'f'
+                : formValues.genero === 'Otro'
+                  ? 'o'
+                  : '',
+          telefono: formValues.telefono || '',
+          fechaNacimiento: formValues.fechaNacimiento
+            ? formatDateOnly(formValues.fechaNacimiento)
+            : null,
+          direccion: formValues.direccion || '',
+          estado: formValues.estado || 'Activo',
+          idApoderado: apoderadoId,
+          contrasena: formValues.contrasena || '',
         };
 
         const url = `${this.apiUrl}/${studentId}`;
