@@ -541,32 +541,58 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
       const newSalonId = formValues.idSalon ? +formValues.idSalon : null;
 
       const updateMainData = () => {
+        // Validate that idApoderado is provided
+        const apoderadoId = formValues.idApoderado ? +formValues.idApoderado : null;
+
+        if (!apoderadoId || apoderadoId === 0) {
+          this.ngZone.run(() => {
+            this.error = 'Debe seleccionar un apoderado válido para el alumno.';
+            this.loading = false;
+            this.cdr.detectChanges();
+          });
+          return;
+        }
+
+        // Format date manually as YYYY-MM-DD
+        const formatDateOnly = (date: Date | null | string): string | null => {
+          if (!date) return null;
+          const d = new Date(date);
+          if (isNaN(d.getTime())) return null;
+
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+
         const editData = {
-          numeroDocumento: formValues.numeroDocumento,
-          nombres: formValues.nombres || '',
-          apellidoPaterno: formValues.apellidoPaterno || '',
-          apellidoMaterno: formValues.apellidoMaterno || '',
-          genero:
-            formValues.genero === 'Masculino'
-              ? 'm'
-              : formValues.genero === 'Femenino'
-                ? 'f'
-                : formValues.genero === 'Otro'
-                  ? 'o'
-                  : '',
-          telefono: formValues.telefono || '',
-          fechaNacimiento: formValues.fechaNacimiento
-            ? this.formatDate(formValues.fechaNacimiento)
-            : null,
-          direccion: formValues.direccion || '',
-          estado: formValues.estado || 'Activo',
-          idApoderado: formValues.idApoderado ? +formValues.idApoderado : null,
-          idSalon: newSalonId,
-          contrasena: formValues.contrasena || '',
-          idColegio: this.data.colegioId || 0,
+          alumno: {
+            numeroDocumento: formValues.numeroDocumento,
+            nombres: formValues.nombres || '',
+            apellidoPaterno: formValues.apellidoPaterno || '',
+            apellidoMaterno: formValues.apellidoMaterno || '',
+            genero:
+              formValues.genero === 'Masculino'
+                ? 'm'
+                : formValues.genero === 'Femenino'
+                  ? 'f'
+                  : formValues.genero === 'Otro'
+                    ? 'o'
+                    : '',
+            telefono: formValues.telefono || '',
+            fechaNacimiento: formValues.fechaNacimiento
+              ? formatDateOnly(formValues.fechaNacimiento)
+              : null,
+            direccion: formValues.direccion || '',
+            estado: formValues.estado || 'Activo',
+            idApoderado: apoderadoId,
+            contrasena: formValues.contrasena || '',
+          }
         };
 
         const url = `${this.apiUrl}/${studentId}`;
+
+        console.log('📤 Enviando datos de alumno:', editData);
 
         this.http
           .put<any>(url, editData, { headers: this.getHeaders() })
@@ -580,8 +606,28 @@ export class StudentEditComponent implements AfterViewInit, OnInit, OnDestroy {
             },
             error: (error) => {
               this.ngZone.run(() => {
-                console.error('Error al editar alumno:', error);
-                this.error = 'Error al guardar cambios';
+                console.error('❌ Error al editar alumno:', error);
+
+                // Extract detailed error message from backend
+                let errorMessage = 'Error al guardar cambios';
+
+                if (error.error?.errors) {
+                  // Handle validation errors
+                  const validationErrors = error.error.errors;
+                  const errorMessages = Object.keys(validationErrors).map(key => {
+                    const messages = validationErrors[key];
+                    return `${key}: ${Array.isArray(messages) ? messages.join(', ') : messages}`;
+                  });
+                  errorMessage = `Errores de validación:\n${errorMessages.join('\n')}`;
+                } else if (error.error?.title) {
+                  errorMessage = error.error.title;
+                } else if (error.error?.message) {
+                  errorMessage = error.error.message;
+                } else if (error.message) {
+                  errorMessage = error.message;
+                }
+
+                this.error = errorMessage;
                 this.loading = false;
                 this.cdr.detectChanges();
               });

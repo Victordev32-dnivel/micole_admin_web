@@ -615,7 +615,7 @@ export class EditApoderadosComponent implements OnInit {
       nombres: formData.nombres,
       apellidoPaterno: formData.apellidoPaterno,
       apellidoMaterno: formData.apellidoMaterno,
-      genero: formData.genero,
+      genero: formData.genero ? formData.genero.toLowerCase() : 'm', // Normalizar a 'm' o 'f'
       telefono: formData.telefono,
       parentesco: formData.parentesco,
       idColegio: formData.idColegio || 1,
