@@ -111,7 +111,7 @@ export class ListaGeneralComponent implements OnInit {
         url = `${this.apiBase}/grado/colegio/${this.colegiosId}?page=${this.currentPage}`;
         break;
       case 'salones':
-        url = `${this.apiBase}/salon/colegio/${this.colegiosId}?page=${this.currentPage}&pagesize=${this.pageSize}`;
+        url = `${this.apiBase}/salon/colegio/sinfiltro/${this.colegiosId}`;
         break;
     }
 
@@ -154,7 +154,12 @@ export class ListaGeneralComponent implements OnInit {
           try {
             console.log(`✅ Respuesta de ${tipo}:`, response);
 
-            this.data = response.data || [];
+            if (tipo === 'salones') {
+              // Manejo específico para el endpoint sin filtro (puede devolver array directo o envuelto)
+              this.data = Array.isArray(response) ? response : (response.data || []);
+            } else {
+              this.data = response.data || [];
+            }
 
             // Corregir formato de horario para salones (Inicio - Fin)
             if (tipo === 'salones') {
@@ -182,12 +187,19 @@ export class ListaGeneralComponent implements OnInit {
             }
 
             this.filteredData = [...this.data];
-            this.totalPages = response.totalPages || 1;
-            this.totalResults = response.totalNiveles ||
-              response.totalSecciones ||
-              response.totalGrados ||
-              response.totalSalones ||
-              this.data.length;
+
+            if (tipo === 'salones') {
+              // Como es sin filtro, asumimos que viene todo en una página o calculamos si fuera necesario
+              // Si el backend no devuelve metadatos de paginación en este endpoint, ajustamos:
+              this.totalResults = this.data.length;
+              this.totalPages = 1; // O calcular si implementamos paginación local
+            } else {
+              this.totalPages = response.totalPages || 1;
+              this.totalResults = response.totalNiveles ||
+                response.totalSecciones ||
+                response.totalGrados ||
+                this.data.length;
+            }
 
             this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
             this.setDisplayedColumns(tipo);
