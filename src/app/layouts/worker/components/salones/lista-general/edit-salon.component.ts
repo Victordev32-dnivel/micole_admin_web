@@ -355,21 +355,24 @@ export class EditSalonComponent implements OnInit {
             console.log('Datos del salón:', response);
 
             if (response) {
+              // Manejar tanto respuesta directa como envuelta en .data
+              const salon = response.data || response;
+
               this.editForm.patchValue({
-                nombre: response.nombre || '',
-                horaInicio: response.horarioInicio || response.horaInicio || '',
-                horaFin: response.horarioFin || response.horaFin || '',
-                tipo: response.tipo || 1,
-                idNivel: response.idNivel || '',
-                idGrado: response.idGrado || '',
-                idSeccion: response.idSeccion || ''
+                nombre: salon.nombre || salon.Nombre || '',
+                horaInicio: salon.horarioInicio || salon.horaInicio || salon.HoraInicio || '',
+                horaFin: salon.horarioFin || salon.horaFin || salon.HoraFin || '',
+                tipo: salon.tipo || salon.tipoId || salon.Tipo || 1,
+                idNivel: salon.idNivel || salon.id_nivel || salon.nivelId || '',
+                idGrado: salon.idGrado || salon.id_grado || salon.gradoId || '',
+                idSeccion: salon.idSeccion || salon.id_seccion || salon.seccionId || ''
               });
             }
             resolve();
           },
           error: (err) => {
             console.error('Error al cargar salón específico:', err);
-            // Si falla el endpoint específico, intentar con el listado
+            // Intentar con el listado como respaldo
             this.cargarSalonDesdeListado().then(resolve).catch(reject);
           }
         });
@@ -378,21 +381,27 @@ export class EditSalonComponent implements OnInit {
 
   private cargarSalonDesdeListado(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.http.get<any>(`${this.apiBase}/salon/colegio/${this.data.idColegio}?page=1&pagesize=500`, { headers: this.getHeaders() })
+      // Usar el endpoint 'sinfiltro' que sabemos que funciona en el listado general
+      this.http.get<any>(`${this.apiBase}/salon/colegio/sinfiltro/${this.data.idColegio}`, { headers: this.getHeaders() })
         .subscribe({
           next: (response) => {
-            if (response && response.data && Array.isArray(response.data)) {
-              const salon = response.data.find((s: any) => s.id === this.data.id);
+            console.log('Respuesta del listado de respaldo:', response);
+            // El endpoint sinfiltro puede devolver un array directamente o envuelto
+            const salones = Array.isArray(response) ? response : (response.data || []);
+
+            if (salones.length > 0) {
+              const salon = salones.find((s: any) => (s.id || s.ID) === this.data.id);
 
               if (salon) {
+                console.log('Salón encontrado en listado:', salon);
                 this.editForm.patchValue({
-                  nombre: salon.nombre || '',
-                  horaInicio: salon.horarioInicio || salon.horaInicio || '',
-                  horaFin: salon.horarioFin || salon.horaFin || '',
-                  tipo: salon.tipo || 1,
-                  idNivel: salon.idNivel || '',
-                  idGrado: salon.idGrado || '',
-                  idSeccion: salon.idSeccion || ''
+                  nombre: salon.nombre || salon.Nombre || '',
+                  horaInicio: salon.horarioInicio || salon.horaInicio || salon.HoraInicio || '',
+                  horaFin: salon.horarioFin || salon.horaFin || salon.HoraFin || '',
+                  tipo: salon.tipo || salon.tipoId || salon.Tipo || 1,
+                  idNivel: salon.idNivel || salon.id_nivel || salon.nivelId || '',
+                  idGrado: salon.idGrado || salon.id_grado || salon.gradoId || '',
+                  idSeccion: salon.idSeccion || salon.id_seccion || salon.seccionId || ''
                 });
               }
             }
