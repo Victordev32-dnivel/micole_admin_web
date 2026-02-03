@@ -32,6 +32,7 @@ export const WORKER_ROUTES: Routes = [
       { path: 'academia-matricula', loadComponent: () => import('./components/academia-matricula/academia-matricula.component').then(m => m.AcademiaMatriculaComponent) },
       { path: 'tipo-asistencia', loadComponent: () => import('./components/tipo-asistencia/tipo-asistencia-list/tipo-asistencia-list.component').then(m => m.TipoAsistenciaListComponent) },
       { path: 'mis-cursos', loadComponent: () => import('./components/mis-cursos/mis-cursos.component').then(m => m.MisCursosComponent) },
+      { path: 'boletas', loadComponent: () => import('./components/boletas/boletas.component').then(m => m.BoletasComponent) },
     ],
   },
 ];
