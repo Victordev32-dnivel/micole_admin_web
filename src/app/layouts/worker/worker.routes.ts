@@ -33,6 +33,7 @@ export const WORKER_ROUTES: Routes = [
       { path: 'tipo-asistencia', loadComponent: () => import('./components/tipo-asistencia/tipo-asistencia-list/tipo-asistencia-list.component').then(m => m.TipoAsistenciaListComponent) },
       { path: 'mis-cursos', loadComponent: () => import('./components/mis-cursos/mis-cursos.component').then(m => m.MisCursosComponent) },
       { path: 'boletas', loadComponent: () => import('./components/boletas/boletas.component').then(m => m.BoletasComponent) },
+      { path: 'periodos', loadComponent: () => import('./components/periodos/periodo-list/periodo-list.component').then(m => m.PeriodoListComponent) },
     ],
   },
 ];

@@ -1,7 +1,7 @@
 .boletas-container {
     padding: 24px;
-    max-width: 1200px;
-    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
     font-family: 'Inter', 'Roboto', sans-serif;
 }
 
@@ -91,15 +91,36 @@ tr.mat-row:hover {
     background-color: #f8f9ff;
 }
 
-.nota-input {
-    width: 60px;
+/* Compact input styles */
+.simple-nota-input {
+    width: 120px;
+    padding: 8px 4px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #333;
+    transition: all 0.2s ease;
+    background-color: #fcfcfc;
+}
+
+.simple-nota-input:focus {
+    outline: none;
+    border-color: #6200ee;
+    background-color: #fff;
+    box-shadow: 0 0 0 2px rgba(98, 0, 238, 0.1);
+}
+
+/* Hide spin buttons */
+.simple-nota-input::-webkit-outer-spin-button,
+.simple-nota-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
     margin: 0;
 }
 
-.nota-input input {
-    text-align: center;
-    font-weight: 600;
-    color: #6200ee;
+.simple-nota-input[type=number] {
+    -moz-appearance: textfield;
 }
 
 @media (max-width: 768px) {
@@ -124,4 +145,28 @@ tr.mat-row:hover {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px dashed #ccc;
+    margin-top: 20px;
+    color: #666;
+}
+
+.empty-icon {
+    font-size: 48px;
+    height: 48px;
+    width: 48px;
+    margin-bottom: 16px;
+    color: #ff9800;
+}
+
+.empty-state p {
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin: 0;
 }

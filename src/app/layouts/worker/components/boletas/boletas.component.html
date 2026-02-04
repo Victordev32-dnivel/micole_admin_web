@@ -8,10 +8,19 @@
         <mat-card-content>
             <div class="selection-controls">
                 <mat-form-field appearance="outline">
+                    <mat-label>Seleccionar Salón</mat-label>
+                    <mat-select [(ngModel)]="salonId" (selectionChange)="onSalonChange()">
+                        <mat-option *ngFor="let s of salones" [value]="s.id">
+                            {{ s.nombre }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
                     <mat-label>Seleccionar Curso</mat-label>
-                    <mat-select [(ngModel)]="cursoId">
-                        <mat-option *ngFor="let c of cursos" [value]="c.cursoId">
-                            {{ c.curso.titulo }}
+                    <mat-select [(ngModel)]="cursoId" [disabled]="!salonId">
+                        <mat-option *ngFor="let c of cursos" [value]="c.id">
+                            {{ c.titulo }}
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
@@ -44,6 +53,11 @@
         <mat-spinner></mat-spinner>
     </div>
 
+    <div class="empty-state" *ngIf="!loading && boletas.length === 0 && cursoId && periodoId">
+        <mat-icon class="empty-icon">info</mat-icon>
+        <p>DEBES CREAR LA BOLETA ANTES DE VER BOLETAS</p>
+    </div>
+
     <mat-card class="table-card" *ngIf="boletas.length > 0">
         <table mat-table [dataSource]="boletas" class="mat-elevation-z8">
             <ng-container matColumnDef="index">
@@ -52,16 +66,14 @@
             </ng-container>
 
             <ng-container matColumnDef="alumno">
-                <th mat-header-cell *matHeaderCellDef> ID Alumno </th>
-                <td mat-cell *matCellDef="let element"> {{element.alumnoId}} </td>
+                <th mat-header-cell *matHeaderCellDef> Alumno </th>
+                <td mat-cell *matCellDef="let element"> {{element.alumno || 'ID: ' + element.alumnoId}} </td>
             </ng-container>
 
             <ng-container matColumnDef="nota">
                 <th mat-header-cell *matHeaderCellDef> Nota </th>
                 <td mat-cell *matCellDef="let element">
-                    <mat-form-field appearance="outline" class="nota-input">
-                        <input matInput type="number" [(ngModel)]="element.nota">
-                    </mat-form-field>
+                    <input type="number" class="simple-nota-input" [(ngModel)]="element.nota" min="0" max="20">
                 </td>
             </ng-container>
 

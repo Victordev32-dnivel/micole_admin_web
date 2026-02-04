@@ -12,7 +12,7 @@ export interface Periodo {
     providedIn: 'root'
 })
 export class PeriodoService {
-    private apiBase = '/api';
+    private apiBase = '/api/Periodo';
 
     constructor(
         private http: HttpClient,
@@ -21,40 +21,38 @@ export class PeriodoService {
 
     private getHeaders(): HttpHeaders {
         const token = this.userService.getJwtToken();
-        const headers = new HttpHeaders({
+        return new HttpHeaders({
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
         });
-
-        if (token) {
-            return headers.append('Authorization', `Bearer ${token}`);
-        }
-        return headers;
     }
 
-    // GET /api/Periodo
-    getPeriodos(): Observable<Periodo[]> {
-        return this.http.get<Periodo[]>(`${this.apiBase}/Periodo`, {
+    getAll(): Observable<Periodo[]> {
+        return this.http.get<Periodo[]>(this.apiBase, {
             headers: this.getHeaders()
         });
     }
 
-    // POST /api/Periodo
-    createPeriodo(periodo: Periodo): Observable<Periodo> {
-        return this.http.post<Periodo>(`${this.apiBase}/Periodo`, periodo, {
+    getById(id: number): Observable<Periodo> {
+        return this.http.get<Periodo>(`${this.apiBase}/${id}`, {
             headers: this.getHeaders()
         });
     }
 
-    // GET /api/Periodo/{id}
-    getPeriodoById(id: number): Observable<Periodo> {
-        return this.http.get<Periodo>(`${this.apiBase}/Periodo/${id}`, {
+    create(periodo: { nombre: string }): Observable<Periodo> {
+        return this.http.post<Periodo>(this.apiBase, periodo, {
             headers: this.getHeaders()
         });
     }
 
-    // PUT /api/Periodo/{id}
-    updatePeriodo(id: number, periodo: Periodo): Observable<Periodo> {
-        return this.http.put<Periodo>(`${this.apiBase}/Periodo/${id}`, periodo, {
+    update(id: number, periodo: { id: number; nombre: string }): Observable<any> {
+        return this.http.put(`${this.apiBase}/${id}`, periodo, {
+            headers: this.getHeaders()
+        });
+    }
+
+    delete(id: number): Observable<any> {
+        return this.http.delete(`${this.apiBase}/${id}`, {
             headers: this.getHeaders()
         });
     }

@@ -14,6 +14,8 @@ import { BoletaService } from '../../../../services/boleta.service';
 import { ProfeService } from '../../../../services/profe.service';
 import { PeriodoService, Periodo } from '../../../../services/periodo.service';
 import { UserService } from '../../../../services/UserData';
+import { CursoService } from '../../../../services/curso.service';
+import { AuthService } from '../../../../core/auth/services/auth.service';
 
 @Component({
     selector: 'app-boletas',
@@ -36,7 +38,9 @@ import { UserService } from '../../../../services/UserData';
 })
 export class BoletasComponent implements OnInit {
     periodoId: number | null = null;
+    salonId: number | null = null;
     cursoId: number | null = null;
+    salones: any[] = [];
     cursos: any[] = [];
     periodos: Periodo[] = [];
     boletas: any[] = [];
@@ -48,20 +52,22 @@ export class BoletasComponent implements OnInit {
         private boletaService: BoletaService,
         private profeService: ProfeService,
         private periodoService: PeriodoService,
+        private cursoService: CursoService,
         private userService: UserService,
+        private authService: AuthService,
         private snackBar: MatSnackBar
     ) { }
 
     ngOnInit(): void {
         const userData = this.userService.getUserData();
         if (userData && userData.id) {
-            this.loadCursos(userData.id);
+            this.loadSalones();
             this.loadPeriodos();
         }
     }
 
     loadPeriodos(): void {
-        this.periodoService.getPeriodos().subscribe({
+        this.periodoService.getAll().subscribe({
             next: (data) => {
                 this.periodos = data;
             },
@@ -72,14 +78,40 @@ export class BoletasComponent implements OnInit {
         });
     }
 
-    loadCursos(usuarioId: number): void {
-        this.profeService.getMisCursos(usuarioId).subscribe({
+    loadSalones(): void {
+        const colegioId = this.authService.getColegioId();
+        if (!colegioId) {
+            this.showError('No se pudo identificar el colegio del usuario.');
+            return;
+        }
+
+        this.cursoService.getSalones(colegioId).subscribe({
+            next: (data) => {
+                this.salones = data;
+            },
+            error: (err) => {
+                console.error('Error cargando salones', err);
+                this.showError('No se pudieron cargar los salones.');
+            }
+        });
+    }
+
+    onSalonChange(): void {
+        this.cursoId = null;
+        this.cursos = [];
+        if (this.salonId) {
+            this.loadCursos(this.salonId);
+        }
+    }
+
+    loadCursos(salonId: number): void {
+        this.cursoService.getCursosPorSalon(salonId).subscribe({
             next: (data) => {
                 this.cursos = data;
             },
             error: (err) => {
                 console.error('Error cargando cursos', err);
-                this.showError('No se pudieron cargar los cursos.');
+                this.showError('No se pudieron cargar los cursos del salón.');
             }
         });
     }
@@ -90,13 +122,19 @@ export class BoletasComponent implements OnInit {
             return;
         }
 
+        if (!this.cursoId) {
+            this.showError('Por favor, seleccione un curso.');
+            return;
+        }
+
         this.loading = true;
-        this.boletaService.getBoletas(this.periodoId).subscribe({
+        this.boletaService.getBoletas(this.periodoId, this.cursoId).subscribe({
             next: (data) => {
                 this.boletas = data;
                 this.loading = false;
-                if (data.length === 0) {
-                    this.snackBar.open('No se encontraron boletas para este periodo.', 'Cerrar', { duration: 3000 });
+
+                if (this.boletas.length === 0) {
+                    this.snackBar.open('DEBES CREAR LA BOLETA ANTES DE VER BOLETAS', 'Cerrar', { duration: 5000 });
                 }
             },
             error: (err) => {
@@ -131,6 +169,16 @@ export class BoletasComponent implements OnInit {
     updateNota(boleta: any): void {
         if (!this.cursoId || !this.periodoId) {
             this.showError('Curso o periodo no seleccionado.');
+            return;
+        }
+
+        if (boleta.nota === null || boleta.nota === undefined || boleta.nota === '') {
+            this.showError('Ingrese una nota válida.');
+            return;
+        }
+
+        if (boleta.nota < 0 || boleta.nota > 20) {
+            this.showError('La nota debe estar entre 0 y 20.');
             return;
         }
 
