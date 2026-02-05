@@ -69,7 +69,12 @@ export class BoletasComponent implements OnInit {
     loadPeriodos(): void {
         this.periodoService.getAll().subscribe({
             next: (data) => {
-                this.periodos = data;
+                if (Array.isArray(data)) {
+                    this.periodos = data;
+                } else {
+                    console.error('Data received for Periodos is not an array:', data);
+                    this.periodos = [];
+                }
             },
             error: (err) => {
                 console.error('Error cargando periodos', err);
@@ -87,7 +92,12 @@ export class BoletasComponent implements OnInit {
 
         this.cursoService.getSalones(colegioId).subscribe({
             next: (data) => {
-                this.salones = data;
+                if (Array.isArray(data)) {
+                    this.salones = data;
+                } else {
+                    console.error('Data received for Salones is not an array:', data);
+                    this.salones = [];
+                }
             },
             error: (err) => {
                 console.error('Error cargando salones', err);
@@ -107,7 +117,12 @@ export class BoletasComponent implements OnInit {
     loadCursos(salonId: number): void {
         this.cursoService.getCursosPorSalon(salonId).subscribe({
             next: (data) => {
-                this.cursos = data;
+                if (Array.isArray(data)) {
+                    this.cursos = data;
+                } else {
+                    console.error('Data received for Cursos is not an array:', data);
+                    this.cursos = [];
+                }
             },
             error: (err) => {
                 console.error('Error cargando cursos', err);
