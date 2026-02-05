@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { UserService } from './UserData';
 
@@ -40,8 +40,10 @@ export class PeriodoService {
     }
 
     create(periodo: { nombre: string }): Observable<Periodo> {
-        return this.http.post<Periodo>(this.apiBase, periodo, {
-            headers: this.getHeaders()
+        let params = new HttpParams().set('nombre', periodo.nombre);
+        return this.http.post<Periodo>(this.apiBase, null, {
+            headers: this.getHeaders(),
+            params: params
         });
     }
 
