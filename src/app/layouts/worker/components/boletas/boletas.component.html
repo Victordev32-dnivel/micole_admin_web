@@ -17,8 +17,8 @@
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
-                    <mat-label>Seleccionar Curso</mat-label>
-                    <mat-select [(ngModel)]="cursoId" [disabled]="!salonId">
+                    <mat-label>Seleccionar Cursos</mat-label>
+                    <mat-select [(ngModel)]="cursoIds" [disabled]="!salonId" multiple>
                         <mat-option *ngFor="let c of cursos" [value]="c.id">
                             {{ c.titulo }}
                         </mat-option>
@@ -38,11 +38,13 @@
                     <button mat-raised-button color="primary" (click)="fetchBoletas()" [disabled]="loading">
                         <mat-icon>search</mat-icon> Ver Boletas
                     </button>
-                    <button mat-raised-button color="accent" (click)="createBoleta()" [disabled]="loading">
-                        <mat-icon>add</mat-icon> Crear Boleta
+                    <button mat-raised-button color="accent" (click)="createBoleta()"
+                        [disabled]="loading || cursoIds.length === 0">
+                        <mat-icon>add</mat-icon> Crear Boletas
                     </button>
-                    <button mat-raised-button color="warn" (click)="deleteBoleta()" [disabled]="loading">
-                        <mat-icon>delete</mat-icon> Eliminar Boleta
+                    <button mat-raised-button color="warn" (click)="deleteBoleta()"
+                        [disabled]="loading || cursoIds.length === 0">
+                        <mat-icon>delete</mat-icon> Eliminar Boletas
                     </button>
                 </div>
             </div>
@@ -53,9 +55,10 @@
         <mat-spinner></mat-spinner>
     </div>
 
-    <div class="empty-state" *ngIf="!loading && boletas.length === 0 && cursoId && periodoId">
+    <div class="empty-state" *ngIf="!loading && boletas.length === 0 && cursoIds.length > 0 && periodoId">
         <mat-icon class="empty-icon">info</mat-icon>
-        <p>DEBES CREAR LA BOLETA ANTES DE VER BOLETAS</p>
+        <p *ngIf="cursoIds.length === 1">DEBES CREAR LA BOLETA ANTES DE VER BOLETAS</p>
+        <p *ngIf="cursoIds.length > 1">SELECCIONA SOLO UN CURSO PARA VER LA TABLA DE NOTAS</p>
     </div>
 
     <mat-card class="table-card" *ngIf="boletas.length > 0">

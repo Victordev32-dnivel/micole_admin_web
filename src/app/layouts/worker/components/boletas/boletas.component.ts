@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { from, of } from 'rxjs';
+import { concatMap, toArray, delay, tap, catchError } from 'rxjs/operators';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -39,7 +41,7 @@ import { AuthService } from '../../../../core/auth/services/auth.service';
 export class BoletasComponent implements OnInit {
     periodoId: number | null = null;
     salonId: number | null = null;
-    cursoId: number | null = null;
+    cursoIds: number[] = [];
     salones: any[] = [];
     cursos: any[] = [];
     periodos: Periodo[] = [];
@@ -113,7 +115,7 @@ export class BoletasComponent implements OnInit {
     }
 
     onSalonChange(): void {
-        this.cursoId = null;
+        this.cursoIds = [];
         this.cursos = [];
         if (this.salonId) {
             this.loadCursos(this.salonId);
@@ -149,13 +151,20 @@ export class BoletasComponent implements OnInit {
             return;
         }
 
-        if (!this.cursoId) {
-            this.showError('Por favor, seleccione un curso.');
+        if (this.cursoIds.length === 0) {
+            this.showError('Por favor, seleccione al menos un curso.');
             return;
         }
 
+        if (this.cursoIds.length > 1) {
+            this.showError('Para ver boletas en la tabla, seleccione solo un curso.');
+            return;
+        }
+
+        const cursoId = this.cursoIds[0];
+
         this.loading = true;
-        this.boletaService.getBoletas(this.periodoId, this.cursoId, colegioId).subscribe({
+        this.boletaService.getBoletas(this.periodoId, cursoId, colegioId).subscribe({
             next: (data) => {
                 this.boletas = data;
                 this.loading = false;
@@ -179,22 +188,42 @@ export class BoletasComponent implements OnInit {
             return;
         }
 
-        if (!this.cursoId || !this.periodoId) {
-            this.showError('Seleccione un curso e ingrese un periodo.');
+        if (this.cursoIds.length === 0 || !this.periodoId) {
+            this.showError('Seleccione al menos un curso e ingrese un periodo.');
             return;
         }
 
         this.loading = true;
-        this.boletaService.createBoleta(this.cursoId, this.periodoId, colegioId).subscribe({
-            next: () => {
+
+        console.log('🚀 Iniciando creación masiva para cursos:', this.cursoIds);
+
+        // Procesar secuencialmente con un retraso para evitar saturación/CORS
+        from(this.cursoIds).pipe(
+            concatMap((id, index) => {
+                console.log(`⏳ Procesando curso ${index + 1}/${this.cursoIds.length} (ID: ${id})...`);
+                const request = this.boletaService.createBoleta(id, this.periodoId!, colegioId).pipe(
+                    tap(() => console.log(`✅ Curso ${id} procesado con éxito`)),
+                    catchError(err => {
+                        console.error(`❌ Error en curso ${id}:`, err);
+                        throw err;
+                    })
+                );
+                // Añadimos un retraso de 1.5 segundos entre peticiones (excepto la primera)
+                return index === 0 ? request : of(null).pipe(delay(1500), concatMap(() => request));
+            }),
+            toArray()
+        ).subscribe({
+            next: (results) => {
                 this.loading = false;
-                this.snackBar.open('Boleta creada con éxito.', 'Cerrar', { duration: 3000 });
-                this.fetchBoletas();
+                this.snackBar.open(`Se procesaron ${results.length} cursos con éxito.`, 'Cerrar', { duration: 3000 });
+                if (this.cursoIds.length === 1) {
+                    this.fetchBoletas();
+                }
             },
             error: (err) => {
-                console.error('Error creando boleta', err);
+                console.error('Error general en creación masiva:', err);
                 this.loading = false;
-                this.showError('Error al crear la boleta.');
+                this.showError('Error al crear boletas. Es posible que algunas se hayan creado y otras no. Verifique la consola.');
             }
         });
     }
@@ -206,10 +235,12 @@ export class BoletasComponent implements OnInit {
             return;
         }
 
-        if (!this.cursoId || !this.periodoId) {
-            this.showError('Curso o periodo no seleccionado.');
+        if (this.cursoIds.length !== 1 || !this.periodoId) {
+            this.showError('Debe tener seleccionado exactamente un curso y un periodo.');
             return;
         }
+
+        const cursoId = this.cursoIds[0];
 
         if (boleta.nota === null || boleta.nota === undefined || boleta.nota === '') {
             this.showError('Ingrese una nota válida.');
@@ -221,7 +252,7 @@ export class BoletasComponent implements OnInit {
             return;
         }
 
-        this.boletaService.updateBoletaNota(this.cursoId, this.periodoId, boleta.alumnoId, boleta.nota, colegioId).subscribe({
+        this.boletaService.updateBoletaNota(cursoId, this.periodoId, boleta.alumnoId, boleta.nota, colegioId).subscribe({
             next: () => {
                 this.snackBar.open('Nota actualizada correctamente.', 'Cerrar', { duration: 2000 });
             },
@@ -239,23 +270,33 @@ export class BoletasComponent implements OnInit {
             return;
         }
 
-        if (!this.cursoId || !this.periodoId) {
-            this.showError('Seleccione curso y periodo para eliminar.');
+        if (this.cursoIds.length === 0 || !this.periodoId) {
+            this.showError('Seleccione al menos un curso y un periodo para eliminar.');
             return;
         }
 
-        if (confirm('¿Está seguro de que desea eliminar las boletas para este curso y periodo?')) {
+        if (confirm(`¿Está seguro de que desea eliminar las boletas para los ${this.cursoIds.length} cursos seleccionados?`)) {
             this.loading = true;
-            this.boletaService.deleteBoletas(this.cursoId, this.periodoId, colegioId).subscribe({
+
+            console.log('🗑️ Iniciando eliminación masiva para cursos:', this.cursoIds);
+
+            // Procesar secuencialmente con retraso
+            from(this.cursoIds).pipe(
+                concatMap((id, index) => {
+                    const request = this.boletaService.deleteBoletas(id, this.periodoId!, colegioId);
+                    return index === 0 ? request : of(null).pipe(delay(1000), concatMap(() => request));
+                }),
+                toArray()
+            ).subscribe({
                 next: () => {
                     this.loading = false;
-                    this.snackBar.open('Boletas eliminadas.', 'Cerrar', { duration: 3000 });
+                    this.snackBar.open('Boletas eliminadas correctamente.', 'Cerrar', { duration: 3000 });
                     this.boletas = [];
                 },
                 error: (err) => {
-                    console.error('Error eliminando boleta', err);
+                    console.error('Error eliminando boletas en masa', err);
                     this.loading = false;
-                    this.showError('Error al eliminar la boleta.');
+                    this.showError('Error al eliminar una o más boletas.');
                 }
             });
         }

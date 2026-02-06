@@ -28,7 +28,7 @@ export class BoletaService {
 
     // GET /api/Boleta
     getBoletas(periodoId: number, cursoId: number, colegioId: number): Observable<any[]> {
-        return this.http.get<any[]>(`${this.apiBase}/Boleta?periodoId=${periodoId}&cursoId=${cursoId}&colegioId=${colegioId}`, {
+        return this.http.get<any[]>(`${this.apiBase}/Boleta?PeriodoId=${periodoId}&CursoId=${cursoId}&colegioId=${colegioId}`, {
             headers: this.getHeaders()
         });
     }
