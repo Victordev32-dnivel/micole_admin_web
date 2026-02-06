@@ -22,7 +22,7 @@
 
                 <mat-form-field appearance="outline" class="full-width">
                     <mat-label>Asignar a Salón</mat-label>
-                    <mat-select formControlName="salonId" placeholder="Seleccione un salón">
+                    <mat-select formControlName="salonId" placeholder="Seleccione uno o varios salones" multiple>
                         <mat-option *ngFor="let salon of salones" [value]="salon.id">
                             {{ salon.nombre }}
                         </mat-option>

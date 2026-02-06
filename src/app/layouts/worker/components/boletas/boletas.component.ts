@@ -67,7 +67,13 @@ export class BoletasComponent implements OnInit {
     }
 
     loadPeriodos(): void {
-        this.periodoService.getAll().subscribe({
+        const colegioId = this.authService.getColegioId();
+        if (!colegioId) {
+            this.showError('No se pudo identificar el colegio para cargar periodos.');
+            return;
+        }
+
+        this.periodoService.getByColegio(colegioId).subscribe({
             next: (data) => {
                 if (Array.isArray(data)) {
                     this.periodos = data;
@@ -132,6 +138,12 @@ export class BoletasComponent implements OnInit {
     }
 
     fetchBoletas(): void {
+        const colegioId = this.authService.getColegioId();
+        if (!colegioId) {
+            this.showError('No se pudo identificar el colegio para ver boletas.');
+            return;
+        }
+
         if (!this.periodoId) {
             this.showError('Por favor, ingrese un ID de periodo.');
             return;
@@ -143,7 +155,7 @@ export class BoletasComponent implements OnInit {
         }
 
         this.loading = true;
-        this.boletaService.getBoletas(this.periodoId, this.cursoId).subscribe({
+        this.boletaService.getBoletas(this.periodoId, this.cursoId, colegioId).subscribe({
             next: (data) => {
                 this.boletas = data;
                 this.loading = false;
@@ -161,13 +173,19 @@ export class BoletasComponent implements OnInit {
     }
 
     createBoleta(): void {
+        const colegioId = this.authService.getColegioId();
+        if (!colegioId) {
+            this.showError('No se pudo identificar el colegio para crear boletas.');
+            return;
+        }
+
         if (!this.cursoId || !this.periodoId) {
             this.showError('Seleccione un curso e ingrese un periodo.');
             return;
         }
 
         this.loading = true;
-        this.boletaService.createBoleta(this.cursoId, this.periodoId).subscribe({
+        this.boletaService.createBoleta(this.cursoId, this.periodoId, colegioId).subscribe({
             next: () => {
                 this.loading = false;
                 this.snackBar.open('Boleta creada con éxito.', 'Cerrar', { duration: 3000 });
@@ -182,6 +200,12 @@ export class BoletasComponent implements OnInit {
     }
 
     updateNota(boleta: any): void {
+        const colegioId = this.authService.getColegioId();
+        if (!colegioId) {
+            this.showError('No se pudo identificar el colegio para actualizar nota.');
+            return;
+        }
+
         if (!this.cursoId || !this.periodoId) {
             this.showError('Curso o periodo no seleccionado.');
             return;
@@ -197,7 +221,7 @@ export class BoletasComponent implements OnInit {
             return;
         }
 
-        this.boletaService.updateBoletaNota(this.cursoId, this.periodoId, boleta.alumnoId, boleta.nota).subscribe({
+        this.boletaService.updateBoletaNota(this.cursoId, this.periodoId, boleta.alumnoId, boleta.nota, colegioId).subscribe({
             next: () => {
                 this.snackBar.open('Nota actualizada correctamente.', 'Cerrar', { duration: 2000 });
             },
@@ -209,6 +233,12 @@ export class BoletasComponent implements OnInit {
     }
 
     deleteBoleta(): void {
+        const colegioId = this.authService.getColegioId();
+        if (!colegioId) {
+            this.showError('No se pudo identificar el colegio para eliminar.');
+            return;
+        }
+
         if (!this.cursoId || !this.periodoId) {
             this.showError('Seleccione curso y periodo para eliminar.');
             return;
@@ -216,7 +246,7 @@ export class BoletasComponent implements OnInit {
 
         if (confirm('¿Está seguro de que desea eliminar las boletas para este curso y periodo?')) {
             this.loading = true;
-            this.boletaService.deleteBoletas(this.cursoId, this.periodoId).subscribe({
+            this.boletaService.deleteBoletas(this.cursoId, this.periodoId, colegioId).subscribe({
                 next: () => {
                     this.loading = false;
                     this.snackBar.open('Boletas eliminadas.', 'Cerrar', { duration: 3000 });

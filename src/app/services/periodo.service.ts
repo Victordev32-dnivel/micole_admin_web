@@ -33,23 +33,40 @@ export class PeriodoService {
         });
     }
 
+    getByColegio(colegioId: number, alumnoId?: number): Observable<Periodo[]> {
+        let params = new HttpParams();
+        if (alumnoId) {
+            params = params.set('alumnoId', alumnoId.toString());
+        }
+        return this.http.get<Periodo[]>(`${this.apiBase}/colegio/${colegioId}`, {
+            headers: this.getHeaders(),
+            params: params
+        });
+    }
+
     getById(id: number): Observable<Periodo> {
         return this.http.get<Periodo>(`${this.apiBase}/${id}`, {
             headers: this.getHeaders()
         });
     }
 
-    create(periodo: { nombre: string }): Observable<Periodo> {
-        let params = new HttpParams().set('nombre', periodo.nombre);
+    create(periodo: { nombre: string }, colegioId: number): Observable<Periodo> {
+        let params = new HttpParams()
+            .set('nombre', periodo.nombre)
+            .set('colegioId', colegioId.toString());
         return this.http.post<Periodo>(this.apiBase, null, {
             headers: this.getHeaders(),
             params: params
         });
     }
 
-    update(id: number, periodo: { id: number; nombre: string }): Observable<any> {
-        return this.http.put(`${this.apiBase}/${id}`, periodo, {
-            headers: this.getHeaders()
+    update(id: number, periodo: { nombre: string; colegioId: number }): Observable<any> {
+        let params = new HttpParams()
+            .set('nombre', periodo.nombre)
+            .set('colegioId', periodo.colegioId.toString());
+        return this.http.put(`${this.apiBase}/${id}`, null, {
+            headers: this.getHeaders(),
+            params: params
         });
     }
 

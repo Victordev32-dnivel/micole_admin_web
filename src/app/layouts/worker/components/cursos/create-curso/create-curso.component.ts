@@ -1,5 +1,6 @@
 
 import { Component, OnInit, Inject } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -57,12 +58,12 @@ export class CreateCursoComponent implements OnInit {
             this.cursoForm.patchValue({
                 titulo: data.curso?.titulo,
                 descripcion: data.curso?.descripcion,
-                salonId: data.curso?.salonId
+                salonId: [data.curso?.salonId]
             });
         }
 
         if (data.salonId && !this.isEditing) {
-            this.cursoForm.patchValue({ salonId: data.salonId });
+            this.cursoForm.patchValue({ salonId: [data.salonId] });
         }
 
         // Use passed salons to avoid re-fetching if available
@@ -87,15 +88,32 @@ export class CreateCursoComponent implements OnInit {
         }
 
         this.loading = true;
-        const cursoData = this.cursoForm.value;
+        const formValue = this.cursoForm.value;
+        // Ensure salonId is an array
+        const salonIds: number[] = Array.isArray(formValue.salonId)
+            ? formValue.salonId
+            : (formValue.salonId ? [formValue.salonId] : []);
 
         if (this.isEditing && this.cursoId) {
-            const updateData = { ...cursoData, id: this.cursoId };
+            // For editing, we take the first salon if multiple selected (or UI should restrict)
+            // But let's assume standard behavior is preserving the ID.
+            const singleSalonId = salonIds.length > 0 ? salonIds[0] : null;
+            if (!singleSalonId) {
+                this.loading = false;
+                return;
+            }
+
+            const updateData = {
+                ...formValue,
+                id: this.cursoId,
+                salonId: singleSalonId
+            };
+
             this.cursoService.updateCurso(this.cursoId, updateData).subscribe({
                 next: () => {
                     this.loading = false;
                     this.showSuccess('¡Curso actualizado exitosamente!');
-                    this.dialogRef.close(true); // Return true to indicate refresh needed
+                    this.dialogRef.close(true);
                 },
                 error: (err) => {
                     this.loading = false;
@@ -104,20 +122,60 @@ export class CreateCursoComponent implements OnInit {
                 }
             });
         } else {
-            this.cursoService.createCurso(cursoData).subscribe({
-                next: (res: any) => {
+            // Creation Mode - Handle Multiple
+            const requests = salonIds.map(sId => {
+                const salon = this.salones.find(s => s.id === sId);
+                let titulo = formValue.titulo;
+
+                // Append section if multiple salons are selected
+                if (salonIds.length > 1 && salon) {
+                    const section = this.extractSection(salon.nombre);
+                    if (section) {
+                        titulo = `${titulo} ${section}`;
+                    }
+                }
+
+                const cursoData = {
+                    titulo: titulo,
+                    descripcion: formValue.descripcion,
+                    salonId: sId
+                };
+                return this.cursoService.createCurso(cursoData);
+            });
+
+            forkJoin(requests).subscribe({
+                next: (res: any[]) => {
                     this.loading = false;
-                    this.showSuccess('¡Curso creado exitosamente!');
+                    this.showSuccess(`¡${res.length} curso(s) creado(s) exitosamente!`);
                     this.cursoForm.reset();
                     this.dialogRef.close(true);
                 },
                 error: (err: any) => {
                     this.loading = false;
-                    console.error('Error al crear curso:', err);
-                    this.showError('Hubo un error al crear el curso');
+                    console.error('Error al crear cursos:', err);
+                    this.showError('Hubo un error al crear los cursos');
                 }
             });
         }
+    }
+
+    extractSection(salonName: string): string {
+        if (!salonName) return '';
+        // Strategy 1: "QUINTO - A - SECUNDARIA" -> "A"
+        const parts = salonName.split(' - ');
+        if (parts.length >= 2) {
+            const singleLetter = parts.find(p => p.trim().length === 1 && /^[A-Z]$/i.test(p.trim()));
+            if (singleLetter) return singleLetter.trim();
+            // Fallback: take the middle part if 3 parts
+            if (parts.length === 3) return parts[1].trim();
+        }
+        // Strategy 2: "QUINTO A" -> "A"
+        const spaceParts = salonName.trim().split(' ');
+        const last = spaceParts[spaceParts.length - 1];
+        if (last.length === 1 && /^[A-Z]$/i.test(last)) {
+            return last;
+        }
+        return '';
     }
 
     onClose(): void {

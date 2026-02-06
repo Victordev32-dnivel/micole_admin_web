@@ -8,20 +8,21 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { PeriodoService, Periodo } from '../../../../../services/periodo.service';
 import { PeriodoFormComponent } from '../periodo-form/periodo-form.component';
+import { AuthService } from '../../../../../core/auth/services/auth.service';
 
 @Component({
-    selector: 'app-periodo-list',
-    standalone: true,
-    imports: [
-        CommonModule,
-        MatTableModule,
-        MatButtonModule,
-        MatIconModule,
-        MatDialogModule,
-        MatProgressSpinnerModule,
-        MatSnackBarModule
-    ],
-    template: `
+  selector: 'app-periodo-list',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatTableModule,
+    MatButtonModule,
+    MatIconModule,
+    MatDialogModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule
+  ],
+  template: `
     <div class="container">
       <div class="header">
         <h1>Periodos</h1>
@@ -72,7 +73,7 @@ import { PeriodoFormComponent } from '../periodo-form/periodo-form.component';
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .container {
       padding: 20px;
     }
@@ -96,60 +97,67 @@ import { PeriodoFormComponent } from '../periodo-form/periodo-form.component';
   `]
 })
 export class PeriodoListComponent implements OnInit {
-    displayedColumns: string[] = ['id', 'nombre', 'actions'];
-    dataSource: Periodo[] = [];
-    loading = false;
+  displayedColumns: string[] = ['id', 'nombre', 'actions'];
+  dataSource: Periodo[] = [];
+  loading = false;
 
-    constructor(
-        private periodoService: PeriodoService,
-        private dialog: MatDialog,
-        private snackBar: MatSnackBar
-    ) { }
+  constructor(
+    private periodoService: PeriodoService,
+    private authService: AuthService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
+  ) { }
 
-    ngOnInit(): void {
+  ngOnInit(): void {
+    this.loadData();
+  }
+
+  loadData(): void {
+    const colegioId = this.authService.getColegioId();
+    if (!colegioId) {
+      console.error('No colegioId found');
+      return;
+    }
+
+    this.loading = true;
+    this.periodoService.getByColegio(colegioId).subscribe({
+      next: (data) => {
+        this.dataSource = data;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error loading periodos:', err);
+        this.loading = false;
+        this.snackBar.open('Error al cargar los periodos', 'Cerrar', { duration: 3000 });
+      }
+    });
+  }
+
+  openDialog(periodo?: Periodo): void {
+    const dialogRef = this.dialog.open(PeriodoFormComponent, {
+      width: '400px',
+      data: periodo || null
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
         this.loadData();
-    }
+      }
+    });
+  }
 
-    loadData(): void {
-        this.loading = true;
-        this.periodoService.getAll().subscribe({
-            next: (data) => {
-                this.dataSource = data;
-                this.loading = false;
-            },
-            error: (err) => {
-                console.error('Error loading periodos:', err);
-                this.loading = false;
-                this.snackBar.open('Error al cargar los periodos', 'Cerrar', { duration: 3000 });
-            }
-        });
-    }
-
-    openDialog(periodo?: Periodo): void {
-        const dialogRef = this.dialog.open(PeriodoFormComponent, {
-            width: '400px',
-            data: periodo || null
-        });
-
-        dialogRef.afterClosed().subscribe(result => {
-            if (result) {
-                this.loadData();
-            }
-        });
-    }
-
-    deletePeriodo(periodo: Periodo): void {
-        if (confirm(`¿Estás seguro de que deseas eliminar el periodo "${periodo.nombre}"?`)) {
-            this.periodoService.delete(periodo.id).subscribe({
-                next: () => {
-                    this.snackBar.open('Periodo eliminado correctamente', 'Cerrar', { duration: 3000 });
-                    this.loadData();
-                },
-                error: (err) => {
-                    console.error('Error deleting periodo:', err);
-                    this.snackBar.open('Error al eliminar el periodo', 'Cerrar', { duration: 3000 });
-                }
-            });
+  deletePeriodo(periodo: Periodo): void {
+    if (confirm(`¿Estás seguro de que deseas eliminar el periodo "${periodo.nombre}"?`)) {
+      this.periodoService.delete(periodo.id).subscribe({
+        next: () => {
+          this.snackBar.open('Periodo eliminado correctamente', 'Cerrar', { duration: 3000 });
+          this.loadData();
+        },
+        error: (err) => {
+          console.error('Error deleting periodo:', err);
+          this.snackBar.open('Error al eliminar el periodo', 'Cerrar', { duration: 3000 });
         }
+      });
     }
+  }
 }
