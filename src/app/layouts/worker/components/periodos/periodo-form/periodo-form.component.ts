@@ -89,7 +89,7 @@ export class PeriodoFormComponent implements OnInit {
         return;
       }
 
-      this.periodoService.update(this.data.id, { colegioId, ...formValue }).subscribe({
+      this.periodoService.update(this.data.id, formValue).subscribe({
         next: () => {
           this.snackBar.open('Periodo actualizado correctamente', 'Cerrar', { duration: 3000 });
           this.dialogRef.close(true);

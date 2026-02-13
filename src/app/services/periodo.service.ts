@@ -60,13 +60,9 @@ export class PeriodoService {
         });
     }
 
-    update(id: number, periodo: { nombre: string; colegioId: number }): Observable<any> {
-        let params = new HttpParams()
-            .set('nombre', periodo.nombre)
-            .set('colegioId', periodo.colegioId.toString());
-        return this.http.put(`${this.apiBase}/${id}`, null, {
-            headers: this.getHeaders(),
-            params: params
+    update(id: number, periodo: { nombre: string }): Observable<any> {
+        return this.http.put(`${this.apiBase}/${id}`, periodo, {
+            headers: this.getHeaders()
         });
     }
 
