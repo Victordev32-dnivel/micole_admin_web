@@ -45,6 +45,11 @@ import { AuthService } from '../../../../../core/auth/services/auth.service';
     .full-width {
       width: 100%;
     }
+    /* Fix for label strikethrough */
+    mat-label {
+      background-color: white;
+      padding: 0 4px;
+    }
   `]
 })
 export class PeriodoFormComponent implements OnInit {
