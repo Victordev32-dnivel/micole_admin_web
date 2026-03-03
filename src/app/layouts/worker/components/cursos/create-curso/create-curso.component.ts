@@ -127,11 +127,11 @@ export class CreateCursoComponent implements OnInit {
                 const salon = this.salones.find(s => s.id === sId);
                 let titulo = formValue.titulo;
 
-                // Append section if multiple salons are selected
-                if (salonIds.length > 1 && salon) {
-                    const section = this.extractSection(salon.nombre);
-                    if (section) {
-                        titulo = `${titulo} ${section}`;
+                // Append grade and section if salon info is available
+                if (salon) {
+                    const salonSuffix = this.getSalonSuffix(salon.nombre);
+                    if (salonSuffix) {
+                        titulo = `${titulo} ${salonSuffix}`;
                     }
                 }
 
@@ -159,23 +159,29 @@ export class CreateCursoComponent implements OnInit {
         }
     }
 
-    extractSection(salonName: string): string {
+    getSalonSuffix(salonName: string): string {
         if (!salonName) return '';
-        // Strategy 1: "QUINTO - A - SECUNDARIA" -> "A"
+
+        // Example: "QUINTO - A - SECUNDARIA" -> "QUINTO A"
         const parts = salonName.split(' - ');
         if (parts.length >= 2) {
-            const singleLetter = parts.find(p => p.trim().length === 1 && /^[A-Z]$/i.test(p.trim()));
-            if (singleLetter) return singleLetter.trim();
-            // Fallback: take the middle part if 3 parts
-            if (parts.length === 3) return parts[1].trim();
+            const grade = parts[0].trim();
+            const section = parts[1].trim();
+            // We only return the grade and section
+            return `${grade} ${section}`;
         }
-        // Strategy 2: "QUINTO A" -> "A"
+
+        // Example: "QUINTO A" -> "QUINTO A"
         const spaceParts = salonName.trim().split(' ');
-        const last = spaceParts[spaceParts.length - 1];
-        if (last.length === 1 && /^[A-Z]$/i.test(last)) {
-            return last;
+        if (spaceParts.length >= 2) {
+            const last = spaceParts[spaceParts.length - 1];
+            // If the last part is a single letter, it's likely the section
+            if (last.length === 1 && /^[A-Z]$/i.test(last)) {
+                return salonName.trim();
+            }
         }
-        return '';
+
+        return salonName.trim();
     }
 
     onClose(): void {

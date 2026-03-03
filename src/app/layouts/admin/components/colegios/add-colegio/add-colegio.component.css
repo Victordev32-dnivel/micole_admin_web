@@ -64,3 +64,79 @@
   color: #388e3c;
   font-size: 0.9rem;
 }
+
+/* Image Upload Styles */
+.image-upload-container {
+  margin-top: 15px;
+  margin-bottom: 20px;
+}
+
+.upload-label {
+  display: block;
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, .6);
+  margin-bottom: 8px;
+}
+
+.upload-wrapper {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  height: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.3s ease;
+}
+
+.upload-wrapper:hover {
+  border-color: #1976d2;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #777;
+}
+
+.upload-placeholder mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+}
+
+.image-preview {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.change-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.image-preview:hover .change-overlay {
+  opacity: 1;
+}

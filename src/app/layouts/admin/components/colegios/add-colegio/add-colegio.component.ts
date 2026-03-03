@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -14,7 +14,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatIconModule } from '@angular/material/icon';
 import { ErrorStateMatcher } from '@angular/material/core';
+import { S3Service } from '../../../../../services/s3.service';
 
 class CustomErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(
@@ -40,6 +42,7 @@ class CustomErrorStateMatcher implements ErrorStateMatcher {
     MatInputModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    MatIconModule,
   ],
   templateUrl: './add-colegio.component.html',
   styleUrls: ['./add-colegio.component.css'],
@@ -51,10 +54,15 @@ export class AddColegioComponent implements OnInit {
   successMessage: string | null = null;
   customErrorStateMatcher = new CustomErrorStateMatcher();
 
+  selectedFile: File | null = null;
+  imagePreview: string | null = null;
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
+    private s3Service: S3Service,
     public dialogRef: MatDialogRef<AddColegioComponent>
   ) {
     this.colegioForm = this.fb.group({
@@ -64,7 +72,7 @@ export class AddColegioComponent implements OnInit {
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   private getHeaders(): HttpHeaders {
     return new HttpHeaders({
@@ -73,35 +81,67 @@ export class AddColegioComponent implements OnInit {
     });
   }
 
-  onSubmit() {
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.imagePreview = reader.result as string;
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  triggerFileInput() {
+    this.fileInput.nativeElement.click();
+  }
+
+  async onSubmit() {
     if (this.colegioForm.valid) {
       this.loading = true;
       this.error = null;
-      const formData = this.colegioForm.value;
-   
-      this.http
-        .post(
-          'https://proy-back-dnivel-44j5.onrender.com/api/colegio',
-          formData,
-          {
-            headers: this.getHeaders(),
-          }
-        )
-        .subscribe({
-          next: (response) => {
-         
-            this.successMessage = 'Colegio agregado exitosamente';
-            this.loading = false;
-            this.cdr.detectChanges();
-            setTimeout(() => this.dialogRef.close(true), 1000);
-          },
-          error: (error) => {
-            console.error('Error al agregar colegio:', error);
-            this.error = `Error al agregar el colegio: ${error.status} - ${error.statusText}. Detalle: ${error.message}`;
-            this.loading = false;
-            this.cdr.detectChanges();
-          },
-        });
+
+      try {
+        let imagenUrl = '';
+        if (this.selectedFile) {
+          imagenUrl = await this.s3Service.uploadFile(this.selectedFile);
+        }
+
+        const formData = {
+          ...this.colegioForm.value,
+          imagenUrl: imagenUrl
+        };
+
+        this.http
+          .post(
+            'https://proy-back-dnivel-44j5.onrender.com/api/colegio',
+            formData,
+            {
+              headers: this.getHeaders(),
+            }
+          )
+          .subscribe({
+            next: (response) => {
+              this.successMessage = 'Colegio agregado exitosamente';
+              this.loading = false;
+              this.cdr.detectChanges();
+              setTimeout(() => this.dialogRef.close(true), 1000);
+            },
+            error: (error) => {
+              console.error('Error al agregar colegio:', error);
+              this.error = `Error al agregar el colegio: ${error.status} - ${error.statusText}. Detalle: ${error.message}`;
+              this.loading = false;
+              this.cdr.detectChanges();
+            },
+          });
+      } catch (uploadError: any) {
+        console.error('Error al subir imagen:', uploadError);
+        this.error = `Error al subir la imagen: ${uploadError.message}`;
+        this.loading = false;
+        this.cdr.detectChanges();
+      }
     }
   }
 

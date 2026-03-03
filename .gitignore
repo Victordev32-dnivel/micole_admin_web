@@ -45,3 +45,8 @@ Thumbs.db
 # Excluir environments.ts
 /src/environments/environment.ts
 
+# Envs
+.env
+.env.*
+!.env.example
+
