@@ -4,8 +4,8 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialogModule } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
-import { MatToolbar } from '@angular/material/toolbar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -23,6 +23,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
     MatProgressSpinnerModule,
     MatFormFieldModule,
     MatInputModule,
+    MatDialogModule,
   ],
   templateUrl: './asignar-trabajadores.component.html',
   styleUrls: ['./asignar-trabajadores.component.css'],

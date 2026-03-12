@@ -2,14 +2,10 @@ import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialogModule } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
-import {
-  MatCard,
-  MatCardContent,
-  MatCardHeader,
-  MatCardTitle,
-} from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-confirmation-delete',
@@ -17,11 +13,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   imports: [
     CommonModule,
     MatButtonModule,
-    MatCardContent,
-    MatCardTitle,
-    MatCardHeader,
-    MatCard,
     MatProgressSpinnerModule,
+    MatIconModule,
+    MatDialogModule,
   ],
   templateUrl: './confirmation-delete.component.html',
   styleUrls: ['./confirmation-delete.component.css'],

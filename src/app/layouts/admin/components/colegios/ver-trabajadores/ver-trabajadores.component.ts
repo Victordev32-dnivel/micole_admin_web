@@ -3,8 +3,8 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialogModule } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
-import { MatToolbar } from '@angular/material/toolbar';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 @Component({
@@ -15,8 +15,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatTableModule,
     MatIconModule,
     MatButtonModule,
-    MatToolbar,
     MatProgressSpinnerModule,
+    MatDialogModule,
   ],
   templateUrl: './ver-trabajadores.component.html',
   styleUrls: ['./ver-trabajadores.component.css'],

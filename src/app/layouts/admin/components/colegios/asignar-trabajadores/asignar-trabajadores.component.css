@@ -1,60 +1,74 @@
-.modal-content-container {
-  padding: 20px;
-  box-sizing: border-box;
-  background-color: #fff;
-  border-radius: 12px;
-}
-
-.modal-content-container > *:first-child {
-  margin-top: 0;
-}
-
-.modal-content-container > *:last-child {
-  margin-bottom: 0;
-}
-
-
-/* ===================== */
-/* Filtro de búsqueda */
-/* ===================== */
-.toolbar {
+.dialog-container {
   display: flex;
-  justify-content: center;
-  padding: 15px;
-  background: #f4f6f8;
-  border-radius: 8px;
+  flex-direction: column;
+  height: 100%;
+}
+
+.large-dialog {
+  min-height: 500px;
+}
+
+.dialog-title {
+  background-color: #f8f9fa;
+  margin: 0;
+  padding: 20px 24px;
+  color: #333;
+  font-weight: 600;
+  border-bottom: 1px solid #eee;
+}
+
+.dialog-content {
+  padding: 24px !important;
+  margin: 0 !important;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.toolbar-section {
   margin-bottom: 20px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  display: flex;
+  justify-content: flex-start;
 }
 
 .search-field {
-  width: 350px;
-  max-width: 100%;
+  width: 100%;
+  max-width: 400px;
 }
 
-mat-form-field {
-  background-color: white;
+.table-wrapper {
   border-radius: 8px;
-  padding: 4px 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-}
-
-/* ===================== */
-/* TABLA PRINCIPAL (lista completa) */
-/* ===================== */
-.mat-elevation-z8 {
-  border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #e6ecf5;
+  border: 1px solid #eee;
+  margin-bottom: 24px;
 }
 
-tr[mat-header-row] {
-  background: #fff; /* sin color */
+.alternate-table {
+  width: 100%;
 }
-th[mat-header-cell] {
-  color: #37474f;
-  font-weight: 700;
-  letter-spacing: .02em;
+
+.alternate-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.alternate-table th {
+  background-color: #f1f3f5;
+  color: #495057;
+  font-weight: 600;
+}
+
+.selected-summary {
+  margin-top: 16px;
+  padding: 16px;
+  background-color: #f8fbff;
+  border-radius: 8px;
+  border: 1px solid #e1e9f5;
+}
+
+.selected-summary h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #2c3e50;
+  font-weight: 600;
   text-transform: uppercase;
   font-size: 12.5px;
   padding: 14px 16px;

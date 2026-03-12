@@ -15,7 +15,7 @@ html, body {
 
 /* Material Dialog Customization (MDC) */
 .custom-dialog.mat-mdc-dialog-panel {
-  max-width: 95vw !important;
+  max-width: 95vw;
 }
 
 .custom-dialog .mat-mdc-dialog-container {

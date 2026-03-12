@@ -1,75 +1,66 @@
-.student-container {
+.dialog-container {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 16px;
-  background-color: #f9f9f9;
+  flex-direction: column;
 }
 
-.form-card {
-  width: 100%;
-  max-width: 380px;
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  background-color: #ffffff;
-  animation: fadeIn 0.2s ease-in-out;
+.dialog-title {
+  background-color: #f8f9fa;
+  margin: 0;
+  padding: 20px 24px;
+  color: #333;
+  font-weight: 600;
+  border-bottom: 1px solid #eee;
 }
 
-mat-card-header {
-  padding-bottom: 8px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-mat-card-title {
-  font-size: 1.3rem;
-  font-weight: bold;
-  color: #333333;
-}
-
-mat-card-content {
-  padding-top: 12px;
-}
-
-p {
-  margin-bottom: 16px;
-  font-size: 1rem;
-  color: #555555;
-}
-
-.error-message {
+.delete-title {
   color: #d32f2f;
-  font-size: 0.9rem;
-  margin-bottom: 12px;
 }
 
-.button-container {
+.dialog-content {
+  padding: 24px !important;
+  margin: 0 !important;
+}
+
+.delete-confirmation-msg {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 16px;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
 }
 
-.submit-button {
-  color: white;
-  font-weight: bold;
+.warning-icon {
+  color: #faad14;
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
 }
 
-.back-button {
-  font-weight: 500;
+.delete-confirmation-msg p {
+  margin: 0;
+  font-size: 16px;
+  color: #555;
 }
 
-mat-spinner {
+.error-box {
+  margin-top: 20px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  background-color: #fff1f0;
+  color: #cf1322;
+  border: 1px solid #ffa39e;
+}
+
+.dialog-actions {
+  padding: 16px 24px !important;
+  border-top: 1px solid #eee;
+  background-color: #f8f9fa;
+  margin: 0 !important;
+}
+
+.btn-spinner {
   margin-right: 8px;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
 }

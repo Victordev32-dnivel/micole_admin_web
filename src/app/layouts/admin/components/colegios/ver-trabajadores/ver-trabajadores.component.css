@@ -1,19 +1,134 @@
 /* ===================== */
 /* Contenedor modal */
 /* ===================== */
-.modal-content-container {
-  padding: 20px;
-  box-sizing: border-box;
-  background-color: #fff;
-  border-radius: 12px;
+.dialog-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
-.modal-content-container > *:first-child {
-  margin-top: 0;
+.large-dialog {
+  min-height: 500px;
 }
 
-.modal-content-container > *:last-child {
-  margin-bottom: 0;
+.dialog-title {
+  background-color: #f8f9fa;
+  margin: 0;
+  padding: 20px 24px;
+  color: #333;
+  font-weight: 600;
+  border-bottom: 1px solid #eee;
+}
+
+.dialog-content {
+  padding: 24px !important;
+  margin: 0 !important;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.table-wrapper {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #eee;
+  margin-bottom: 24px;
+}
+
+.alternate-table {
+  width: 100%;
+}
+
+.alternate-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.alternate-table th {
+  background-color: #f1f3f5;
+  color: #495057;
+  font-weight: 600;
+}
+
+.selected-summary {
+  margin-top: 16px;
+  padding: 16px;
+  background-color: #f8fbff;
+  border-radius: 8px;
+  border: 1px solid #e1e9f5;
+}
+
+.warn-summary {
+  background-color: #fff1f0;
+  border-color: #ffa39e;
+}
+
+.selected-summary h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #2c3e50;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chip-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.custom-chip {
+  display: inline-flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #d0d7de;
+  border-radius: 16px;
+  padding: 4px 12px;
+  font-size: 13px;
+  color: #24292f;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.warn-chip {
+  border-color: #ffa39e;
+}
+
+.custom-chip mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
+  cursor: pointer;
+  color: #cf222e;
+}
+
+.error-box {
+  margin-top: 20px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  background-color: #fff1f0;
+  color: #cf1322;
+  border: 1px solid #ffa39e;
+}
+
+.dialog-actions {
+  padding: 16px 24px !important;
+  border-top: 1px solid #eee;
+  background-color: #f8f9fa;
+  margin: 0 !important;
+}
+
+.btn-spinner {
+  margin-right: 8px;
+}
+
+@media (max-width: 600px) {
+  .dialog-content {
+    padding: 16px !important;
+  }
 }
 
 /* ===================== */
