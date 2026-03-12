@@ -1,61 +1,70 @@
 import { Injectable } from '@angular/core';
-import { S3 } from 'aws-sdk';
-import { Buffer } from 'buffer';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 @Injectable({
     providedIn: 'root'
 })
 export class S3Service {
-    private s3: S3;
-    private readonly BUCKET_NAME = environment.aws.bucketName;
+    private readonly API_URL = `${environment.apiUrl}/Upload`;
 
-    constructor() {
-        // Polyfill for Buffer if not present
-        if (typeof (window as any).Buffer === 'undefined') {
-            (window as any).Buffer = Buffer;
+    constructor(private http: HttpClient) { }
+
+    private getHeaders(): HttpHeaders {
+        // Obtenemos el token del localStorage si existe, similar a otros servicios
+        let token = '';
+        try {
+            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            token = userData.jwt || '732612882'; // Fallback al token estático si no hay login
+        } catch {
+            token = '732612882';
         }
-
-        this.s3 = new S3({
-            accessKeyId: environment.aws.accessKeyId,
-            secretAccessKey: environment.aws.secretAccessKey,
-            region: environment.aws.region
+        
+        return new HttpHeaders({
+            'Authorization': `Bearer ${token}`
         });
     }
 
     async uploadFile(file: File, folder: string = 'colegios'): Promise<string> {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                const base64Content = reader.result as string;
-                const base64Data = base64Content.split(',')[1];
-                const buffer = Buffer.from(base64Data, 'base64');
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const url = `${this.API_URL}?folder=${folder}`;
 
-                const timestamp = Date.now();
-                const randomId = Math.random().toString(36).substring(2);
-                const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-                const fileName = `${folder}/${timestamp}_${randomId}.${fileExtension}`;
+        try {
+            // Según tu ejemplo de Fetch, no se envían headers personalizados.
+            // Probamos sin el header de Authorization para descartar que sea la causa del 500.
+            const response = await firstValueFrom(
+                this.http.post<any>(url, formData)
+            );
+            
+            if (response && response.url) {
+                return response.url;
+            } else {
+                throw new Error('La respuesta del servidor no contiene el campo "url".');
+            }
+        } catch (error: any) {
+            console.error('Error uploading file via API:', error);
+            
+            // Si el error tiene un cuerpo que no es JSON (como indica tu log "Unexpected token E..."),
+            // Angular lo capturará aquí. Intentaremos dar una pista más clara.
+            if (error.status === 500) {
+                throw new Error('Error interno del servidor (500). Es posible que el servidor no tenga bien configuradas las credenciales de AWS o el bucket.');
+            }
+            throw new Error(error.message || 'Error desconocido al subir el archivo.');
+        }
+    }
 
-                const contentType = file.type || 'image/jpeg';
-
-                const params = {
-                    Bucket: this.BUCKET_NAME,
-                    Key: fileName,
-                    Body: buffer,
-                    ContentType: contentType,
-                };
-
-                this.s3.upload(params, (err: any, data: any) => {
-                    if (err) {
-                        console.error('Error uploading to S3:', err);
-                        reject(err);
-                    } else {
-                        resolve(data.Location);
-                    }
-                });
-            };
-            reader.onerror = () => reject(new Error('Error reading file'));
-            reader.readAsDataURL(file);
-        });
+    async deleteFile(fileUrl: string): Promise<any> {
+        const url = `${this.API_URL}?url=${encodeURIComponent(fileUrl)}`;
+        try {
+            return await firstValueFrom(
+                this.http.delete(url, { headers: this.getHeaders() })
+            );
+        } catch (error) {
+            console.error('Error deleting file via API:', error);
+            throw error;
+        }
     }
 }

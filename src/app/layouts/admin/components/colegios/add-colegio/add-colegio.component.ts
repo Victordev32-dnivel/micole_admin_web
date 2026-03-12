@@ -8,11 +8,11 @@ import {
   FormGroupDirective,
 } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { CommonModule } from '@angular/common';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { ErrorStateMatcher } from '@angular/material/core';
@@ -38,11 +38,12 @@ class CustomErrorStateMatcher implements ErrorStateMatcher {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatCardModule,
     MatInputModule,
     MatButtonModule,
+    MatFormFieldModule,
     MatProgressSpinnerModule,
     MatIconModule,
+    MatDialogModule,
   ],
   templateUrl: './add-colegio.component.html',
   styleUrls: ['./add-colegio.component.css'],

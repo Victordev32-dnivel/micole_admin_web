@@ -36,6 +36,7 @@ export class ColegioListComponent implements OnInit {
   error: string | null = null;
   displayedColumns: string[] = [
     'id',
+    'imagen',
     'nombre',
     'direccion',
     'celular',
@@ -94,13 +95,9 @@ export class ColegioListComponent implements OnInit {
         } else {
           const searchTerm = term.toLowerCase().trim();
           this.filteredColegios = this.colegios.filter((colegio) => {
-            const matchesName = colegio.nombre
-              .toLowerCase()
-              .includes(searchTerm);
-            const matchesDireccion = colegio.direccion
-              .toLowerCase()
-              .includes(searchTerm);
-            return matchesName || matchesDireccion;
+            const nombre = (colegio.nombre || colegio.colegio || '').toLowerCase();
+            const direccion = (colegio.direccion || '').toLowerCase();
+            return nombre.includes(searchTerm) || direccion.includes(searchTerm);
           });
         }
        
@@ -112,9 +109,9 @@ export class ColegioListComponent implements OnInit {
 
   openAddDialog() {
     const dialogRef = this.dialog.open(AddColegioComponent, {
-      width: '25vw',
-      maxWidth: '50vw',
-      height: '23vw',
+      width: '100%',
+      maxWidth: '450px',
+      maxHeight: '90vh',
       panelClass: 'custom-dialog',
     });
 
@@ -125,9 +122,9 @@ export class ColegioListComponent implements OnInit {
 
   openEditDialog(id: number) {
     const dialogRef = this.dialog.open(EditColegioComponent, {
-      width: '25vw',
-      maxWidth: '50vw',
-      height: '25vw',
+      width: '100%',
+      maxWidth: '450px',
+      maxHeight: '90vh',
       panelClass: 'custom-dialog',
       data: { id, colegios: this.colegios },
     });
@@ -139,8 +136,9 @@ export class ColegioListComponent implements OnInit {
 
   confirmDelete(id: number) {
     const dialogRef = this.dialog.open(ConfirmationDeleteComponent, {
-      width: '20vw',
-      maxWidth: '50vw',
+      width: '100%',
+      maxWidth: '350px',
+      panelClass: 'custom-dialog',
       data: { id, message: '¿Estás seguro de eliminar este colegio?' },
     });
 
@@ -151,9 +149,9 @@ export class ColegioListComponent implements OnInit {
 
   openAsignarTrabajadoresDialog(id: number) {
     const dialogRef = this.dialog.open(AsignarTrabajadoresComponent, {
-      width: '60vw',
-      maxWidth: '90vw',
-      height: '70vh',
+      width: '95%',
+      maxWidth: '800px',
+      maxHeight: '90vh',
       panelClass: 'custom-dialog',
       data: { colegioId: id },
     });
@@ -167,9 +165,9 @@ export class ColegioListComponent implements OnInit {
 
   openVerTrabajadoresDialog(id: number) {
     const dialogRef = this.dialog.open(VerTrabajadoresComponent, {
-      width: '60vw',
-      maxWidth: '90vw',
-      height: '70vh',
+      width: '95%',
+      maxWidth: '800px',
+      maxHeight: '90vh',
       panelClass: 'custom-dialog',
       data: {
         colegioId: id,

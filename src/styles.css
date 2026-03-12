@@ -1,17 +1,42 @@
 @import '@fortawesome/fontawesome-free/css/all.css';
 
-body {
-  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; /* Fuentes preferidas con fallback */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
   margin: 0;
   padding: 0;
-  overflow-x: hidden; /* Evita desplazamiento horizontal */
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  overflow-x: hidden;
+  background-color: #f5f5f5;
 }
 
-* {
-  box-sizing: border-box; /* Mejora la consistencia del diseño */
+/* Material Dialog Customization (MDC) */
+.custom-dialog.mat-mdc-dialog-panel {
+  max-width: 95vw !important;
 }
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+.custom-dialog .mat-mdc-dialog-container {
+  padding: 0 !important;
+  display: block !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.custom-dialog .mat-mdc-dialog-surface {
+  border-radius: 12px !important;
+  padding: 0 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 11px 15px -7px rgba(0,0,0,.2), 0 24px 38px 3px rgba(0,0,0,.14), 0 9px 46px 8px rgba(0,0,0,.12) !important;
+  overflow: hidden !important;
+}
+
+.dialog-container {
+  width: 100%;
+  background-color: #ffffff;
+  display: flex !important;
+  flex-direction: column;
+  border-radius: 12px;
+}

@@ -1,11 +1,3 @@
-/* styles.css o el CSS global */
-.custom-dialog .mat-dialog-container {
-  padding: 24px; /* Aquí controlas el espaciado interno */
-  border-radius: 12px; /* opcional, bordes redondeados */
-  box-sizing: border-box;
-}
-
-
 .colegio-container {
   margin: 80px 0 20px 15vw;
   padding: 20px;
@@ -59,7 +51,7 @@
 
 .table-header {
   display: grid;
-  grid-template-columns: 1fr 2fr 1.5fr 1fr 1fr;
+  grid-template-columns: 0.5fr 1fr 2fr 1.5fr 1fr 1fr;
   padding: 15px;
   background-color: #f1f3f5;
   border-bottom: 2px solid #e9ecef;
@@ -109,7 +101,8 @@
   font-weight: 500;
   text-transform: uppercase;
   display: grid;
-  grid-template-columns: 1fr 2fr 1.5fr 1fr 1fr;
+  grid-template-columns: 0.5fr 1fr 2fr 1.5fr 1fr 1fr;
+  align-items: center;
   padding: 15px;
   border-bottom: 1px solid #e9ecef;
   text-align: center;
@@ -147,6 +140,39 @@
 .actions mat-icon:hover {
   background-color: rgba(255, 204, 0, 0.1);
   transform: scale(1.1);
+}
+
+.img-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.colegio-img {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #ddd;
+  padding: 2px;
+  background: white;
+}
+
+.no-img-placeholder {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: #f1f3f5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #adb5bd;
+}
+
+.no-img-placeholder mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
 }
 
 @media (max-width: 1024px) {
