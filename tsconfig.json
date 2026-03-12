@@ -25,8 +25,7 @@
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
-    "strictTemplates": true,
-    "compilationMode": "partial"
+    "strictTemplates": true
   },
   "exclude": [
     "node_modules",
