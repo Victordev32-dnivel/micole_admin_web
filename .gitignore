@@ -41,9 +41,8 @@ testem.log
 .DS_Store
 Thumbs.db
 .vercel
-# Excluir componente específico
-# Excluir environments.ts
-/src/environments/environment.ts
+# Excluir environments.ts (ELIMINADO PARA PERMITIR BUILD EN RENDER)
+# /src/environments/environment.ts
 
 # Envs
 .env
