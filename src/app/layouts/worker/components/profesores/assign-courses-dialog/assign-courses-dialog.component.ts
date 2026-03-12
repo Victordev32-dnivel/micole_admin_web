@@ -73,7 +73,12 @@ export class AssignCoursesDialogComponent implements OnInit {
                 salones.forEach((salon) => {
                     this.cursoService.getCursosPorSalon(salon.id).subscribe({
                         next: (listaCursos) => {
-                            todosLosCursos = [...todosLosCursos, ...listaCursos];
+                            // Enriquecemos cada curso con el nombre del salón
+                            const enriched = listaCursos.map(c => ({
+                                ...c,
+                                salonNombre: salon.nombre || `Salón ${salon.id}`
+                            }));
+                            todosLosCursos = [...todosLosCursos, ...enriched];
                             salonesLoaded++;
                             if (salonesLoaded === totalSalones) {
                                 this.cruzarCursosAsignados(todosLosCursos);
@@ -116,12 +121,15 @@ export class AssignCoursesDialogComponent implements OnInit {
             next: (data) => {
                 // Cruzar por nombre para obtener el ID real del curso
                 this.cursosAsignados = data.map(item => {
+                    // Intentar encontrar el curso real por ID (más preciso) o por título si el ID no coincide
                     const cursoReal = todosLosCursos.find(c =>
-                        c.titulo.toLowerCase() === item.nombreCurso.toLowerCase()
+                        c.id === item.cursoId || c.titulo.toLowerCase() === item.nombreCurso.toLowerCase()
                     );
+                    
                     return {
                         id: cursoReal ? cursoReal.id : item.cursoId,
                         titulo: item.nombreCurso,
+                        salonNombre: cursoReal ? cursoReal.salonNombre : '',
                         profeId: item.profeId
                     };
                 });
@@ -160,12 +168,12 @@ export class AssignCoursesDialogComponent implements OnInit {
                 salones.forEach((salon) => {
                     this.cursoService.getCursosPorSalon(salon.id).subscribe({
                         next: (listaCursos) => {
-                            // Mostrar TODOS los cursos, marcando los ya asignados por título
+                            // Mostrar TODOS los cursos, marcando los ya asignados por ID
                             const enrichedCursos = listaCursos.map((curso) => ({
                                 ...curso,
-                                displayName: `${salon.nombre || 'Salon ' + salon.id} - ${curso.titulo}`,
+                                displayName: `${curso.titulo} - ${salon.nombre || 'Salón ' + salon.id}`,
                                 yaAsignado: this.cursosAsignados.some(asignado =>
-                                    asignado.titulo.toLowerCase() === curso.titulo.toLowerCase()
+                                    asignado.id === curso.id || asignado.titulo === curso.titulo
                                 )
                             }));
                             this.cursosDisponibles = [...this.cursosDisponibles, ...enrichedCursos];

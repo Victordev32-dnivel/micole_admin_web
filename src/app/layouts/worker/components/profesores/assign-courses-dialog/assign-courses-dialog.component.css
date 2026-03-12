@@ -63,3 +63,8 @@ table {
     margin-left: 8px;
     font-weight: 500;
 }
+
+.salon-label {
+    font-weight: 600;
+    color: #1976d2;
+}
