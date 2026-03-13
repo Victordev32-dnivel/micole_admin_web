@@ -79,7 +79,7 @@ export class EditTarjetaModalComponent implements OnInit {
   jwtToken: string;
   alumnoActualId: number | null = null;
 
-  private readonly baseUrl = 'https://proy-back-dnivel-44j5.onrender.com/api';
+  private readonly baseUrl = '/api';
 
   constructor(
     private fb: FormBuilder,

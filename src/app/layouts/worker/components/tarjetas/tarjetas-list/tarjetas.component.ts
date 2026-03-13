@@ -135,7 +135,7 @@ export class TarjetasComponent implements OnInit {
   pageSize: number = 10;
   totalPages: number = 0;
 
-  private readonly baseUrl = 'https://proy-back-dnivel-44j5.onrender.com/api';
+  private readonly baseUrl = '/api';
   // URL CORREGIDA: agregado /lista en la ruta
   private readonly apiUrlTarjetaLista = `${this.baseUrl}/tarjeta/lista/colegio`;
   private readonly apiUrlTarjeta = `${this.baseUrl}/tarjeta`;
@@ -228,8 +228,7 @@ export class TarjetasComponent implements OnInit {
   }
 
   private getHeaders(): HttpHeaders {
-    const userData = this.userService.getUserData();
-    const jwtToken = '732612882';
+    const jwtToken = this.userService.getJwtToken();
     return new HttpHeaders({
       Authorization: `Bearer ${jwtToken}`,
       'Content-Type': 'application/json',
@@ -749,32 +748,25 @@ export class TarjetasComponent implements OnInit {
     });
   }
 
-  // Nuevo método para habilitar/inhabilitar tarjeta por alumno
+  // Método recomendado para habilitar/inhabilitar tarjeta (Cambio Rápido de Estado)
   toggleTarjetaStatus(tarjeta: TarjetaConAlumno, event: any): void {
-    // Si no tiene alumno asignado, no podemos usar el endpoint PATCH /api/tarjeta/alumno/{idAlumno}
-    // En ese caso, deberíamos usar el endpoint PUT /api/tarjeta/{idTarjeta}
-    if (!tarjeta.alumnoData?.id) {
-      console.log('ℹ️ Sin alumno asignado, actualizando tarjeta directamente por ID');
-      this.updateTarjetaStatusById(tarjeta, event.checked);
-      return;
-    }
-
-    const idAlumno = tarjeta.alumnoData.id;
     const nuevoEstado = event.checked;
+    const idTarjeta = tarjeta.id;
 
-    console.log(`🔄 Cambiando estado de tarjeta para alumno ${idAlumno} a: ${nuevoEstado}`);
+    console.log(`🔄 Cambiando estado de tarjeta ${idTarjeta} a: ${nuevoEstado}`);
 
     this.loading = true;
     this.loadingMessage = nuevoEstado ? 'Habilitando tarjeta...' : 'Inhabilitando tarjeta...';
 
     const headers = this.getHeaders();
-    const patchUrl = `${this.apiUrlTarjeta}/alumno/${idAlumno}`;
+    const patchUrl = `${this.apiUrlTarjeta}/${idTarjeta}/estado`;
 
-    this.http.patch(patchUrl, { activo: nuevoEstado }, { headers, responseType: 'text' })
+    // Se envía el valor booleano directamente en el cuerpo (Literal)
+    this.http.patch(patchUrl, nuevoEstado, { headers, responseType: 'text' })
       .pipe(catchError(this.handleError))
       .subscribe({
         next: (response: any) => {
-          console.log('✅ Estado actualizado (PATCH):', response);
+          console.log('✅ Estado actualizado (PATCH/estado):', response);
           this.ngZone.run(() => {
             const msj = nuevoEstado ? 'Tarjeta habilitada' : 'Tarjeta inhabilitada';
             this.showSnackBar(`${msj} con éxito`, 'success');
@@ -787,47 +779,9 @@ export class TarjetasComponent implements OnInit {
         error: (error) => {
           console.error('❌ Error al actualizar estado:', error);
           // Revertir el estado del toggle en caso de error
-          event.source.checked = !nuevoEstado;
-          this.cdr.detectChanges();
-        }
-      });
-  }
-
-  // Método para actualizar por ID de tarjeta si no hay alumno (o como fallback)
-  updateTarjetaStatusById(tarjeta: TarjetaConAlumno, activo: boolean): void {
-    console.log(`🔄 Actualizando tarjeta ${tarjeta.id} por ID a estado: ${activo}`);
-
-    this.loading = true;
-    this.loadingMessage = 'Actualizando estado...';
-
-    const headers = this.getHeaders();
-    const putUrl = `${this.apiUrlTarjeta}/${tarjeta.id}`;
-
-    // Construir objeto completo para el PUT
-    const updateData = {
-      rfid: tarjeta.rfid,
-      codigo: tarjeta.codigo,
-      idAlumno: tarjeta.alumnoData?.id || 0,
-      idColegio: this.colegioId,
-      activo: activo
-    };
-
-    this.http.put(putUrl, updateData, { headers, responseType: 'text' })
-      .pipe(catchError(this.handleError))
-      .subscribe({
-        next: (response: any) => {
-          console.log('✅ Estado actualizado (PUT):', response);
-          this.ngZone.run(() => {
-            const msj = activo ? 'Tarjeta habilitada' : 'Tarjeta inhabilitada';
-            this.showSnackBar(`${msj} con éxito`, 'success');
-            tarjeta.activo = activo; // Actualizar estado local
-            this.loading = false;
-            this.loadingMessage = '';
-            this.cdr.detectChanges();
-          });
-        },
-        error: (error) => {
-          console.error('❌ Error al actualizar estado por ID:', error);
+          if (event && event.source) {
+            event.source.checked = !nuevoEstado;
+          }
           this.loading = false;
           this.loadingMessage = '';
           this.cdr.detectChanges();
