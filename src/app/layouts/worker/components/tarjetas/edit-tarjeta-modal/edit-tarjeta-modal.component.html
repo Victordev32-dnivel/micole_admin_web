@@ -84,7 +84,19 @@
       <div class="form-group">
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Asignar a Alumno</mat-label>
-          <mat-select formControlName="alumno" [disabled]="loading">
+          <mat-select formControlName="alumno" [disabled]="loading" (openedChange)="$event && resetFilter()">
+            <!-- Buscador interno -->
+            <div class="search-filter-container" (click)="$event.stopPropagation()">
+              <mat-icon>search</mat-icon>
+              <input 
+                type="text" 
+                placeholder="Escriba para filtrar alumnos..." 
+                (input)="onSearchAlumno($event)"
+                (keydown)="$event.stopPropagation()"
+                autocomplete="off"
+              >
+            </div>
+
             <mat-option [value]="null" class="unassigned-option">
               <div class="option-content">
                 <mat-icon class="option-icon">credit_card</mat-icon>
@@ -92,7 +104,7 @@
               </div>
             </mat-option>
             <mat-option
-              *ngFor="let alumno of alumnos"
+              *ngFor="let alumno of filteredAlumnos"
               [value]="alumno.id"
               [class.current-assignment]="alumno.id === alumnoActualId"
             >

@@ -74,6 +74,8 @@ export class EditTarjetaModalComponent implements OnInit {
   editTarjetaForm: FormGroup;
   loading = false;
   alumnos: Alumno[] = [];
+  filteredAlumnos: Alumno[] = [];
+  searchTerm: string = '';
   tarjeta: TarjetaConAlumno;
   colegioId: number;
   jwtToken: string;
@@ -91,6 +93,7 @@ export class EditTarjetaModalComponent implements OnInit {
     this.colegioId = data.colegioId;
     this.tarjeta = data.tarjeta;
     this.alumnos = data.alumnos || [];
+    this.filteredAlumnos = [...this.alumnos];
     this.jwtToken = data.jwtToken;
 
     // Determinar el ID del alumno actual
@@ -124,6 +127,31 @@ export class EditTarjetaModalComponent implements OnInit {
 
   ngOnInit(): void {
   
+  }
+
+  onSearchAlumno(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm = input.value.toLowerCase();
+    
+    // Obtener el ID seleccionado actualmente para no filtrarlo
+    const selectedId = this.editTarjetaForm.get('alumno')?.value;
+
+    if (!this.searchTerm) {
+      this.filteredAlumnos = [...this.alumnos];
+      return;
+    }
+
+    this.filteredAlumnos = this.alumnos.filter(alumno => 
+      alumno.id === selectedId || // No filtrar si es el seleccionado
+      alumno.nombre_completo.toLowerCase().includes(this.searchTerm) ||
+      alumno.codigo.toLowerCase().includes(this.searchTerm) ||
+      alumno.numero_documento.toLowerCase().includes(this.searchTerm)
+    );
+  }
+
+  resetFilter(): void {
+    this.searchTerm = '';
+    this.filteredAlumnos = [...this.alumnos];
   }
 
   // Método para determinar el ID del alumno actual
