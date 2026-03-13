@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { HttpClient, HttpClientModule, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { catchError, throwError } from 'rxjs';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 interface Alumno {
   id: number;
@@ -31,6 +32,7 @@ interface TarjetaConAlumno {
   alumnoNombre?: string;
   alumnoDocumento?: string;
   alumnoCodigo?: string;
+  activo?: boolean; // Agregado campo activo
 }
 
 interface DialogData {
@@ -41,10 +43,11 @@ interface DialogData {
 }
 
 interface TarjetaUpdatePayload {
-  Rfid: number;
-  Codigo: string;
-  IdAlumno: number;
-  IdColegio: number;
+  rfid: number;
+  codigo: string;
+  idAlumno: number;
+  idColegio: number;
+  activo: boolean; // Agregado campo activo
 }
 
 @Component({
@@ -62,6 +65,7 @@ interface TarjetaUpdatePayload {
     MatProgressSpinnerModule,
     MatSnackBarModule,
     HttpClientModule,
+    MatSlideToggleModule,
   ],
   templateUrl: './edit-tarjeta-modal.component.html',
   styleUrls: ['./edit-tarjeta-modal.component.css'],
@@ -114,6 +118,7 @@ export class EditTarjetaModalComponent implements OnInit {
         ],
       ],
       alumno: [this.alumnoActualId],
+      activo: [this.tarjeta.activo !== undefined ? this.tarjeta.activo : true], // Agregado campo activo
     });
   }
 
@@ -172,6 +177,8 @@ export class EditTarjetaModalComponent implements OnInit {
 
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Error de conexión: ${error.error.message}`;
+    } else if (typeof error.error === 'string' && error.error.length > 0) {
+      errorMessage = error.error;
     } else {
       switch (error.status) {
         case 400:
@@ -224,10 +231,11 @@ export class EditTarjetaModalComponent implements OnInit {
       const formData = this.editTarjetaForm.value;
       
       const payload: TarjetaUpdatePayload = {
-        Rfid: Number(formData.rfid),
-        Codigo: formData.codigo.trim(),
-        IdAlumno: formData.alumno || 0,
-        IdColegio: this.colegioId,
+        rfid: Number(formData.rfid),
+        codigo: formData.codigo.trim(),
+        idAlumno: formData.alumno || 0,
+        idColegio: this.colegioId,
+        activo: formData.activo // Agregado campo Activo
       };
 
      
@@ -235,7 +243,7 @@ export class EditTarjetaModalComponent implements OnInit {
       const updateUrl = `${this.baseUrl}/tarjeta/${this.tarjeta.id}`;
       const headers = this.getHeaders();
 
-      this.http.put(updateUrl, payload, { headers })
+      this.http.put(updateUrl, payload, { headers, responseType: 'text' })
         .pipe(catchError(this.handleError))
         .subscribe({
           next: (response: any) => {
@@ -284,7 +292,7 @@ export class EditTarjetaModalComponent implements OnInit {
 
   
 
-    this.http.delete(deleteUrl, { headers })
+    this.http.delete(deleteUrl, { headers, responseType: 'text' })
       .pipe(catchError(this.handleError))
       .subscribe({
         next: (response: any) => {
@@ -409,7 +417,8 @@ export class EditTarjetaModalComponent implements OnInit {
     return (
       currentValues.rfid !== this.tarjeta.rfid ||
       currentValues.codigo !== originalCodigo ||
-      currentValues.alumno !== this.alumnoActualId
+      currentValues.alumno !== this.alumnoActualId ||
+      currentValues.activo !== this.tarjeta.activo
     );
   }
 }

@@ -119,6 +119,18 @@
           <mat-hint>Seleccione un alumno o deje sin asignar</mat-hint>
         </mat-form-field>
       </div>
+
+      <!-- Campo Activo -->
+      <div class="form-group slide-toggle-group">
+        <mat-slide-toggle
+          formControlName="activo"
+          [disabled]="loading"
+          color="primary"
+        >
+          {{ editTarjetaForm.get('activo')?.value ? 'Tarjeta Habilitada' : 'Tarjeta Inhabilitada' }}
+        </mat-slide-toggle>
+        <span class="field-hint">Si la tarjeta está inhabilitada, no podrá usarse para marcar asistencia.</span>
+      </div>
       
       <!-- Indicador de cambios -->
       <div *ngIf="hasChanges() && !loading" class="changes-indicator">

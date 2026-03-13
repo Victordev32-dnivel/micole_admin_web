@@ -8,6 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Observable, map, startWith } from 'rxjs';
@@ -33,6 +34,7 @@ interface Alumno {
     MatDialogModule,
     MatIconModule,
     MatAutocompleteModule,
+    MatSlideToggleModule,
   ],
   template: `
     <div class="modal-header">
@@ -181,6 +183,16 @@ interface Alumno {
             >| {{ data.alumnos.length }} alumnos disponibles</span
           >
         </div>
+
+        <div class="activo-field">
+          <mat-slide-toggle
+            formControlName="activo"
+            color="primary"
+          >
+            {{ tarjetaForm.get('activo')?.value ? 'Tarjeta Habilitada' : 'Tarjeta Inhabilitada' }}
+          </mat-slide-toggle>
+          <p class="hint">Define si la tarjeta nace activa o bloqueada.</p>
+        </div>
       </form>
     </mat-dialog-content>
 
@@ -258,6 +270,20 @@ interface Alumno {
       .alumnos-count {
         color: #4caf50;
         font-weight: 500;
+      }
+
+      .activo-field {
+        margin-top: 10px;
+        padding: 12px 16px;
+        background-color: rgba(0, 0, 0, 0.02);
+        border-radius: 8px;
+        border: 1px dashed rgba(0, 0, 0, 0.1);
+      }
+
+      .activo-field .hint {
+        margin: 8px 0 0 0;
+        font-size: 12px;
+        color: #666;
       }
 
       .alumno-option-auto {
@@ -526,6 +552,7 @@ export class AddTarjetaModalComponent {
       alumnoSearch: ['', Validators.required],
       idAlumno: ['', Validators.required],
       idColegio: [this.data.colegioId, Validators.required],
+      activo: [true, Validators.required],
     });
 
     this.filteredAlumnos = this.tarjetaForm
@@ -643,6 +670,7 @@ export class AddTarjetaModalComponent {
         codigo: formData.codigo.trim(),
         idAlumno: Number(formData.idAlumno),
         idColegio: Number(formData.idColegio),
+        activo: formData.activo,
       };
 
       // AGREGAR ESTOS LOGS PARA DEBUG:

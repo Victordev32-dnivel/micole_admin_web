@@ -25,6 +25,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { EditTarjetaModalComponent } from '../edit-tarjeta-modal/edit-tarjeta-modal.component';
 import { ConfirmDeleteModalComponent } from '../tarjetas-list/eliminar.component';
 import {
@@ -43,6 +44,7 @@ interface TarjetaApiResponse {
   rfid: number;
   horario: string; // Cambiado de 'codigo' a 'horario'
   alumno: any; // Cambiado a 'any' porque puede ser string, objeto, null, etc.
+  activo: boolean; // Agregado campo activo
 }
 
 // Interfaz para la respuesta paginada de la API
@@ -59,6 +61,7 @@ interface Tarjeta {
   id: number;
   rfid: number;
   codigo: string; // Para compatibilidad interna
+  activo: boolean; // Agregado campo activo
 }
 
 interface Alumno {
@@ -84,10 +87,11 @@ interface ApiResponse<T> {
 }
 
 interface TarjetaUpdateData {
-  Rfid: number;
-  Codigo: string;
-  IdAlumno: number;
-  IdColegio: number;
+  rfid: number;
+  codigo: string;
+  idAlumno: number;
+  idColegio: number;
+  activo: boolean; // Agregado campo activo
 }
 
 @Component({
@@ -109,6 +113,7 @@ interface TarjetaUpdateData {
     MatDialogModule,
     MatTooltipModule,
     MatSnackBarModule,
+    MatSlideToggleModule,
   ],
   templateUrl: './tarjetas.component.html',
   styleUrls: ['./tarjetas.component.css'],
@@ -142,6 +147,7 @@ export class TarjetasComponent implements OnInit {
     'codigo',
     'alumno',
     'estado',
+    'activo', // Agregada columna para el toggle de activo
     'acciones',
   ];
 
@@ -236,10 +242,14 @@ export class TarjetasComponent implements OnInit {
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Error: ${error.error.message}`;
     } else {
-      errorMessage =
-        error.error?.message ||
-        error.message ||
-        `Error ${error.status}: ${error.statusText}`;
+      if (typeof error.error === 'string') {
+        errorMessage = error.error;
+      } else {
+        errorMessage =
+          error.error?.message ||
+          error.message ||
+          `Error ${error.status}: ${error.statusText}`;
+      }
     }
 
     console.error('❌ Error HTTP completo:', error);
@@ -272,7 +282,8 @@ export class TarjetasComponent implements OnInit {
         rfid: tarjetaApi.rfid,
         codigo: codigo,
         horario: tarjetaApi.horario,
-        alumnoNombre: this.procesarNombreAlumno(tarjetaApi.alumno)
+        alumnoNombre: this.procesarNombreAlumno(tarjetaApi.alumno),
+        activo: tarjetaApi.activo !== undefined ? tarjetaApi.activo : true // Manejar el campo activo
       };
 
       // Si hay un nombre de alumno, intentar encontrar el alumno completo
@@ -645,7 +656,7 @@ export class TarjetasComponent implements OnInit {
       const headers = this.getHeaders();
 
       this.http
-        .post(this.apiUrlTarjeta, cleanedData, { headers })
+        .post(this.apiUrlTarjeta, cleanedData, { headers, responseType: 'text' })
         .pipe(catchError(this.handleError))
         .subscribe({
           next: (response: any) => {
@@ -738,6 +749,92 @@ export class TarjetasComponent implements OnInit {
     });
   }
 
+  // Nuevo método para habilitar/inhabilitar tarjeta por alumno
+  toggleTarjetaStatus(tarjeta: TarjetaConAlumno, event: any): void {
+    // Si no tiene alumno asignado, no podemos usar el endpoint PATCH /api/tarjeta/alumno/{idAlumno}
+    // En ese caso, deberíamos usar el endpoint PUT /api/tarjeta/{idTarjeta}
+    if (!tarjeta.alumnoData?.id) {
+      console.log('ℹ️ Sin alumno asignado, actualizando tarjeta directamente por ID');
+      this.updateTarjetaStatusById(tarjeta, event.checked);
+      return;
+    }
+
+    const idAlumno = tarjeta.alumnoData.id;
+    const nuevoEstado = event.checked;
+
+    console.log(`🔄 Cambiando estado de tarjeta para alumno ${idAlumno} a: ${nuevoEstado}`);
+
+    this.loading = true;
+    this.loadingMessage = nuevoEstado ? 'Habilitando tarjeta...' : 'Inhabilitando tarjeta...';
+
+    const headers = this.getHeaders();
+    const patchUrl = `${this.apiUrlTarjeta}/alumno/${idAlumno}`;
+
+    this.http.patch(patchUrl, { activo: nuevoEstado }, { headers, responseType: 'text' })
+      .pipe(catchError(this.handleError))
+      .subscribe({
+        next: (response: any) => {
+          console.log('✅ Estado actualizado (PATCH):', response);
+          this.ngZone.run(() => {
+            const msj = nuevoEstado ? 'Tarjeta habilitada' : 'Tarjeta inhabilitada';
+            this.showSnackBar(`${msj} con éxito`, 'success');
+            tarjeta.activo = nuevoEstado; // Actualizar estado local
+            this.loading = false;
+            this.loadingMessage = '';
+            this.cdr.detectChanges();
+          });
+        },
+        error: (error) => {
+          console.error('❌ Error al actualizar estado:', error);
+          // Revertir el estado del toggle en caso de error
+          event.source.checked = !nuevoEstado;
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  // Método para actualizar por ID de tarjeta si no hay alumno (o como fallback)
+  updateTarjetaStatusById(tarjeta: TarjetaConAlumno, activo: boolean): void {
+    console.log(`🔄 Actualizando tarjeta ${tarjeta.id} por ID a estado: ${activo}`);
+
+    this.loading = true;
+    this.loadingMessage = 'Actualizando estado...';
+
+    const headers = this.getHeaders();
+    const putUrl = `${this.apiUrlTarjeta}/${tarjeta.id}`;
+
+    // Construir objeto completo para el PUT
+    const updateData = {
+      rfid: tarjeta.rfid,
+      codigo: tarjeta.codigo,
+      idAlumno: tarjeta.alumnoData?.id || 0,
+      idColegio: this.colegioId,
+      activo: activo
+    };
+
+    this.http.put(putUrl, updateData, { headers, responseType: 'text' })
+      .pipe(catchError(this.handleError))
+      .subscribe({
+        next: (response: any) => {
+          console.log('✅ Estado actualizado (PUT):', response);
+          this.ngZone.run(() => {
+            const msj = activo ? 'Tarjeta habilitada' : 'Tarjeta inhabilitada';
+            this.showSnackBar(`${msj} con éxito`, 'success');
+            tarjeta.activo = activo; // Actualizar estado local
+            this.loading = false;
+            this.loadingMessage = '';
+            this.cdr.detectChanges();
+          });
+        },
+        error: (error) => {
+          console.error('❌ Error al actualizar estado por ID:', error);
+          this.loading = false;
+          this.loadingMessage = '';
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
   private performDelete(tarjeta: TarjetaConAlumno): void {
     this.loading = true;
     this.loadingMessage = 'Eliminando tarjeta...';
@@ -750,7 +847,7 @@ export class TarjetasComponent implements OnInit {
     console.log('🗑️ Eliminando tarjeta:', deleteUrl);
 
     this.http
-      .delete(deleteUrl, { headers })
+      .delete(deleteUrl, { headers, responseType: 'text' })
       .pipe(catchError(this.handleError))
       .subscribe({
         next: (response: any) => {
@@ -779,10 +876,11 @@ export class TarjetasComponent implements OnInit {
     console.log('🔍 Valores extraídos:', { rfidValue, codigoValue, alumnoValue });
 
     const cleanedData: TarjetaUpdateData = {
-      Rfid: 0,
-      Codigo: '',
-      IdAlumno: 0,
-      IdColegio: this.colegioId,
+      rfid: 0,
+      codigo: '',
+      idAlumno: 0,
+      idColegio: this.colegioId,
+      activo: data.activo !== undefined ? data.activo : true, // Agregado activo
     };
 
     // Validar RFID
@@ -796,14 +894,14 @@ export class TarjetasComponent implements OnInit {
         `RFID debe ser un número válido. Recibido: "${rfidValue}"`
       );
     }
-    cleanedData.Rfid = rfidNumber;
+    cleanedData.rfid = rfidNumber;
 
     // Validar código
     const codigoString = codigoValue ? String(codigoValue).trim() : null;
     if (!codigoString) {
       throw new Error('Código es requerido');
     }
-    cleanedData.Codigo = codigoString;
+    cleanedData.codigo = codigoString;
 
     // Manejar alumno
     if (
@@ -814,12 +912,12 @@ export class TarjetasComponent implements OnInit {
       const alumnoNumber = Number(alumnoValue);
       if (isNaN(alumnoNumber)) {
         console.log('⚠️ IdAlumno no es número, estableciendo a 0');
-        cleanedData.IdAlumno = 0;
+        cleanedData.idAlumno = 0;
       } else {
-        cleanedData.IdAlumno = alumnoNumber;
+        cleanedData.idAlumno = alumnoNumber;
       }
     } else {
-      cleanedData.IdAlumno = 0;
+      cleanedData.idAlumno = 0;
       console.log('ℹ️ No hay alumno asignado, IdAlumno = 0');
     }
 
