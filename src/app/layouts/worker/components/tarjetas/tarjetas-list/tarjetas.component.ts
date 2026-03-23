@@ -38,6 +38,7 @@ import { AddTarjetaModalComponent } from '../add-tarjeta-modal/add-tarjeta-modal
 import { UserService } from '../../../../../services/UserData';
 import { PaginationComponent } from '../../../../../shared/components/pagination/pagination.component';
 import { catchError, throwError, forkJoin } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 // Respuesta de cada tarjeta del backend
 interface TarjetaApiResponse {
@@ -218,8 +219,12 @@ export class TarjetasComponent implements OnInit {
   }
 
   private setupSearchListener(): void {
-    this.tarjetaForm.get('searchTerm')?.valueChanges.subscribe((term) => {
-      this.filterTarjetas(term || '');
+    this.tarjetaForm.get('searchTerm')?.valueChanges.pipe(
+      debounceTime(400),
+      distinctUntilChanged()
+    ).subscribe((term) => {
+      this.currentPage = 1;
+      this.loadAllTarjetas(1, term?.trim() || '');
     });
   }
 
@@ -294,10 +299,13 @@ export class TarjetasComponent implements OnInit {
     this.loadAllTarjetas();
   }
 
-  // FIX 2026-03-23 — Paginación server-side (ya no carga todo de golpe)
-  private loadAllTarjetas(page: number = 1): void {
+  // Carga tarjetas con paginación y búsqueda server-side
+  private loadAllTarjetas(page: number = 1, search: string = ''): void {
     const headers = this.getHeaders();
-    const tarjetasUrl = `${this.apiUrlTarjetaLista}/${this.colegioId}?page=${page}&limit=${this.pageSize}`;
+    let tarjetasUrl = `${this.apiUrlTarjetaLista}/${this.colegioId}?page=${page}&limit=${this.pageSize}`;
+    if (search) {
+      tarjetasUrl += `&search=${encodeURIComponent(search)}`;
+    }
 
     this.loading = true;
     this.loadingMessage = 'Cargando tarjetas...';
@@ -334,26 +342,10 @@ export class TarjetasComponent implements OnInit {
 
   // loadRemainingPages eliminado — FIX 2026-03-23: ahora usa paginación server-side
 
-  filterTarjetas(searchTerm: string): void {
-    if (!searchTerm) {
-      this.filteredTarjetas = [...this.tarjetas];
-      return;
-    }
-
-    const term = searchTerm.toLowerCase().trim();
-    this.filteredTarjetas = this.tarjetas.filter(
-      (tarjeta) =>
-        tarjeta.rfid.toString().includes(term) ||
-        tarjeta.codigo.toLowerCase().includes(term) ||
-        tarjeta.id.toString().includes(term) ||
-        (tarjeta.alumnoNombre?.toLowerCase().includes(term)) ||
-        (tarjeta.alumnoDocumento?.toLowerCase().includes(term))
-    );
-  }
+  // Búsqueda es server-side — filterTarjetas eliminado
 
   clearSearch(): void {
     this.tarjetaForm.get('searchTerm')?.setValue('');
-    this.filteredTarjetas = [...this.tarjetas];
   }
 
   // ===============================
@@ -362,13 +354,15 @@ export class TarjetasComponent implements OnInit {
 
   onPageChange(page: number): void {
     this.currentPage = page;
-    this.loadAllTarjetas(page);
+    const search = this.tarjetaForm.get('searchTerm')?.value?.trim() || '';
+    this.loadAllTarjetas(page, search);
   }
 
   onPageSizeChange(newSize: number): void {
     this.pageSize = newSize;
     this.currentPage = 1;
-    this.loadAllTarjetas(1);
+    const search = this.tarjetaForm.get('searchTerm')?.value?.trim() || '';
+    this.loadAllTarjetas(1, search);
   }
 
   // ===============================

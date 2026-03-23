@@ -12,13 +12,13 @@
 
     <mat-card-content>
       <form [formGroup]="tarjetaForm" class="tarjetas-form">
-        <!-- Campo de búsqueda -->
+        <!-- Campo de búsqueda server-side -->
         <mat-form-field appearance="outline" class="form-field search-field">
           <mat-label>Buscar tarjeta</mat-label>
           <input
             matInput
             formControlName="searchTerm"
-            placeholder="Buscar por RFID, código o alumno"
+            placeholder="Buscar por código, nombre alumno, DNI..."
           />
           <mat-icon matPrefix>search</mat-icon>
           <button
@@ -29,6 +29,7 @@
           >
             <mat-icon>close</mat-icon>
           </button>
+          <mat-hint>Busca por código de tarjeta, nombre del alumno o DNI</mat-hint>
         </mat-form-field>
       </form>
 
