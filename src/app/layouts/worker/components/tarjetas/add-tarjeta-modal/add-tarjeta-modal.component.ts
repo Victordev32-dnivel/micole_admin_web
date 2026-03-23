@@ -11,7 +11,9 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
-import { Observable, map, startWith } from 'rxjs';
+import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
+import { Observable, of, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 
 interface Alumno {
   id: number;
@@ -35,6 +37,7 @@ interface Alumno {
     MatIconModule,
     MatAutocompleteModule,
     MatSlideToggleModule,
+    HttpClientModule,
   ],
   template: `
     <div class="modal-header">
@@ -530,17 +533,20 @@ export class AddTarjetaModalComponent {
   filteredAlumnos: Observable<Alumno[]>;
   selectedAlumno: Alumno | null = null;
   private _alumnos: Alumno[] = [];
+  private readonly apiUrlAlumnos = '/api/alumno/colegio';
 
   constructor(
     private fb: FormBuilder,
+    private http: HttpClient,
     public dialogRef: MatDialogRef<AddTarjetaModalComponent>,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       colegioId: number;
       alumnos: Alumno[];
+      jwtToken: string;
     }
   ) {
-    // Limpiar nombres de alumnos al inicializar
+    // Mantener los alumnos precargados como base inicial
     this._alumnos = this.data.alumnos.map((alumno) => ({
       ...alumno,
       nombre_completo: this.cleanName(alumno.nombre_completo),
@@ -555,11 +561,13 @@ export class AddTarjetaModalComponent {
       activo: [true, Validators.required],
     });
 
+    // FIX 2026-03-23 — Búsqueda server-side con debounce
     this.filteredAlumnos = this.tarjetaForm
       .get('alumnoSearch')!
       .valueChanges.pipe(
-        startWith(''),
-        map((value) => this._filter(value))
+        debounceTime(400),
+        distinctUntilChanged(),
+        switchMap((value) => this._searchAlumnos(value))
       );
   }
 
@@ -572,29 +580,37 @@ export class AddTarjetaModalComponent {
     return null;
   }
 
-  private _filter(value: string | Alumno): Alumno[] {
-    // Si el valor es un objeto (Alumno seleccionado), no filtrar
+  // FIX 2026-03-23 — Búsqueda server-side en vez de filtro local
+  private _searchAlumnos(value: string | Alumno): Observable<Alumno[]> {
+    // Si el valor es un objeto (Alumno seleccionado), no buscar
     if (typeof value === 'object' && value !== null) {
-      return this._alumnos;
+      return of(this._alumnos);
     }
 
-    const filterValue = (value as string)?.toLowerCase() || '';
+    const searchTerm = (value as string)?.trim() || '';
 
-    if (!filterValue.trim()) {
-      return this._alumnos;
+    // Sin término: mostrar los alumnos precargados
+    if (!searchTerm) {
+      return of(this._alumnos);
     }
 
-    return this._alumnos.filter((alumno) => {
-      const nombre = alumno.nombre_completo.toLowerCase();
-      const codigo = (alumno.codigo || '').toLowerCase();
-      const documento = alumno.numero_documento.toLowerCase();
-
-      return (
-        nombre.includes(filterValue) ||
-        codigo.includes(filterValue) ||
-        documento.includes(filterValue)
-      );
+    // Llamar al backend con ?search=
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${this.data.jwtToken}`,
+      'Content-Type': 'application/json',
     });
+    const url = `${this.apiUrlAlumnos}/${this.data.colegioId}?page=1&limit=30&search=${encodeURIComponent(searchTerm)}`;
+
+    return this.http.get<any>(url, { headers }).pipe(
+      switchMap((response) => {
+        const alumnos: Alumno[] = (response?.data || response || []).map((a: any) => ({
+          ...a,
+          nombre_completo: this.cleanName(a.nombre_completo),
+        }));
+        return of(alumnos);
+      }),
+      catchError(() => of(this._alumnos))
+    );
   }
 
   onSearchInput(event: any): void {

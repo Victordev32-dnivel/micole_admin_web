@@ -152,22 +152,15 @@
       </div>
     </div>
 
-    <!-- PAGINACIÓN RESPONSIVA MEJORADA -->
-    <div class="pagination" *ngIf="totalPages > 1 && !selectedSalonId">
-      <div class="pagination-info">
-        <span class="total-info">Total de alumnos: {{ totalAlumnos }}</span>
-        <span class="page-info">Página {{ currentPage }} de {{ totalPages }}</span>
-
-      </div>
-
-
-
-      <!-- Paginación simple para móvil con números -->
-      <div *ngIf="isMobile && totalPages <= 10" class="mobile-page-numbers">
-        <button *ngFor="let page of getPageNumbers()" mat-button [class.active]="page === currentPage"
-          [disabled]="loading" (click)="changePage(page)" class="page-button">
-          {{ page }}
-        </button>
-      </div>
-    </div>
+    <!-- PAGINACIÓN -->
+    <app-pagination
+      *ngIf="!selectedSalonId"
+      [currentPage]="currentPage"
+      [totalPages]="totalPages"
+      [totalItems]="totalAlumnos"
+      [pageSize]="pageSize"
+      [disabled]="loading"
+      (pageChange)="changePage($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+    </app-pagination>
   </div>

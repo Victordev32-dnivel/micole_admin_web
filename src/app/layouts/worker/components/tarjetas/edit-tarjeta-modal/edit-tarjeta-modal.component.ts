@@ -10,7 +10,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { HttpClient, HttpClientModule, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
-import { catchError, throwError } from 'rxjs';
+import { catchError, throwError, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 interface Alumno {
@@ -80,6 +81,7 @@ export class EditTarjetaModalComponent implements OnInit {
   colegioId: number;
   jwtToken: string;
   alumnoActualId: number | null = null;
+  private searchSubject = new Subject<string>();
 
   private readonly baseUrl = '/api';
 
@@ -126,27 +128,45 @@ export class EditTarjetaModalComponent implements OnInit {
   }
 
   ngOnInit(): void {
-  
+    // FIX 2026-03-23 — Búsqueda server-side con debounce
+    this.searchSubject.pipe(
+      debounceTime(400),
+      distinctUntilChanged()
+    ).subscribe((term) => {
+      this.searchTerm = term;
+      if (!term) {
+        this.filteredAlumnos = [...this.alumnos];
+        return;
+      }
+      const headers = new HttpHeaders({
+        Authorization: `Bearer ${this.jwtToken}`,
+        'Content-Type': 'application/json',
+      });
+      const url = `${this.baseUrl}/alumno/colegio/${this.colegioId}?page=1&limit=30&search=${encodeURIComponent(term)}`;
+      this.http.get<any>(url, { headers }).subscribe({
+        next: (response) => {
+          const selectedId = this.editTarjetaForm.get('alumno')?.value;
+          const results: Alumno[] = (response?.data || response || []).map((a: any) => ({
+            ...a,
+            nombre_completo: a.nombre_completo?.replace(/\t/g, ' ').replace(/\s+/g, ' ').trim() || '',
+          }));
+          // Mantener el alumno seleccionado en la lista si no está en los resultados
+          if (selectedId && !results.find(a => a.id === selectedId)) {
+            const current = this.alumnos.find(a => a.id === selectedId);
+            if (current) results.unshift(current);
+          }
+          this.filteredAlumnos = results;
+        },
+        error: () => {
+          this.filteredAlumnos = [...this.alumnos];
+        }
+      });
+    });
   }
 
   onSearchAlumno(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.searchTerm = input.value.toLowerCase();
-    
-    // Obtener el ID seleccionado actualmente para no filtrarlo
-    const selectedId = this.editTarjetaForm.get('alumno')?.value;
-
-    if (!this.searchTerm) {
-      this.filteredAlumnos = [...this.alumnos];
-      return;
-    }
-
-    this.filteredAlumnos = this.alumnos.filter(alumno => 
-      alumno.id === selectedId || // No filtrar si es el seleccionado
-      alumno.nombre_completo.toLowerCase().includes(this.searchTerm) ||
-      alumno.codigo.toLowerCase().includes(this.searchTerm) ||
-      alumno.numero_documento.toLowerCase().includes(this.searchTerm)
-    );
+    this.searchSubject.next(input.value.trim().toLowerCase());
   }
 
   resetFilter(): void {
