@@ -48,17 +48,7 @@ interface Alumno {
     </div>
 
     <mat-dialog-content>
-      <div
-        *ngIf="!data.alumnos || data.alumnos.length === 0"
-        class="no-alumnos"
-      >
-        <mat-icon>info</mat-icon>
-        <h3>No hay alumnos disponibles</h3>
-        <p>No hay alumnos sin tarjeta asignada en este salón.</p>
-      </div>
-
       <form
-        *ngIf="data.alumnos && data.alumnos.length > 0"
         [formGroup]="tarjetaForm"
         class="tarjeta-form"
       >

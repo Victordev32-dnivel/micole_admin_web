@@ -4,7 +4,8 @@
       "Bash(xargs grep:*)",
       "Bash(grep -E \"\\\\.\\(ts|json\\)$\")",
       "Bash(find /d/dnivel-legacy/proy_back_DNivel -type f -name *Alumno*Service* -o -type f -name *Alumno*Repository*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Read(//d/dnivel-legacy/**)"
     ]
   }
 }
