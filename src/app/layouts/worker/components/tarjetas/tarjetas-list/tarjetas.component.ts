@@ -36,15 +36,18 @@ import {
 } from '@angular/common/http';
 import { AddTarjetaModalComponent } from '../add-tarjeta-modal/add-tarjeta-modal.component';
 import { UserService } from '../../../../../services/UserData';
+import { PaginationComponent } from '../../../../../shared/components/pagination/pagination.component';
 import { catchError, throwError, forkJoin } from 'rxjs';
 
 // Interfaz actualizada para la respuesta de la API - más flexible
 interface TarjetaApiResponse {
   id: number;
   rfid: number;
-  horario: string; // Cambiado de 'codigo' a 'horario'
-  alumno: any; // Cambiado a 'any' porque puede ser string, objeto, null, etc.
-  activo: boolean; // Agregado campo activo
+  codigo?: string;
+  horario?: string;
+  alumno: any; // ID numérico del alumno (puede ser null)
+  alumnoNombre?: string; // FIX 2026-03-23 — nombre completo del alumno directo del backend
+  activo: boolean;
 }
 
 // Interfaz para la respuesta paginada de la API
@@ -114,6 +117,7 @@ interface TarjetaUpdateData {
     MatTooltipModule,
     MatSnackBarModule,
     MatSlideToggleModule,
+    PaginationComponent,
   ],
   templateUrl: './tarjetas.component.html',
   styleUrls: ['./tarjetas.component.css'],
@@ -265,76 +269,57 @@ export class TarjetasComponent implements OnInit {
   };
 
   // Método actualizado para mapear los datos de la API al formato interno
+  // FIX 2026-03-23 — Simplificado: el backend ahora retorna alumnoNombre directamente
   private mapearTarjetasApi(tarjetasApi: TarjetaApiResponse[]): TarjetaConAlumno[] {
-    console.log('🔄 Mapeando tarjetas de API:', tarjetasApi);
-
     return tarjetasApi.map((tarjetaApi) => {
-      console.log('🔍 Procesando tarjeta individual:', tarjetaApi);
-      console.log('🔍 Tipo de alumno:', typeof tarjetaApi.alumno, tarjetaApi.alumno);
-      console.log('🔍 Tipo de horario:', typeof tarjetaApi.horario, tarjetaApi.horario);
-
-      // Procesar el código/horario
       const codigo = this.procesarCodigo(tarjetaApi);
-      
+
       const tarjetaConAlumno: TarjetaConAlumno = {
         id: tarjetaApi.id,
         rfid: tarjetaApi.rfid,
         codigo: codigo,
         horario: tarjetaApi.horario,
-        alumnoNombre: this.procesarNombreAlumno(tarjetaApi.alumno),
-        activo: tarjetaApi.activo !== undefined ? tarjetaApi.activo : true // Manejar el campo activo
+        alumnoNombre: tarjetaApi.alumnoNombre?.replace(/\t/g, ' ').trim() || undefined,
+        activo: tarjetaApi.activo !== undefined ? tarjetaApi.activo : true
       };
 
-      // Si hay un nombre de alumno, intentar encontrar el alumno completo
-      const nombreAlumno = this.procesarNombreAlumno(tarjetaApi.alumno);
-      if (nombreAlumno && nombreAlumno !== 'Sin asignar' && nombreAlumno.toLowerCase() !== 'null') {
-        console.log('🔍 Buscando alumno:', nombreAlumno);
-        console.log('🔍 Alumnos disponibles:', this.alumnos.map(a => a.nombre_completo));
-        
-        const alumnoEncontrado = this.alumnos.find((a) => {
-          const nombreCompleto = a.nombre_completo.replace(/\t/g, ' ').trim().toLowerCase();
-          const nombreBuscado = nombreAlumno.toLowerCase().trim();
-          
-          // Buscar coincidencias exactas o parciales
-          return nombreCompleto === nombreBuscado || 
-                 nombreCompleto.includes(nombreBuscado) ||
-                 nombreBuscado.includes(nombreCompleto);
-        });
-
-        console.log('👤 Alumno encontrado:', alumnoEncontrado);
-
+      // Buscar datos completos del alumno si hay ID
+      const alumnoId = typeof tarjetaApi.alumno === 'number' ? tarjetaApi.alumno : null;
+      if (alumnoId) {
+        const alumnoEncontrado = this.alumnos.find(a => a.id === alumnoId);
         if (alumnoEncontrado) {
           tarjetaConAlumno.alumnoData = alumnoEncontrado;
           tarjetaConAlumno.alumnoDocumento = alumnoEncontrado.numero_documento;
           tarjetaConAlumno.alumnoCodigo = alumnoEncontrado.codigo;
+          // Si el backend no trajo el nombre, usar el del alumno encontrado
+          if (!tarjetaConAlumno.alumnoNombre) {
+            tarjetaConAlumno.alumnoNombre = alumnoEncontrado.nombre_completo;
+          }
+        } else {
+          // Alumno no está en los 30 precargados — usar nombre del backend
+          if (tarjetaConAlumno.alumnoNombre) {
+            tarjetaConAlumno.alumnoData = {
+              id: alumnoId,
+              nombre_completo: tarjetaConAlumno.alumnoNombre,
+              numero_documento: '',
+              codigo: '',
+            } as Alumno;
+          }
         }
       }
 
-      console.log('✅ Tarjeta procesada:', tarjetaConAlumno);
       return tarjetaConAlumno;
     });
   }
 
-  // Nuevo método para procesar el código de forma segura
+  // FIX 2026-03-23 — Priorizar 'codigo' (endpoint /lista/) sobre 'horario' (endpoint legacy)
   private procesarCodigo(tarjetaApi: TarjetaApiResponse): string {
-    console.log('🔍 Procesando código:', tarjetaApi);
+    const codigo = tarjetaApi.codigo || tarjetaApi.horario;
 
-    // Intentar obtener el código de diferentes fuentes
-    let codigo = tarjetaApi.horario;
-
-    // Si horario no existe o es null/undefined, buscar otras propiedades
-    if (!codigo || codigo === null || codigo === undefined) {
-      // Verificar si existe una propiedad 'codigo' en el objeto
-      const tarjetaAny = tarjetaApi as any;
-      codigo = tarjetaAny.codigo || tarjetaAny.Code || tarjetaAny.code;
+    if (!codigo || codigo === 'null' || codigo === 'undefined') {
+      return `CARD-${tarjetaApi.id}`;
     }
 
-    // Si aún no hay código, usar el ID como código
-    if (!codigo || codigo === null || codigo === undefined || codigo === 'null') {
-      codigo = `CARD-${tarjetaApi.id}`;
-    }
-
-    // Asegurar que sea un string
     return String(codigo).trim();
   }
 
@@ -457,13 +442,13 @@ export class TarjetasComponent implements OnInit {
       });
   }
 
-  // Método para cargar todas las tarjetas (manejando paginación)
-  private loadAllTarjetas(): void {
+  // FIX 2026-03-23 — Paginación server-side (ya no carga todo de golpe)
+  private loadAllTarjetas(page: number = 1): void {
     const headers = this.getHeaders();
-    const tarjetasUrl = `${this.apiUrlTarjetaLista}/${this.colegioId}`;
-    
-    console.log('📡 Cargando tarjetas desde URL:', tarjetasUrl);
-    console.log('🔑 Headers:', headers.keys());
+    const tarjetasUrl = `${this.apiUrlTarjetaLista}/${this.colegioId}?page=${page}&limit=${this.pageSize}`;
+
+    this.loading = true;
+    this.loadingMessage = 'Cargando tarjetas...';
 
     this.http.get<TarjetasApiResponse>(tarjetasUrl, { headers })
       .pipe(catchError(this.handleError))
@@ -475,23 +460,14 @@ export class TarjetasComponent implements OnInit {
             this.totalTarjetas = response.totalTarjetas || 0;
             this.totalPages = response.totalPages || 0;
             this.currentPage = response.page || 1;
-            
-            const tarjetasApi = response.data || [];
-            console.log('🎯 Tarjetas en la respuesta:', tarjetasApi.length);
 
+            const tarjetasApi = response.data || [];
             this.tarjetas = this.mapearTarjetasApi(tarjetasApi);
             this.filteredTarjetas = [...this.tarjetas];
 
-            console.log('📋 Tarjetas procesadas:', this.tarjetas.length);
-
-            // Si hay más páginas, cargar todas
-            if (this.totalPages > 1) {
-              this.loadRemainingPages();
-            } else {
-              this.loading = false;
-              this.loadingMessage = '';
-              this.cdr.detectChanges();
-            }
+            this.loading = false;
+            this.loadingMessage = '';
+            this.cdr.detectChanges();
           });
         },
         error: (error) => {
@@ -500,59 +476,7 @@ export class TarjetasComponent implements OnInit {
       });
   }
 
-  // Método para cargar las páginas restantes
-  private loadRemainingPages(): void {
-    const headers = this.getHeaders();
-    const requests = [];
-
-    for (let page = 2; page <= this.totalPages; page++) {
-      const url = `${this.apiUrlTarjetaLista}/${this.colegioId}?page=${page}`;
-      requests.push(this.http.get<TarjetasApiResponse>(url, { headers }));
-    }
-
-    if (requests.length === 0) {
-      this.loading = false;
-      this.loadingMessage = '';
-      this.cdr.detectChanges();
-      return;
-    }
-
-    forkJoin(requests)
-      .pipe(catchError(this.handleError))
-      .subscribe({
-        next: (responses: TarjetasApiResponse[]) => {
-          console.log('✅ Páginas adicionales cargadas:', responses.length);
-
-          this.ngZone.run(() => {
-            // Combinar todas las tarjetas
-            const todasLasTarjetas = [...this.tarjetas];
-
-            responses.forEach(response => {
-              const tarjetasApi = response.data || [];
-              const tarjetasMapeadas = this.mapearTarjetasApi(tarjetasApi);
-              todasLasTarjetas.push(...tarjetasMapeadas);
-            });
-
-            this.tarjetas = todasLasTarjetas;
-            this.filteredTarjetas = [...this.tarjetas];
-            this.totalTarjetas = this.tarjetas.length;
-
-            console.log('📊 Total de tarjetas cargadas:', this.tarjetas.length);
-
-            this.loading = false;
-            this.loadingMessage = '';
-            this.cdr.detectChanges();
-          });
-        },
-        error: (error) => {
-          console.error('❌ Error al cargar páginas adicionales:', error);
-          // Mantener las tarjetas ya cargadas
-          this.loading = false;
-          this.loadingMessage = '';
-          this.cdr.detectChanges();
-        },
-      });
-  }
+  // loadRemainingPages eliminado — FIX 2026-03-23: ahora usa paginación server-side
 
   filterTarjetas(searchTerm: string): void {
     if (!searchTerm) {
@@ -580,6 +504,21 @@ export class TarjetasComponent implements OnInit {
   clearSearch(): void {
     this.tarjetaForm.get('searchTerm')?.setValue('');
     this.filteredTarjetas = [...this.tarjetas];
+  }
+
+  // ===============================
+  // PAGINACIÓN
+  // ===============================
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadAllTarjetas(page);
+  }
+
+  onPageSizeChange(newSize: number): void {
+    this.pageSize = newSize;
+    this.currentPage = 1;
+    this.loadAllTarjetas(1);
   }
 
   // ===============================
