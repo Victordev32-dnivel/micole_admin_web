@@ -129,10 +129,11 @@ export class TarjetasComponent implements OnInit {
   colegioId: number = 0;
   totalTarjetas: number = 0;
 
-  // Paginación
+  // Paginación y filtros
   currentPage: number = 1;
   pageSize: number = 10;
   totalPages: number = 0;
+  filtroActivo: string = 'todas'; // 'todas', 'activas', 'inactivas'
 
   private readonly baseUrl = '/api';
   private readonly apiUrlTarjetaLista = `${this.baseUrl}/tarjeta/colegio`;
@@ -299,12 +300,17 @@ export class TarjetasComponent implements OnInit {
     this.loadAllTarjetas();
   }
 
-  // Carga tarjetas con paginación y búsqueda server-side
+  // Carga tarjetas con paginación, búsqueda y filtro de estado
   private loadAllTarjetas(page: number = 1, search: string = ''): void {
     const headers = this.getHeaders();
     let tarjetasUrl = `${this.apiUrlTarjetaLista}/${this.colegioId}?page=${page}&limit=${this.pageSize}`;
     if (search) {
       tarjetasUrl += `&search=${encodeURIComponent(search)}`;
+    }
+    if (this.filtroActivo === 'activas') {
+      tarjetasUrl += '&activo=true';
+    } else if (this.filtroActivo === 'inactivas') {
+      tarjetasUrl += '&activo=false';
     }
 
     this.loading = true;
@@ -360,6 +366,12 @@ export class TarjetasComponent implements OnInit {
 
   onPageSizeChange(newSize: number): void {
     this.pageSize = newSize;
+    this.currentPage = 1;
+    const search = this.tarjetaForm.get('searchTerm')?.value?.trim() || '';
+    this.loadAllTarjetas(1, search);
+  }
+
+  onFiltroActivoChange(): void {
     this.currentPage = 1;
     const search = this.tarjetaForm.get('searchTerm')?.value?.trim() || '';
     this.loadAllTarjetas(1, search);
