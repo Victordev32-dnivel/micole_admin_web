@@ -172,9 +172,6 @@ interface Alumno {
         <div class="info-field">
           <mat-icon>school</mat-icon>
           <span>Colegio ID: {{ data.colegioId }}</span>
-          <span class="alumnos-count"
-            >| {{ data.alumnos.length }} alumnos disponibles</span
-          >
         </div>
 
         <div class="activo-field">
@@ -195,7 +192,6 @@ interface Alumno {
         Cancelar
       </button>
       <button
-        *ngIf="data.alumnos && data.alumnos.length > 0"
         mat-raised-button
         color="primary"
         (click)="onSubmit()"

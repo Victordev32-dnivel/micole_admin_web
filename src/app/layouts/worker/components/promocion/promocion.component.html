@@ -1,0 +1,295 @@
+<div class="promocion-container">
+  <!-- Header -->
+  <div class="page-header">
+    <mat-icon>moving</mat-icon>
+    <div>
+      <h1>Promocion de Alumnos</h1>
+      <p>Promueva alumnos al siguiente grado de forma masiva o individual</p>
+    </div>
+  </div>
+
+  <!-- Step 1: Seleccionar grado -->
+  <mat-card class="step-card">
+    <div class="step-header">
+      <span class="step-number">1</span>
+      <h3>Seleccionar grado de origen</h3>
+    </div>
+    <div class="step-content">
+      <div class="selector-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Grado</mat-label>
+          <mat-select
+            [(ngModel)]="selectedGradoId"
+            (selectionChange)="onGradoChange()"
+            [disabled]="loading || ejecutado"
+          >
+            <mat-option *ngFor="let grado of grados" [value]="grado.id">
+              {{ grado.nombre }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button
+          mat-raised-button
+          color="primary"
+          [disabled]="!selectedGradoId || loadingPreview || loading || ejecutado"
+          (click)="loadPreview()"
+        >
+          <mat-icon>preview</mat-icon>
+          Ver Preview
+        </button>
+      </div>
+    </div>
+  </mat-card>
+
+  <!-- Loading preview -->
+  <div *ngIf="loadingPreview" class="loading-overlay">
+    <mat-spinner diameter="32"></mat-spinner>
+    <span>Cargando alumnos del grado...</span>
+  </div>
+
+  <!-- Step 2: Preview -->
+  <mat-card class="step-card" *ngIf="preview && !loadingPreview">
+    <div class="step-header">
+      <span class="step-number">2</span>
+      <h3>
+        Preview: {{ preview.gradoOrigen }}
+        <span *ngIf="!esUltimoGrado"> &rarr; {{ preview.gradoDestino }}</span>
+        <span *ngIf="esUltimoGrado"> (Ultimo grado)</span>
+      </h3>
+    </div>
+    <div class="step-content">
+      <!-- Warning ultimo grado -->
+      <div *ngIf="esUltimoGrado" class="warning-banner">
+        <mat-icon>warning</mat-icon>
+        <span>
+          Este es el ultimo grado. Los alumnos seleccionados seran
+          <strong>eliminados</strong> del sistema de matriculas.
+        </span>
+      </div>
+
+      <!-- Summary -->
+      <div class="summary-bar">
+        <div class="summary-item total">
+          <span class="summary-count">{{ alumnos.length }}</span>
+          Total
+        </div>
+        <div class="summary-item promover" *ngIf="countPromover > 0">
+          <span class="summary-count">{{ countPromover }}</span>
+          Promover
+        </div>
+        <div class="summary-item eliminar" *ngIf="countEliminar > 0">
+          <span class="summary-count">{{ countEliminar }}</span>
+          Eliminar
+        </div>
+        <div class="summary-item omitir" *ngIf="countOmitir > 0">
+          <span class="summary-count">{{ countOmitir }}</span>
+          Omitir
+        </div>
+        <div class="summary-item sin-destino" *ngIf="countSinDestino > 0">
+          <span class="summary-count">{{ countSinDestino }}</span>
+          Sin destino
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div *ngIf="alumnos.length === 0" class="empty-state">
+        <mat-icon>school</mat-icon>
+        <h3>No hay alumnos en este grado</h3>
+        <p>No se encontraron alumnos matriculados en el grado seleccionado.</p>
+      </div>
+
+      <!-- Table -->
+      <div *ngIf="alumnos.length > 0" class="table-container">
+        <table mat-table [dataSource]="alumnos" class="full-width-table">
+          <!-- Checkbox -->
+          <ng-container matColumnDef="select">
+            <th mat-header-cell *matHeaderCellDef>
+              <mat-checkbox
+                [checked]="allSelected"
+                [indeterminate]="someSelected"
+                (change)="toggleAll($event.checked)"
+                [disabled]="ejecutado"
+              ></mat-checkbox>
+            </th>
+            <td mat-cell *matCellDef="let alumno">
+              <mat-checkbox
+                [(ngModel)]="alumno.selected"
+                (change)="onAlumnoToggle(alumno)"
+                [disabled]="ejecutado"
+              ></mat-checkbox>
+            </td>
+          </ng-container>
+
+          <!-- Alumno -->
+          <ng-container matColumnDef="alumno">
+            <th mat-header-cell *matHeaderCellDef>Alumno</th>
+            <td mat-cell *matCellDef="let alumno">
+              <div class="alumno-cell">
+                <span class="alumno-nombre">{{ alumno.alumnoNombre }}</span>
+                <span class="alumno-doc">DNI: {{ alumno.alumnoDocumento }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Origen -->
+          <ng-container matColumnDef="origen">
+            <th mat-header-cell *matHeaderCellDef>Actual</th>
+            <td mat-cell *matCellDef="let alumno">
+              {{ alumno.gradoOrigen }} - {{ alumno.seccionOrigen }}
+            </td>
+          </ng-container>
+
+          <!-- Arrow -->
+          <ng-container matColumnDef="arrow">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let alumno">
+              <mat-icon class="arrow-icon" *ngIf="alumno.accionUsuario === 'PROMOVER'">
+                arrow_forward
+              </mat-icon>
+              <mat-icon
+                style="color: #c62828"
+                *ngIf="alumno.accionUsuario === 'ELIMINAR'"
+              >
+                delete_outline
+              </mat-icon>
+              <mat-icon
+                style="color: #e65100"
+                *ngIf="alumno.accionUsuario === 'OMITIR'"
+              >
+                remove_circle_outline
+              </mat-icon>
+            </td>
+          </ng-container>
+
+          <!-- Destino -->
+          <ng-container matColumnDef="destino">
+            <th mat-header-cell *matHeaderCellDef>Destino</th>
+            <td mat-cell *matCellDef="let alumno">
+              <ng-container *ngIf="alumno.accionUsuario === 'PROMOVER' && !esUltimoGrado">
+                <span>{{ preview?.gradoDestino }} - </span>
+                <mat-form-field
+                  appearance="outline"
+                  class="seccion-select"
+                  *ngIf="salonesDestino.length > 0"
+                >
+                  <mat-select
+                    [value]="alumno.salonDestinoIdUsuario"
+                    (selectionChange)="onSeccionChange(alumno, $event.value)"
+                    [disabled]="ejecutado"
+                  >
+                    <mat-option
+                      *ngFor="let s of salonesDestino"
+                      [value]="s.salonId"
+                    >
+                      {{ s.seccionNombre }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </ng-container>
+              <span *ngIf="alumno.accionUsuario === 'ELIMINAR'" style="color: #c62828">
+                Se eliminara
+              </span>
+              <span *ngIf="alumno.accionUsuario === 'OMITIR'" style="color: #999">
+                Se mantiene
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Accion -->
+          <ng-container matColumnDef="accion">
+            <th mat-header-cell *matHeaderCellDef>Accion</th>
+            <td mat-cell *matCellDef="let alumno">
+              <mat-form-field appearance="outline" class="seccion-select" *ngIf="!ejecutado">
+                <mat-select
+                  [(ngModel)]="alumno.accionUsuario"
+                  (selectionChange)="onAccionChange(alumno)"
+                >
+                  <mat-option value="PROMOVER" *ngIf="!esUltimoGrado">
+                    Promover
+                  </mat-option>
+                  <mat-option value="ELIMINAR">Eliminar</mat-option>
+                  <mat-option value="OMITIR">Omitir</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <span *ngIf="ejecutado">
+                <span
+                  class="badge"
+                  [ngClass]="{
+                    'badge-promover': alumno.accionUsuario === 'PROMOVER',
+                    'badge-eliminar': alumno.accionUsuario === 'ELIMINAR',
+                    'badge-omitir': alumno.accionUsuario === 'OMITIR'
+                  }"
+                >
+                  {{ alumno.accionUsuario }}
+                </span>
+              </span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="actions-row" *ngIf="alumnos.length > 0 && !ejecutado">
+        <div class="bulk-actions">
+          <button mat-stroked-button (click)="toggleAll(true)" [disabled]="loading">
+            <mat-icon>select_all</mat-icon> Seleccionar todos
+          </button>
+          <button mat-stroked-button (click)="toggleAll(false)" [disabled]="loading">
+            <mat-icon>deselect</mat-icon> Deseleccionar todos
+          </button>
+        </div>
+
+        <button
+          mat-raised-button
+          color="warn"
+          [disabled]="loading || (countPromover === 0 && countEliminar === 0)"
+          (click)="ejecutarPromocion()"
+        >
+          <mat-spinner *ngIf="loading" diameter="18" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+          <mat-icon *ngIf="!loading">send</mat-icon>
+          Ejecutar Promocion
+        </button>
+      </div>
+    </div>
+  </mat-card>
+
+  <!-- Step 3: Resultado -->
+  <mat-card
+    class="step-card result-card"
+    [class.has-errors]="resultado && resultado.errores > 0"
+    *ngIf="ejecutado && resultado"
+  >
+    <div class="step-header">
+      <span class="step-number">3</span>
+      <h3>Resultado de la Promocion</h3>
+    </div>
+    <div class="step-content">
+      <div class="result-grid">
+        <div class="result-item promovidos">
+          <span class="count">{{ resultado.promovidos }}</span>
+          <span class="label">Promovidos</span>
+        </div>
+        <div class="result-item eliminados">
+          <span class="count">{{ resultado.eliminados }}</span>
+          <span class="label">Eliminados</span>
+        </div>
+        <div class="result-item omitidos">
+          <span class="count">{{ resultado.omitidos }}</span>
+          <span class="label">Omitidos</span>
+        </div>
+        <div class="result-item errores" *ngIf="resultado.errores > 0">
+          <span class="count">{{ resultado.errores }}</span>
+          <span class="label">Errores</span>
+        </div>
+      </div>
+
+      <button mat-raised-button color="primary" (click)="nuevaPromocion()" style="margin-top: 16px;">
+        <mat-icon>refresh</mat-icon> Nueva Promocion
+      </button>
+    </div>
+  </mat-card>
+</div>

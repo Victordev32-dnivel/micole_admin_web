@@ -34,6 +34,7 @@ export const WORKER_ROUTES: Routes = [
       { path: 'mis-cursos', loadComponent: () => import('./components/mis-cursos/mis-cursos.component').then(m => m.MisCursosComponent) },
       { path: 'boletas', loadComponent: () => import('./components/boletas/boletas.component').then(m => m.BoletasComponent) },
       { path: 'periodos', loadComponent: () => import('./components/periodos/periodo-list/periodo-list.component').then(m => m.PeriodoListComponent) },
+      { path: 'promocion', loadComponent: () => import('./components/promocion/promocion.component').then(m => m.PromocionComponent) },
     ],
   },
 ];
