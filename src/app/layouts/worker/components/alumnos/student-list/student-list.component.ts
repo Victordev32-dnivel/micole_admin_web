@@ -27,12 +27,14 @@ import {
   HttpHeaders,
 } from '@angular/common/http';
 import * as XLSX from 'xlsx';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { ConfirmationDialogComponent } from '../confirmation-delete/confirmation-dialog.component';
 import { StudentEditComponent } from '../edit-student/edit-student.component';
 import { AddStudentComponent } from '../add-student/add-student.component';
 import { Router } from '@angular/router';
 import { UserService } from '../../../../../services/UserData';
+import { PaginationComponent } from '../../../../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-student-list',
@@ -46,6 +48,7 @@ import { UserService } from '../../../../../services/UserData';
     MatSelectModule,
     ReactiveFormsModule,
     HttpClientModule,
+    PaginationComponent,
   ],
   templateUrl: './student-list.component.html',
   styleUrls: ['./student-list.component.css'],
@@ -130,9 +133,13 @@ export class StudentListComponent implements OnInit {
         });
       }
 
-      // Configurar el filtro de búsqueda
-      this.searchTermControl.valueChanges.subscribe((term) => {
-        this.filterStudents(term);
+      // FIX 2026-03-23 — Búsqueda server-side con debounce
+      this.searchTermControl.valueChanges.pipe(
+        debounceTime(400),
+        distinctUntilChanged()
+      ).subscribe((term) => {
+        this.currentPage = 1;
+        this.loadStudents(1, term?.trim() || '');
       });
     }
   }
@@ -298,7 +305,7 @@ export class StudentListComponent implements OnInit {
     this.loadStudents(1);
   }
 
-  loadStudents(page: number = 1) {
+  loadStudents(page: number = 1, search: string = '') {
     if (!this.colegioId) {
       console.error('❌ ID del colegio no disponible');
       this.loading = false;
@@ -307,6 +314,7 @@ export class StudentListComponent implements OnInit {
 
     console.log('👥 Cargando estudiantes...', {
       page,
+      search,
       colegioId: this.colegioId,
       selectedSalonId: this.selectedSalonId,
     });
@@ -318,8 +326,11 @@ export class StudentListComponent implements OnInit {
     if (this.selectedSalonId) {
       apiUrl = `${this.salonApiUrl}/${this.selectedSalonId}`;
     } else {
-      // CORRECCIÓN: Usar la URL correcta para obtener estudiantes por colegio
+      // FIX 2026-03-23 — Búsqueda server-side por DNI/nombre
       apiUrl = `${this.colegioApiUrl}/${this.colegioId}?page=${page}&limit=${this.pageSize}`;
+      if (search) {
+        apiUrl += `&search=${encodeURIComponent(search)}`;
+      }
     }
 
     console.log('🌐 Llamando API:', apiUrl);
@@ -447,40 +458,11 @@ export class StudentListComponent implements OnInit {
     });
   }
 
+  // FIX 2026-03-23 — filterStudents ya no se usa, la búsqueda es server-side
+  // Se mantiene el método por si algún otro flujo lo referencia
   filterStudents(term: string) {
     this.ngZone.run(() => {
-      // CORRECCIÓN: No mostrar loading para filtros locales
-      if (!term || term.trim() === '') {
-        this.filteredStudents = [...this.students];
-      } else {
-        const searchTerm = term.toLowerCase().trim();
-        this.filteredStudents = this.students.filter((student) => {
-          const matchesName = student.nombre_completo
-            ?.toLowerCase()
-            .includes(searchTerm);
-          const matchesDNI = student.numero_documento
-            ?.toString()
-            .toLowerCase()
-            .includes(searchTerm);
-          const matchesApoderado =
-            student.nombreApoderado?.toLowerCase().includes(searchTerm) ||
-            student.apellidoPaternoApoderado
-              ?.toLowerCase()
-              .includes(searchTerm) ||
-            student.apellidoMaternoApoderado
-              ?.toLowerCase()
-              .includes(searchTerm);
-
-          return matchesName || matchesDNI || matchesApoderado;
-        });
-      }
-
-      console.log('🔍 Filtro aplicado:', {
-        term,
-        totalStudents: this.students.length,
-        filteredCount: this.filteredStudents.length,
-      });
-
+      this.filteredStudents = [...this.students];
       this.cdr.detectChanges();
     });
   }
@@ -584,8 +566,14 @@ export class StudentListComponent implements OnInit {
 
     if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
       console.log('📄 Cambiando a página:', page);
-      this.loadStudents(page);
+      this.loadStudents(page, this.searchTermControl.value?.trim() || '');
     }
+  }
+
+  onPageSizeChange(newSize: number): void {
+    this.pageSize = newSize;
+    this.currentPage = 1;
+    this.loadStudents(1, this.searchTermControl.value?.trim() || '');
   }
 
   goToFirstPage(): void {
