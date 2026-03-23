@@ -137,7 +137,7 @@ export class TarjetasComponent implements OnInit {
 
   private readonly baseUrl = '/api';
   // URL CORREGIDA: agregado /lista en la ruta
-  private readonly apiUrlTarjetaLista = `${this.baseUrl}/tarjeta/lista/colegio`;
+  private readonly apiUrlTarjetaLista = `${this.baseUrl}/tarjeta/colegio`;
   private readonly apiUrlTarjeta = `${this.baseUrl}/tarjeta`;
   private readonly apiUrlAlumnos = `${this.baseUrl}/alumno/colegio`;
 
@@ -292,7 +292,7 @@ export class TarjetasComponent implements OnInit {
         console.log('🔍 Alumnos disponibles:', this.alumnos.map(a => a.nombre_completo));
         
         const alumnoEncontrado = this.alumnos.find((a) => {
-          const nombreCompleto = a.nombre_completo.replace(/\t/g, ' ').trim().toLowerCase();
+          const nombreCompleto = a.nombre_completo.replace(/\s+/g, ' ').trim().toLowerCase();
           const nombreBuscado = nombreAlumno.toLowerCase().trim();
           
           // Buscar coincidencias exactas o parciales
@@ -349,7 +349,7 @@ export class TarjetasComponent implements OnInit {
 
     // Si es un string
     if (typeof alumnoData === 'string') {
-      const nombreLimpio = alumnoData.replace(/\t/g, ' ').trim();
+      const nombreLimpio = alumnoData.replace(/\s+/g, ' ').trim();
       return (nombreLimpio && nombreLimpio !== 'null' && nombreLimpio !== 'undefined') ? nombreLimpio : undefined;
     }
 
@@ -369,7 +369,7 @@ export class TarjetasComponent implements OnInit {
                     alumnoData.nombreCompleto;
       
       if (typeof nombre === 'string') {
-        const nombreLimpio = nombre.replace(/\t/g, ' ').trim();
+        const nombreLimpio = nombre.replace(/\s+/g, ' ').trim();
         return (nombreLimpio && nombreLimpio !== 'null' && nombreLimpio !== 'undefined') ? nombreLimpio : undefined;
       }
 
@@ -382,7 +382,7 @@ export class TarjetasComponent implements OnInit {
 
       // Si el objeto se puede convertir a string de forma útil
       try {
-        const nombreStr = String(alumnoData).replace(/\t/g, ' ').trim();
+        const nombreStr = String(alumnoData).replace(/\s+/g, ' ').trim();
         if (nombreStr && nombreStr !== '[object Object]' && nombreStr !== 'null' && nombreStr !== 'undefined') {
           return nombreStr;
         }
@@ -393,7 +393,7 @@ export class TarjetasComponent implements OnInit {
 
     // Intentar convertir a string como último recurso
     try {
-      const nombreStr = String(alumnoData).replace(/\t/g, ' ').trim();
+      const nombreStr = String(alumnoData).replace(/\s+/g, ' ').trim();
       return (nombreStr && nombreStr !== 'null' && nombreStr !== 'undefined' && nombreStr !== '[object Object]') ? nombreStr : undefined;
     } catch (error) {
       console.warn('⚠️ No se pudo convertir alumnoData a string:', alumnoData);
@@ -440,7 +440,7 @@ export class TarjetasComponent implements OnInit {
           const alumnosData = alumnosResponse.data || [];
           this.alumnos = alumnosData.map((alumno) => ({
             ...alumno,
-            nombre_completo: alumno.nombre_completo?.replace(/\t/g, ' ').trim() || '',
+            nombre_completo: alumno.nombre_completo?.replace(/\s+/g, ' ').trim() || '',
           }));
 
           console.log('👥 Alumnos procesados:', this.alumnos.length);
@@ -465,18 +465,19 @@ export class TarjetasComponent implements OnInit {
     console.log('📡 Cargando tarjetas desde URL:', tarjetasUrl);
     console.log('🔑 Headers:', headers.keys());
 
-    this.http.get<TarjetasApiResponse>(tarjetasUrl, { headers })
+    this.http.get<any>(tarjetasUrl, { headers })
       .pipe(catchError(this.handleError))
       .subscribe({
         next: (response) => {
           console.log('✅ Respuesta tarjetas recibida:', response);
 
           this.ngZone.run(() => {
-            this.totalTarjetas = response.totalTarjetas || 0;
-            this.totalPages = response.totalPages || 0;
-            this.currentPage = response.page || 1;
+            // Manejar tanto respuesta paginada (objeto) como respuesta simple (array)
+            const tarjetasApi = Array.isArray(response) ? response : (response.data || []);
+            this.totalTarjetas = Array.isArray(response) ? response.length : (response.totalTarjetas || 0);
+            this.totalPages = Array.isArray(response) ? 1 : (response.totalPages || 0);
+            this.currentPage = Array.isArray(response) ? 1 : (response.page || 1);
             
-            const tarjetasApi = response.data || [];
             console.log('🎯 Tarjetas en la respuesta:', tarjetasApi.length);
 
             this.tarjetas = this.mapearTarjetasApi(tarjetasApi);
@@ -484,8 +485,8 @@ export class TarjetasComponent implements OnInit {
 
             console.log('📋 Tarjetas procesadas:', this.tarjetas.length);
 
-            // Si hay más páginas, cargar todas
-            if (this.totalPages > 1) {
+            // Si hay más páginas (en caso de respuesta paginada), cargar todas
+            if (!Array.isArray(response) && this.totalPages > 1) {
               this.loadRemainingPages();
             } else {
               this.loading = false;
@@ -496,6 +497,8 @@ export class TarjetasComponent implements OnInit {
         },
         error: (error) => {
           console.error('❌ Error al cargar tarjetas:', error);
+          this.loading = false;
+          this.loadingMessage = '';
         },
       });
   }

@@ -110,7 +110,7 @@
             >
               <div class="option-content">
                 <div class="alumno-details">
-                  <div class="alumno-nombre">{{ alumno.nombre_completo.replace('\t', ' ').trim() }}</div>
+                  <div class="alumno-nombre">{{ alumno.nombre_completo.replace('\s+', ' ').trim() }}</div>
                   <div class="alumno-info">
                     <span class="codigo">{{ alumno.codigo }}</span>
                     <span class="separator">•</span>

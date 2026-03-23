@@ -168,9 +168,9 @@ export class EditTarjetaModalComponent implements OnInit {
 
     // Si el campo alumno es un string (nombre), buscar por nombre
     if (typeof this.tarjeta.alumno === 'string' && this.tarjeta.alumno.trim()) {
-      const nombreLimpio = this.tarjeta.alumno.replace(/\t/g, ' ').trim();
+      const nombreLimpio = this.tarjeta.alumno.replace(/\s+/g, ' ').trim();
       const alumnoEncontrado = this.alumnos.find(
-        (a) => a.nombre_completo.replace(/\t/g, ' ').trim() === nombreLimpio
+        (a) => a.nombre_completo.replace(/\s+/g, ' ').trim() === nombreLimpio
       );
       
       if (alumnoEncontrado) {
@@ -180,9 +180,9 @@ export class EditTarjetaModalComponent implements OnInit {
 
     // Si hay alumnoNombre, buscar por ese nombre
     if (this.tarjeta.alumnoNombre) {
-      const nombreLimpio = this.tarjeta.alumnoNombre.replace(/\t/g, ' ').trim();
+      const nombreLimpio = this.tarjeta.alumnoNombre.replace(/\s+/g, ' ').trim();
       const alumnoEncontrado = this.alumnos.find(
-        (a) => a.nombre_completo.replace(/\t/g, ' ').trim() === nombreLimpio
+        (a) => a.nombre_completo.replace(/\s+/g, ' ').trim() === nombreLimpio
       );
       
       if (alumnoEncontrado) {
@@ -396,7 +396,7 @@ export class EditTarjetaModalComponent implements OnInit {
 
   // Método mejorado para mostrar información del alumno
   getAlumnoDisplayName(alumno: Alumno): string {
-    const nombre = alumno.nombre_completo.replace(/\t/g, ' ').trim();
+    const nombre = alumno.nombre_completo.replace(/\s+/g, ' ').trim();
     return `${nombre} (${alumno.codigo})`;
   }
 
@@ -410,7 +410,7 @@ export class EditTarjetaModalComponent implements OnInit {
     
     // Si el campo alumno es un string y no está vacío
     if (typeof this.tarjeta.alumno === 'string' && this.tarjeta.alumno.trim()) {
-      return `Actualmente asignada a: ${this.tarjeta.alumno.replace(/\t/g, ' ').trim()}`;
+      return `Actualmente asignada a: ${this.tarjeta.alumno.replace(/\s+/g, ' ').trim()}`;
     }
     
     return 'Tarjeta disponible - Sin asignar';
